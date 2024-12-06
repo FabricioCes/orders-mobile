@@ -1,9 +1,20 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
+import { useColorScheme } from 'react-native';
 
 export default function TabLayout() {
+
+  const colorScheme = useColorScheme();
+
+  const isDarkMode = colorScheme === "dark";
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: 'blue' }}>
+    <Tabs screenOptions={{
+      tabBarActiveTintColor: '#60A5FACC',
+      headerStyle: {
+        backgroundColor: '#60A5FACC'
+      },
+      headerTintColor: isDarkMode ? "#fff" : "#000",
+    }}>
       <Tabs.Screen
         name="index"
         options={{
