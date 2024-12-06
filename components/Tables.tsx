@@ -13,10 +13,17 @@ export default function Tables({ qty, place }: Table) {
     const columns = isTablet ? 9 : 3;
 
     // Dividir mesas en filas
-    const tables = Array.from({ length: qty }, (_, i) => `Mesa ${i + 1}`);
+    const tables = Array.from({ length: qty }, (_, i) => `${i + 1}`);
     const rows = [];
     for (let i = 0; i < tables.length; i += columns) {
         rows.push(tables.slice(i, i + columns));
+    }
+
+    const handlePress = (tableId : number) => {
+        router.navigate({
+            pathname: '/Order',
+            params: { tableId: tableId, place: place},
+        })
     }
 
     return (
@@ -34,11 +41,11 @@ export default function Tables({ qty, place }: Table) {
                         {row.map((table, index) => (
                             <TouchableOpacity
                                 key={index}
-                                onPress={() => console.log(`${table} presionada`)}
+                                onPress={() => handlePress(parseInt(table))}
                                 className="bg-blue-400/80 p-4 rounded-lg flex justify-center items-center w-24 h-24 mx-2"
                             >
                                 <FontAwesome5 name="chair" color="white" size={24} />
-                                <Text className="text-center font-medium mt-2">{table}</Text>
+                                <Text className="text-center font-medium mt-2">Mesa {table}</Text>
                             </TouchableOpacity>
                         ))}
                     </View>
