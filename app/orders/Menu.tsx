@@ -6,15 +6,14 @@ import {
   ScrollView,
   TextInput,
 } from "react-native";
-import React, { useState, useEffect } from "react";
-import { AntDesign, EvilIcons, FontAwesome5 } from "@expo/vector-icons";
 
-type Product = {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number; // Nueva propiedad para la cantidad
-};
+import React, { useState, useEffect } from "react";
+
+import { AntDesign, EvilIcons } from "@expo/vector-icons";
+import { Product } from "@/types/types";
+import { useOrder } from "@/context/OrderContext";
+
+
 
 type SubSubCategory = {
   name: string;
@@ -63,13 +62,12 @@ export const mockMenu: Menu = [
 ];
 
 export default function Menu() {
-  const [expandedSubCategory, setExpandedSubCategory] = useState<string | null>(
-    null
-  );
-  const [expandedSubSubCategory, setExpandedSubSubCategory] =
-    useState<string | null>(null);
+  const [expandedSubCategory, setExpandedSubCategory] = useState<string | null>(null);
+  const [expandedSubSubCategory, setExpandedSubSubCategory] = useState<string | null>(null);
   const [order, setOrder] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
+
+  const { saveOrder } = useOrder();
 
   // Normalizar texto (eliminar tildes y convertir a minúsculas)
   const normalizeText = (text: string) =>
@@ -142,151 +140,142 @@ export default function Menu() {
     );
   };
 
+  const totalOrder = () => {
+    return order.reduce((acc, product) => acc + product.price * product.quantity, 0)
+  }
+
+  //Guardar Orden en el Contexto
+
+  const handleSaveOrder = () => {
+    saveOrder(order);
+  }
   return (
-    <ScrollView className="container mx-auto p-5">
-      <Text className="font-bold text-2xl">Menú</Text>
+    <View>
+      <ScrollView className="container mx-auto p-5" contentContainerStyle={{paddingBottom: 150}}>
+        <Text className="font-bold text-2xl">Menú</Text>
 
-      {/* Campo de búsqueda */}
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Buscar producto..."
-        value={searchQuery}
-        onChangeText={(text) => setSearchQuery(text)}
-      />
+        {/* Campo de búsqueda */}
+        <TextInput
+          className={`border rounded-md p-3 mb-2 ${!hasProducts ? "border-red-400" : "border-gray-400"}`}
+          placeholder="Buscar producto..."
+          value={searchQuery}
+          onChangeText={(text) => setSearchQuery(text)}
+        />
 
-      {!hasProducts && (
-        <Text className="text-center text-gray-400">No se encontraron productos.</Text>
-      )}
+        {!hasProducts && (
+          <Text className="text-center text-gray-400">No se encontraron productos.</Text>
+        )}
 
-      {filteredMenu.map((subCategory) => (
-        <View key={subCategory.name} className="my-3">
-          {/* Subcategoría */}
-          <TouchableOpacity
-            onPress={() =>
-              setExpandedSubCategory((prev) =>
-                prev === subCategory.name ? null : subCategory.name
-              )
-            }
-          >
-            <Text style={styles.subCategoryTitle}>{subCategory.name}</Text>
-          </TouchableOpacity>
+        {filteredMenu.map((subCategory) => (
+          <View key={subCategory.name} className="my-3">
 
-          {/* SubSubCategorías */}
-          {expandedSubCategory === subCategory.name &&
-            subCategory.subSubCategories.map((subSubCategory) => (
-              <View key={subSubCategory.name} className="m-2">
-                <TouchableOpacity
-                  onPress={() =>
-                    setExpandedSubSubCategory((prev) =>
-                      prev === subSubCategory.name ? null : subSubCategory.name
-                    )
+            {/* Subcategoría */}
+            <TouchableOpacity
+              onPress={() =>
+                setExpandedSubCategory((prev) =>
+                  prev === subCategory.name ? null : subCategory.name
+                )
+              }
+            >
+              <Text className="text-xl font-bold text-[#007BFF]">{subCategory.name}</Text>
+            </TouchableOpacity>
+
+            {/* SubSubCategorías */}
+            {expandedSubCategory === subCategory.name &&
+              subCategory.subSubCategories.map((subSubCategory) => (
+                <View key={subSubCategory.name} className="m-2">
+                  <TouchableOpacity
+                    onPress={() =>
+                      setExpandedSubSubCategory((prev) =>
+                        prev === subSubCategory.name ? null : subSubCategory.name
+                      )
+                    }
+                  >
+                    <Text className="text-[#0056B3]">
+                      {subSubCategory.name}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {/* Productos */}
+                  {expandedSubSubCategory === subSubCategory.name &&
+                    subSubCategory.products.map((product) => (
+                      <View key={product.id} className="mx-2 flex-row justify-between items-center my-1">
+                        <Text className="flex-1">{product.name}</Text>
+                        <Text
+                          className="mx-4"
+                        >{`$${product.price}`}</Text>
+                        <TouchableOpacity
+                          className="bg-[#007BFF] p-3 rounded-md"
+                          onPress={() =>
+                            addToOrder({ ...product, quantity: 1 })
+                          }
+                        >
+                          <Text className="font-bold text-white">Agregar</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                </View>
+              ))}
+          </View>
+        ))}
+
+        {/* Orden */}
+        {order.length > 0 ? (
+          <View className="mt-5 border-t border-t-gray-400 pt-2">
+            <Text className="text-2xl font-semibold tracking-wide py-5">
+              Orden:
+            </Text>
+            {order.map((item) => (
+              <View key={item.id} style={styles.orderItem}>
+                <View style={styles.orderDetails}>
+                  <Text>{item.name}</Text>
+                  <Text>{`$${item.price}`}</Text>
+                </View>
+                <TextInput
+                  className="border border-gray-400 px-5 text-center mr-2 h-full rounded-lg"
+                  keyboardType="numeric"
+                  defaultValue={String(item.quantity)}
+                  onChangeText={(text) =>
+                    updateQuantity(item.id, parseInt(text) || 1)
                   }
+                />
+                <TouchableOpacity
+                  className="bg-red-500 p-3 rounded-md flex-row items-center "
+                  onPress={() => removeFromOrder(item.id)}
                 >
-                  <Text style={styles.subSubCategoryTitle}>
-                    {subSubCategory.name}
+                  <Text className="text-white font-bold">
+                    Eliminar
                   </Text>
+                  <EvilIcons name="trash" size={25} color="white" className="mb-1" />
                 </TouchableOpacity>
 
-                {/* Productos */}
-                {expandedSubSubCategory === subSubCategory.name &&
-                  subSubCategory.products.map((product) => (
-                    <View key={product.id} style={styles.product} className="mx-2">
-                      <Text style={styles.productName}>{product.name}</Text>
-                      <Text
-                        style={styles.productPrice}
-                      >{`$${product.price}`}</Text>
-                      <TouchableOpacity
-                        style={styles.addButton}
-                        onPress={() =>
-                          addToOrder({ ...product, quantity: 1 })
-                        }
-                      >
-                        <Text style={styles.addButtonText}>Agregar</Text>
-                      </TouchableOpacity>
-                    </View>
-                  ))}
               </View>
             ))}
-        </View>
-      ))}
-
-      {/* Orden */}
-      {order.length > 0 ? (
-        <View style={styles.order}>
-          <Text className="text-2xl font-semibold tracking-wide py-5">
-            Orden:
-          </Text>
-          {order.map((item) => (
-            <View key={item.id} style={styles.orderItem}>
-              <View style={styles.orderDetails}>
-                <Text>{item.name}</Text>
-                <Text>{`$${item.price}`}</Text>
-              </View>
-              <TextInput
-                className="border border-gray-400 px-5 text-center mr-2 h-full rounded-lg"
-                keyboardType="numeric"
-                defaultValue={String(item.quantity)}
-                onChangeText={(text) =>
-                  updateQuantity(item.id, parseInt(text) || 1)
-                }
-              />
-              <TouchableOpacity
-                style={styles.removeButton}
-                onPress={() => removeFromOrder(item.id)}
-              >
-                <Text style={styles.removeButtonText}>Eliminar <EvilIcons name="trash" size={20} color="white"/></Text>
-              </TouchableOpacity>
-
-             
+            <View className="container my-4">
+              <Text className="text-2xl font-bold">Total: ${totalOrder()}</Text>
             </View>
-          ))}
-           <View className="mt-5 items-center">
-                <TouchableOpacity className="bg-blue-500 p-3 rounded-lg">
-                  <Text className="text-white font-bold text-xl">Guardar Orden <AntDesign name="check" size={20} color="white" /></Text>
-                 
-                </TouchableOpacity>
-              </View>
-        </View>
-      ) : (
-        <Text className="text-center text-gray-400 font-bold">
-          Orden sin Productos
-        </Text>
-      )}
-    </ScrollView>
+            <View className="mt-5 items-center">
+              <TouchableOpacity className="bg-blue-500 p-3 rounded-lg flex-row items-center gap-2 "
+                onPress={() => handleSaveOrder()}
+              >
+                <Text className="text-white font-bold text-xl">Guardar Orden</Text>
+                <AntDesign name="check" size={20} color="white" />
+              </TouchableOpacity>
+            </View>
+
+          </View>
+        ) : (
+          <Text className="text-center text-gray-400 font-bold">
+            Orden sin Productos
+          </Text>
+        )}
+      </ScrollView>
+      
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  searchInput: {
-    borderWidth: 1,
-    borderColor: "#CCC",
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
-  },
-  subCategoryTitle: { fontSize: 18, fontWeight: "bold", color: "#007BFF" },
-  subSubCategoryTitle: { fontSize: 16, color: "#0056B3" },
-  product: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginVertical: 5,
-  },
-  productName: { fontSize: 16, flex: 1 },
-  productPrice: { fontSize: 16, marginHorizontal: 10 },
-  addButton: {
-    backgroundColor: "#007BFF",
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-  },
-  addButtonText: { color: "#FFF", fontWeight: "bold" },
-  order: {
-    marginTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: "#CCC",
-    paddingTop: 10,
-  },
   orderItem: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -301,5 +290,5 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
   },
-  removeButtonText: { color: "#FFF", fontWeight: "bold" },
+
 });
