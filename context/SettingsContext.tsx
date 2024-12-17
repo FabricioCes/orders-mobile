@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Alert } from "react-native";
+
 
 // Define la interfaz del contexto
 interface SettingsContextType {
@@ -10,6 +10,7 @@ interface SettingsContextType {
   settings: string;
   hasUser: boolean;
   userName: string;
+  token: string;
 }
 
 // Crea el contexto
@@ -33,7 +34,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch("http://localhost:5001/autenticacion/login", {
+      const response = await fetch(`http://${settings}:5001/autenticacion/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -47,6 +48,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (response.ok && data.resultado) {
         await AsyncStorage.setItem("token", data.resultado);
         await AsyncStorage.setItem("hasUser", "true");
+        await AsyncStorage.setItem("userName", username);
+        setToken(data.resultado);
         setHasUser(true);
         setUserName(username);
         return true; // Login exitoso
@@ -75,14 +78,13 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       try {
         const storedValue = await AsyncStorage.getItem("idComputadora");
         const userStatus = await AsyncStorage.getItem("hasUser");
+        const savedToken = await AsyncStorage.getItem("token");
+        const savedUserName = await AsyncStorage.getItem("userName");
 
-        if (storedValue) {
-          setSettings(storedValue);
-        }
-
-        if (userStatus === "true") {
-          setHasUser(true); // Restaurar sesión si el usuario ya inició sesión previamente
-        }
+        if(savedUserName) setUserName(savedUserName);
+        if (storedValue) setSettings(storedValue);
+        if (userStatus === "true") setHasUser(true);
+        if (savedToken) setToken(savedToken);
       } catch (error) {
         console.error("Error al cargar datos de AsyncStorage:", error);
       }
@@ -92,7 +94,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   return (
-    <SettingsContext.Provider value={{ settings, saveSettings, login, hasUser, userName, logOut }}>
+    <SettingsContext.Provider value={{ settings, saveSettings, login, hasUser, userName, logOut, token }}>
       {children}
     </SettingsContext.Provider>
   );

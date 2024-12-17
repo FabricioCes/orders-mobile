@@ -12,5 +12,9 @@ export type Product = {
     id: number;
     name: string;
     price: number;
-    quantity: number; // Nueva propiedad para la cantidad
+    idSubCategoria: number;
+    subCategoria: string;
+    idSubSubCategoria: number;
+    subSubCategoria: string;
+    quantity: number;
   };
