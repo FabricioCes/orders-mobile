@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import { router } from "expo-router";
+import {jwtDecode} from "jwt-decode";
 
 // Define la interfaz del contexto
 interface SettingsContextType {
@@ -80,18 +81,42 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const userStatus = await AsyncStorage.getItem("hasUser");
         const savedToken = await AsyncStorage.getItem("token");
         const savedUserName = await AsyncStorage.getItem("userName");
-
-        if(savedUserName) setUserName(savedUserName);
+  
+        if (savedUserName) setUserName(savedUserName);
         if (storedValue) setSettings(storedValue);
         if (userStatus === "true") setHasUser(true);
-        if (savedToken) setToken(savedToken);
+        checkTokenExpiration();
+        if (savedToken) {
+          setToken(savedToken);
+        }
       } catch (error) {
         console.error("Error al cargar datos de AsyncStorage:", error);
       }
     };
-
+  
     loadSettings();
   }, []);
+
+  const checkTokenExpiration = async () => {
+    if (!token) return; // Si no hay token, salir de la función
+    
+    try {
+      const decodedToken: { exp: number } = jwtDecode(token);
+      const currentTime = Math.floor(Date.now() / 1000); // Tiempo actual en segundos
+  
+      if (decodedToken.exp < currentTime) {
+        console.log("El token ha expirado.");
+        await logOut(); // Hacer logout
+        router.replace("/login"); // Redirigir al login
+      }else{
+        console.log("Token alive.")
+      }
+    } catch (error) {
+      console.error("Error al decodificar el token:", error);
+      await logOut();
+      router.replace("/login");
+    }
+  };
 
   return (
     <SettingsContext.Provider value={{ settings, saveSettings, login, hasUser, userName, logOut, token }}>

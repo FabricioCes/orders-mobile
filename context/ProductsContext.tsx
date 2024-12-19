@@ -96,7 +96,6 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     useEffect(() => {
         if (products.length > 0) {
             orderProducts(products);
-            console.log(JSON.stringify(orderedProducts))
         }
     }, [products]);
 
