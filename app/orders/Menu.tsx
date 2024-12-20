@@ -12,6 +12,7 @@ import { AntDesign, EvilIcons } from "@expo/vector-icons";
 import { Product } from "@/types/types";
 import { useOrder } from "@/context/OrderContext";
 import { useProducts } from "@/context/ProductsContext"; // Importa el contexto de productos
+import { router } from "expo-router";
 
 export default function Menu() {
   const [expandedSubCategory, setExpandedSubCategory] = useState<string | null>(null);
@@ -107,6 +108,10 @@ export default function Menu() {
     saveOrder(order);
   };
 
+  const handleAddClient = () => {
+   router.navigate("/clients");
+  }
+
   return (
     <View>
       <ScrollView className="container mx-auto p-5" contentContainerStyle={{ paddingBottom: 150 }}>
@@ -180,6 +185,14 @@ export default function Menu() {
         {/* Orden */}
         {order.length > 0 ? (
           <View className="mt-5 border-t border-t-gray-400 pt-2">
+            <View className="flex-row justify-between">
+              <Text className="text-lg font-semibold tracking-wide">Cliente Generico</Text>
+              <TouchableOpacity className="p-2 rounded-md flex-row items-center gap-2" onPress={() => handleAddClient()}>
+                <Text  className="text-sm font-semibold tracking-wide text-blue-600">Agregar</Text>
+                <AntDesign name="plus" color="#2563eb"/>
+              </TouchableOpacity>
+            </View>
+
             <Text className="text-2xl font-semibold tracking-wide py-5">Orden:</Text>
             {order.map((item) => (
               <View key={item.name} style={styles.orderItem}>

@@ -103,7 +103,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const decodedToken: { exp: number } = jwtDecode(token);
       const currentTime = Math.floor(Date.now() / 1000); // Tiempo actual en segundos
-  
+      console.log(currentTime)
       if (decodedToken.exp < currentTime) {
         console.log("El token ha expirado.");
         await logOut(); // Hacer logout

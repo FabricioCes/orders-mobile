@@ -27,6 +27,13 @@ export default function RootLayout() {
           headerTintColor:"#60A5FA",       
         }}
         />
+        <Stack.Screen name="clients" options={{
+          presentation: 'modal',
+          title: "Agregar Cliente",
+          headerStyle: { backgroundColor: "#F3F4F6" },
+          headerTintColor:"#60A5FA",       
+        }}
+        />
       </Stack>
     </Providers>
   );

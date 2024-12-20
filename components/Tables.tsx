@@ -57,9 +57,6 @@ export default function Tables({ qty, place }: Table) {
 
   return (
     <View className="container p-5">
-      <View>
-        <Text className="text-center font-bold text-2xl">Mesas en {place}</Text>
-      </View>
       {/* ScrollView para desplazamiento */}
       <ScrollView contentContainerStyle={{ paddingVertical: 10 }} showsVerticalScrollIndicator={false}>
         {rows.map((row, rowIndex) => (

@@ -27,7 +27,6 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Función para obtener mesas activas
   const getActiveTables = async () => {
     const url = `http://${settings}:5001/orden/activa`
-    console.log(url)
     try {
       const response = await fetch(url, {
         method: "GET",
@@ -37,11 +36,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         },
       });
 
-      console.log(JSON.stringify(response, null, 2));
-
-      // Validar si la respuesta tiene contenido
       if (!response.ok) {
-        console.error(`Error: ${response.status} - ${response.statusText}`);
         return;
       }
 
@@ -51,9 +46,6 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setActiveTables([]); // Devolver un array vacío si no hay datos
         return;
       }
-
-
-
       const data = JSON.parse(text); // Parsear a JSON
       setActiveTables(data.resultado || []); // Establecer mesas activas
     } catch (error) {
