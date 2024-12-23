@@ -1,5 +1,7 @@
+import { useSettings } from '@/context/SettingsContext';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
+import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 
 export default function TabLayout() {
@@ -7,6 +9,13 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   const isDarkMode = colorScheme === "dark";
+
+  const {checkTokenExpiration} = useSettings()
+
+  useEffect(() => {
+    checkTokenExpiration();
+  },[])
+
   return (
     <Tabs screenOptions={{
       tabBarActiveTintColor: '#60A5FACC',

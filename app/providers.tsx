@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native'
 import { OrderProvider } from '@/context/OrderContext'
 import { ProductsProvider } from '@/context/ProductsContext'
 import { TableProvider } from '@/context/TablesContext'
+import { ClientsProvider } from '@/context/ClientsContext'
 
 export default function Providers({ children }: { children: React.ReactNode }) {
     return (
@@ -12,7 +13,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             <ProductsProvider>
                 <TableProvider>
                     <OrderProvider>
-                        {children}
+                        <ClientsProvider>
+                            {children}
+                        </ClientsProvider>
                     </OrderProvider>
                 </TableProvider>
             </ProductsProvider>

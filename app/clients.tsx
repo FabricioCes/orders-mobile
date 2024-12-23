@@ -1,7 +1,11 @@
 import { View, Text, TextInput, FlatList, TouchableOpacity } from 'react-native'
 import React from 'react'
+import { useClients } from '@/context/ClientsContext';
+
 
 export default function Clients() {
+ 
+  const {clients} = useClients();
 
   const data = [
     { i: 1, id: "0-1234-5678", name: "Devin Morales" },

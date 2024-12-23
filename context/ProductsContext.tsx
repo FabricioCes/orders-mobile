@@ -44,7 +44,6 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                     "Authorization": `Bearer ${token}`,
                 },
             });
-
             const data = await response.json();
             setProducts(data.resultado || []); // Asegurarse de no setear 'null'
         } catch (error) {

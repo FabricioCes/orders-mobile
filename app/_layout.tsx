@@ -7,7 +7,6 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   const isDarkMode = colorScheme === "dark";
-
   return (
     <Providers>
       <Stack

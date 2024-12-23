@@ -12,6 +12,7 @@ interface SettingsContextType {
   hasUser: boolean;
   userName: string;
   token: string;
+  checkTokenExpiration: () => void;
 }
 
 // Crea el contexto
@@ -107,19 +108,19 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (decodedToken.exp < currentTime) {
         console.log("El token ha expirado.");
         await logOut(); // Hacer logout
-        router.replace("/login"); // Redirigir al login
+        router.navigate("/login"); // Redirigir al login
       }else{
         console.log("Token alive.")
       }
     } catch (error) {
       console.error("Error al decodificar el token:", error);
       await logOut();
-      router.replace("/login");
+      router.navigate("/login");
     }
   };
 
   return (
-    <SettingsContext.Provider value={{ settings, saveSettings, login, hasUser, userName, logOut, token }}>
+    <SettingsContext.Provider value={{ settings, saveSettings, login, hasUser, userName, logOut, token, checkTokenExpiration }}>
       {children}
     </SettingsContext.Provider>
   );

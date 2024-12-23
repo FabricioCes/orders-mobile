@@ -9,7 +9,7 @@ import { useTable } from '@/context/TablesContext';
 
 export default function Tables({ qty, place }: Table) {
   const { width } = useWindowDimensions();
-  const { hasUser } = useSettings();
+  const { hasUser, checkTokenExpiration } = useSettings();
   const { activeTables, getActiveTables } = useTable(); // Obtener mesas activas del contexto
 
   const isTablet = width >= 768;
@@ -28,7 +28,9 @@ export default function Tables({ qty, place }: Table) {
   }, []);
 
   const handlePress = (tableId: number) => {
+    
     if (hasUser) {
+      checkTokenExpiration();
       router.navigate({
         pathname: '/Order',
         params: { tableId: tableId, place: place },

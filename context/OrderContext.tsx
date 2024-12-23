@@ -30,11 +30,6 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
         );
     }
 
-    async function checkTables (){
-
-        //this function checks if there is any table with an order
-
-    }
 
     return <OrderContext.Provider value={{ saveOrder }}>
         {children}
