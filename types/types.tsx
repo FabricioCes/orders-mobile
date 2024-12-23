@@ -18,3 +18,16 @@ export type Product = {
     subSubCategoria: string;
     quantity: number;
   };
+
+
+export type Client = {
+    id: number;
+    name: string;
+    ced: string;
+    priceType: string;
+    tel: string;
+    tel2: string;
+    email: string;
+    email2: string;
+    address: string;
+}
