@@ -49,7 +49,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const data = JSON.parse(text); // Parsear a JSON
       setActiveTables(data.resultado || []); // Establecer mesas activas
     } catch (error) {
-      console.error("Error al obtener mesas activas:", error);
+      //console.error("Error al obtener mesas activas:", error);
       setActiveTables([]); // Fallback para evitar errores
     }
   };

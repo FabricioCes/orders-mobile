@@ -1,14 +1,21 @@
 import { View, Text, TextInput, FlatList, TouchableOpacity } from 'react-native'
 import React from 'react'
 import { useClients } from '@/context/ClientsContext';
+import { Client } from '@/types/types';
+import { router } from 'expo-router';
 
 
 export default function Clients() {
  
-  const {clients} = useClients();
+  const {clients, addClient} = useClients();
 
   function isPar(n: number){
     return n % 2 === 0;
+  }
+
+  const handleSelectedClient = (client: Client) => {
+    addClient(client);
+    router.back();
   }
 
   return (
@@ -20,7 +27,7 @@ export default function Clients() {
       className='self-start p-6'
         data={clients}
         renderItem={({item}) =>
-        <TouchableOpacity className={`p-2  w-[320px] mb-3 rounded-md ${isPar(item.id) ? "bg-gray-300" : "bg-gray-200"}`}>
+        <TouchableOpacity className={`p-2  w-[320px] mb-3 rounded-md ${isPar(item.id) ? "bg-gray-300" : "bg-gray-200"}`} onPress={() => handleSelectedClient(item)}>
           <Text className='text-lg font-semibold text-gray-700'>{item.name}</Text>
         </TouchableOpacity>
         }

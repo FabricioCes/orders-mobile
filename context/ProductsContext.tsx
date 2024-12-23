@@ -47,7 +47,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const data = await response.json();
             setProducts(data.resultado || []); // Asegurarse de no setear 'null'
         } catch (error) {
-            console.error("Error al obtener productos:", error);
+            //console.error("Error al obtener productos:", error);
             setProducts([]); // Fallback a array vacío en caso de error
         }
     };

@@ -4,6 +4,9 @@ import { Client } from "@/types/types";
 
 interface ClientsContextType {
     clients: Client[]; // Cambiado a un array de `Client`
+    addClient: (client: Client) => void;
+    selectedClient: Client | undefined;
+    clearClient: () => void;
 }
 
 const ClientsContext = createContext<ClientsContextType | undefined>(undefined);
@@ -11,6 +14,7 @@ const ClientsContext = createContext<ClientsContextType | undefined>(undefined);
 export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [clients, setClients] = useState<Client[]>([]); // Inicialización con el tipo correcto
     const { settings, token } = useSettings();
+    const [selectedClient, setSelectedClient] = useState<Client | undefined>(undefined);
 
     const getClients = async () => {
         const url = `http://${settings}:5001/cliente?pagina=1&tamanoPagina=100`;
@@ -44,7 +48,6 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
                     address: client.direccion.trim() || "",
                 }));
                 setClients(mappedClients);
-                console.log("Clientes mapeados:", JSON.stringify(mappedClients, null, 2));
             } else {
                 setClients([]); // Fallback a un array vacío si no hay resultados
             }
@@ -54,6 +57,14 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
     };
 
+    const addClient = (client: Client) =>{
+        setSelectedClient(client);
+    }
+
+    const clearClient = () =>{
+        setSelectedClient(undefined);
+    }
+
     useEffect(() => {
         if (token && settings) {
             getClients();
@@ -61,7 +72,7 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }, [token, settings]);
 
     return (
-        <ClientsContext.Provider value={{ clients }}>
+        <ClientsContext.Provider value={{ clients, addClient, selectedClient, clearClient }}>
             {children}
         </ClientsContext.Provider>
     );

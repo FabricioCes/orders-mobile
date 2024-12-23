@@ -13,6 +13,7 @@ import { Product } from "@/types/types";
 import { useOrder } from "@/context/OrderContext";
 import { useProducts } from "@/context/ProductsContext"; // Importa el contexto de productos
 import { router } from "expo-router";
+import { useClients } from "@/context/ClientsContext";
 
 export default function Menu() {
   const [expandedSubCategory, setExpandedSubCategory] = useState<string | null>(null);
@@ -21,6 +22,7 @@ export default function Menu() {
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   const { saveOrder } = useOrder();
+  const {selectedClient, clearClient} = useClients();
   const { orderedProducts } = useProducts(); // Obtener productos ordenados desde el contexto
 
   // Normalizar texto para la búsqueda
@@ -106,10 +108,11 @@ export default function Menu() {
 
   const handleSaveOrder = () => {
     saveOrder(order);
+    clearClient();
   };
 
   const handleAddClient = () => {
-   router.navigate("/clients");
+    router.navigate("/clients");
   }
 
   return (
@@ -186,10 +189,10 @@ export default function Menu() {
         {order.length > 0 ? (
           <View className="mt-5 border-t border-t-gray-400 pt-2">
             <View className="flex-row justify-between">
-              <Text className="text-lg font-semibold tracking-wide">Cliente Generico</Text>
+              <Text className="text-lg font-semibold tracking-wide">{selectedClient ? selectedClient.name : "Client Generico"}</Text>
               <TouchableOpacity className="p-2 rounded-md flex-row items-center gap-2" onPress={() => handleAddClient()}>
-                <Text  className="text-sm font-semibold tracking-wide text-blue-600">Agregar</Text>
-                <AntDesign name="plus" color="#2563eb"/>
+                <Text className="text-sm font-semibold tracking-wide text-blue-600">{selectedClient ? "Cambiar" : "Agregar"}</Text>
+                <AntDesign name="plus" color="#2563eb" />
               </TouchableOpacity>
             </View>
 
@@ -203,8 +206,13 @@ export default function Menu() {
                 <TextInput
                   className="border border-gray-400 px-5 text-center mr-2 h-full rounded-lg"
                   keyboardType="numeric"
-                  defaultValue={String(item.quantity)} // Usar 'value' en lugar de defaultValue
-                  onChangeText={(text) => updateQuantity(item.id, parseInt(text) || 1)}
+                  defaultValue={String(item.quantity)} // Usar 'value' para sincronización
+                  onChangeText={(text) => {
+                    if (/^\d*$/.test(text)) { // Solo permitir números o vacío
+                      const newQuantity = text === "" ? "" : parseInt(text, 10);
+                      updateQuantity(item.id, newQuantity || 0);
+                    }
+                  }}
                 />
                 <TouchableOpacity
                   className="bg-red-500 p-3 rounded-md flex-row items-center"

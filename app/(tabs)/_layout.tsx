@@ -1,8 +1,8 @@
 import { useSettings } from '@/context/SettingsContext';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Tabs } from 'expo-router';
+import { router, Tabs } from 'expo-router';
 import { useEffect } from 'react';
-import { useColorScheme } from 'react-native';
+import { Alert, useColorScheme } from 'react-native';
 
 export default function TabLayout() {
 
@@ -10,10 +10,26 @@ export default function TabLayout() {
 
   const isDarkMode = colorScheme === "dark";
 
-  const {checkTokenExpiration} = useSettings()
+  const {checkTokenExpiration, settings} = useSettings()
 
   useEffect(() => {
+    
     checkTokenExpiration();
+    if(settings.length < 0){
+       Alert.alert(
+              "Oops! 🤚🏼",
+              "No has configurado la ip del Servidor 🚫",
+              [
+                {
+                  text: "Aceptar",
+                  onPress: () => {
+                    router.navigate("/(tabs)/settings");
+                  },
+                },
+              ],
+              { cancelable: false }
+            );
+    }
   },[])
 
   return (
