@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "orders-agil",
+    "name": "Ordenes Sistemas Ágil",
     "slug": "orders-agil",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,13 +9,18 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fcespedes.ordersagil"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "INTERNET"
+      ],
+      "package": "com.fcespedes.ordersagil"
     },
     "web": {
       "bundler": "metro",
@@ -36,6 +41,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "d8f68f69-e244-4dd3-bc09-89f768f65175"
+      }
     }
   }
 }
