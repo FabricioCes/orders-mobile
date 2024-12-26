@@ -23,8 +23,6 @@ export default function Tab() {
 
   return (
     <View className="flex-1 bg-gray-100 items-center p-5">
-      <Text className="text-2xl font-bold text-blue-600 mb-5">Configuración</Text>
-
       <View className="w-full p-4 bg-white shadow-md rounded-lg mb-10">
         <Text className="text-lg font-semibold text-gray-700">ID Computadora</Text>
         <TextInput

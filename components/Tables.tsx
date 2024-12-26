@@ -9,7 +9,7 @@ import { useTable } from '@/context/TablesContext';
 
 export default function Tables({ qty, place }: Table) {
   const { width } = useWindowDimensions();
-  const { hasUser, checkTokenExpiration } = useSettings();
+  const { hasUser, checkTokenExpiration, settings } = useSettings();
   const { activeTables, getActiveTables } = useTable(); // Obtener mesas activas del contexto
 
   const isTablet = width >= 768;
@@ -35,6 +35,20 @@ export default function Tables({ qty, place }: Table) {
         pathname: '/Order',
         params: { tableId: tableId, place: place },
       });
+    }else if(!settings){
+      Alert.alert(
+        "Oops! 🤚🏼",
+        "Debes configurar la IP",
+        [
+          {
+            text: "Aceptar",
+            onPress: () => {
+              router.navigate("/settings");
+            },
+          },
+        ],
+        { cancelable: false }
+      );
     } else {
       Alert.alert(
         "Oops! 🤚🏼",

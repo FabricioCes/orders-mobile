@@ -52,7 +52,7 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 setClients([]); // Fallback a un array vacío si no hay resultados
             }
         } catch (error) {
-            console.error("Error al obtener clientes:", error);
+            //console.error("Error al obtener clientes:", error);
             setClients([]); // Fallback a un array vacío en caso de error
         }
     };

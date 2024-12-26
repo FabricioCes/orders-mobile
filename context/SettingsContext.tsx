@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import {jwtDecode} from "jwt-decode";
+import { Alert } from "react-native";
 
 // Define la interfaz del contexto
 interface SettingsContextType {
@@ -46,7 +47,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       });
   
       const data = await response.json();
-  
+      if(!response.ok){
+        Alert.alert(`No se pudo conectar con la base de datos: ${JSON.stringify(response)}`)
+      }
       if (response.ok && data.resultado) {
         await AsyncStorage.setItem("token", data.resultado);
         await AsyncStorage.setItem("hasUser", "true");
@@ -56,10 +59,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setUserName(username);
         return true; // Login exitoso
       } else {
+        Alert.alert("Error iniciando sesión")
         return false; // Login fallido
       }
     } catch (error) {
-      console.error("Error al iniciar sesión:", error);
+      
       return false; // Error de red o servidor
     }
   };
