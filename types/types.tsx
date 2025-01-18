@@ -17,8 +17,7 @@ export type Product = {
     idSubSubCategoria: number;
     subSubCategoria: string;
     quantity: number;
-  };
-
+};
 
 export type Client = {
     id: number;
@@ -30,4 +29,27 @@ export type Client = {
     email: string;
     email2: string;
     address: string;
+}
+
+export type Order = {
+    numeroOrden: number;
+    numeroLugar: string;
+    ubicacion: string;
+    observaciones: string;
+    nombreCliente: string;
+    idCliente: number;
+    idUsuario: string;
+    autorizado: boolean;
+    totalSinDescuento: number;
+    detalles: OrderDetail[];
+}
+
+export type OrderDetail = {
+    idProducto: number;
+    nombreProducto: string;
+    cantidad: number;
+    precio: number;
+    porcentajeDescProducto: number;
+    ingrediente: boolean;
+    quitarIngrediente: boolean;
 }

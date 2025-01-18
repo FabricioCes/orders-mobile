@@ -27,15 +27,15 @@ export default function Tables({ qty, place }: Table) {
     getActiveTables();
   }, []);
 
-  const handlePress = (tableId: number) => {
-    
+  const handlePress = (tableId: number, isActive: boolean) => {
+
     if (hasUser) {
       checkTokenExpiration();
       router.navigate({
         pathname: '/Order',
-        params: { tableId: tableId, place: place },
+        params: { tableId: tableId, place: place, isActive: isActive.toString() },
       });
-    }else if(!settings){
+    } else if (!settings) {
       Alert.alert(
         "Oops! 🤚🏼",
         "Debes configurar la IP",
@@ -72,7 +72,7 @@ export default function Tables({ qty, place }: Table) {
   };
 
   return (
-    <View className="container p-5">
+    <View className="container p-5 flex-row items-center justify-center">
       {/* ScrollView para desplazamiento */}
       <ScrollView contentContainerStyle={{ paddingVertical: 10 }} showsVerticalScrollIndicator={false}>
         {rows.map((row, rowIndex) => (
@@ -80,10 +80,9 @@ export default function Tables({ qty, place }: Table) {
             {row.map((table) => (
               <TouchableOpacity
                 key={table}
-                onPress={() => handlePress(table)}
-                className={`p-4 rounded-lg flex justify-center items-center w-24 h-24 mx-2 ${
-                  isTableActive(table) ? "bg-red-400/80" : "bg-blue-400/80"
-                }`}
+                onPress={() => handlePress(table, isTableActive(table))}
+                className={`p-4 rounded-lg flex justify-center items-center w-24 h-24 mx-2 ${isTableActive(table) ? "bg-red-400/80" : "bg-blue-400/80"
+                  }`}
               >
                 <FontAwesome5
                   name="chair"
@@ -91,9 +90,8 @@ export default function Tables({ qty, place }: Table) {
                   size={24}
                 />
                 <Text
-                  className={`text-center font-medium mt-2 ${
-                    isTableActive(table) ? "text-red-700" : "text-white"
-                  }`}
+                  className={`text-center font-medium mt-2 ${isTableActive(table) ? "text-red-700" : "text-white"
+                    }`}
                 >
                   Mesa {table}
                 </Text>

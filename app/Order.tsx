@@ -5,12 +5,12 @@ import { useLocalSearchParams } from 'expo-router';
 
 export default function Order() {
 
-  const {tableId, place} = useLocalSearchParams();
-
+  const { tableId, place, isActive } = useLocalSearchParams();
+  const isActiveBoolean = isActive === "true";
   return (
     <View>
       <Text className='text-xl text-center p-5'>{`Mesa ${tableId}, ${place}`}</Text>
-      <Menu />
+      <Menu tableId={Number(tableId)} place={String(place)} isActive={isActiveBoolean} />
     </View>
   );
 }

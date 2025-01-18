@@ -29,7 +29,6 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
             });
 
             if (!response.ok) {
-                console.error(`Error: ${response.status} - ${response.statusText}`);
                 return;
             }
 

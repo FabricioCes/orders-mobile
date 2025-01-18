@@ -37,7 +37,7 @@ export default function Clients() {
       />
 
       <FlatList
-        className="self-start p-6"
+        className="p-6"
         data={filteredClients}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (

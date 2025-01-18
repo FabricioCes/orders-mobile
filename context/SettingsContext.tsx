@@ -25,6 +25,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [hasUser, setHasUser] = useState<boolean>(false);
   const [userName, setUserName] = useState<string>("");
   const [token, setToken] = useState<string>("");
+  
   // Función para guardar configuraciones
   const saveSettings = async (value: string) => {
     try {
