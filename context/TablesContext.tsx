@@ -16,6 +16,7 @@ interface ActiveTable {
   cronometroOrden: string;
   ordenImpresa: boolean;
   tiempoLimiteCronometro: string;
+  totalConDescuento: number;
 }
 
 const TableContext = createContext<TableContextType | undefined>(undefined);

@@ -42,6 +42,7 @@ export type Order = {
     autorizado: boolean;
     totalSinDescuento: number;
     detalles: OrderDetail[];
+    listaEliminacion: [number] | null;
 }
 
 export type OrderDetail = {

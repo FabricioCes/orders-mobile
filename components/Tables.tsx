@@ -6,11 +6,12 @@ import { router } from 'expo-router';
 import { useSettings } from '@/context/SettingsContext';
 import { useTable } from '@/context/TablesContext';
 
-
 export default function Tables({ qty, place }: Table) {
   const { width } = useWindowDimensions();
   const { hasUser, checkTokenExpiration, settings } = useSettings();
   const { activeTables, getActiveTables } = useTable(); // Obtener mesas activas del contexto
+  const [orderId, setOrderId] = useState<number>(0);
+  const [totalOrder, setTotalOrder] = useState<number>(0);
 
   const isTablet = width >= 768;
   const columns = isTablet ? 9 : 3;
@@ -28,39 +29,58 @@ export default function Tables({ qty, place }: Table) {
   }, []);
 
   const handlePress = (tableId: number, isActive: boolean) => {
+    console.log(`Table ID: ${tableId}, Place: ${place}, IsActive: ${isActive}`);
+
+    let currentOrderId = 0;
+    let currentTotalOrder = 0;
+
+    if (isActive) {
+      // Encuentra la mesa activa correspondiente
+      const activeTable = activeTables.find(
+        (table) => table.numeroMesa === tableId && table.zona === place.toUpperCase()
+      );
+
+      if (activeTable) {
+        currentOrderId = activeTable.identificador || 0;
+        currentTotalOrder = activeTable.totalConDescuento || 0;
+
+        // Establece el identificador de la orden y el total localmente
+        setOrderId(currentOrderId);
+        setTotalOrder(currentTotalOrder);
+      } else {
+        console.warn("No se encontró una mesa activa con los parámetros dados.");
+        currentOrderId = 0;
+        currentTotalOrder = 0;
+      }
+    } else {
+      setOrderId(0);
+      setTotalOrder(0);
+    }
 
     if (hasUser) {
       checkTokenExpiration();
       router.navigate({
         pathname: '/Order',
-        params: { tableId: tableId, place: place, isActive: isActive.toString() },
+        params: {
+          tableId: tableId,
+          place: place,
+          isActive: isActive.toString(),
+          orderId: currentOrderId, // Usa la variable local
+          totalOrder: currentTotalOrder, // Usa la variable local
+        },
       });
     } else if (!settings) {
       Alert.alert(
         "Oops! 🤚🏼",
         "Debes configurar la IP",
-        [
-          {
-            text: "Aceptar",
-            onPress: () => {
-              router.navigate("/settings");
-            },
-          },
-        ],
+        [{ text: "Aceptar", onPress: () => router.navigate("/settings") }],
         { cancelable: false }
       );
     } else {
       Alert.alert(
         "Oops! 🤚🏼",
         "Debes Iniciar Sesión 👤",
-        [
-          {
-            text: "Aceptar",
-            onPress: () => {
-              router.navigate("/login");
-            },
-          },
-        ],
+        [{ text: "Aceptar", onPress: () => router.navigate("/login") }],
         { cancelable: false }
       );
     }

@@ -5,8 +5,10 @@ import { useLocalSearchParams } from 'expo-router';
 
 export default function Order() {
 
-  const { tableId, place, isActive } = useLocalSearchParams();
+  const { tableId, place, isActive, orderId, totalOrder } = useLocalSearchParams();
   const isActiveBoolean = isActive === "true";
+  console.log(orderId)
+  console.log(totalOrder)
   return (
     <View>
       <Text className='text-xl text-center p-5'>{`Mesa ${tableId}, ${place}`}</Text>

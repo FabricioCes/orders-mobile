@@ -24,7 +24,9 @@ type Props = {
   place: string;
   isActive: boolean;
 }
+
 export default function Menu({ tableId, place, isActive }: Props) {
+
   const [expandedSubCategory, setExpandedSubCategory] = useState<string | null>(null);
   const [expandedSubSubCategory, setExpandedSubSubCategory] = useState<string | null>(null);
   const { saveOrder } = useOrder();
@@ -43,6 +45,7 @@ export default function Menu({ tableId, place, isActive }: Props) {
     autorizado: true,
     totalSinDescuento: 0,
     detalles: [],
+    listaEliminacion:[0]
   });
   const [orderDetails, setOrderDetails] = useState<OrderDetail[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");

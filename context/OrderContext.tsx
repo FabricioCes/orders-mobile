@@ -31,7 +31,8 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
             })
             //console.log(JSON.stringify(order, null, 2))
 
-            console.log(res.status);
+            console.log(res);
+
             if (res.status === 200) {
                 getActiveTables();
                 showOrder(true);
