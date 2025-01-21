@@ -89,19 +89,20 @@ export default function Menu({ tableId, place, isActive, orderId, totalOrder }: 
   }, [searchQuery]);
 
   //revisar si la orden está activa
-
   useEffect(() => {
     const fetchOrderDetails = async () => {
-      if(isActive){
-        getOrderDetails(orderId);
-        if(apiOrderDetails.length > 0){
-          setOrderDetails(apiOrderDetails);
+      if (isActive) {
+        await getOrderDetails(orderId); // Esperar a que se obtengan los detalles de la orden
+        if (apiOrderDetails.length > 0) {
+          setOrderDetails(apiOrderDetails); // Actualizar el estado de los detalles de la orden
+        } else {
+          console.log("No se encontraron detalles para la orden activa.");
         }
       }
-    }
-    
+    };
+  
     fetchOrderDetails();
-  },[isActive])
+  }, [isActive, orderId, apiOrderDetails]);
 
 
   //actualizar cliente de la orden

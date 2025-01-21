@@ -29,7 +29,6 @@ export default function Tables({ qty, place }: Table) {
   }, []);
 
   const handlePress = (tableId: number, isActive: boolean) => {
-    console.log(`Table ID: ${tableId}, Place: ${place}, IsActive: ${isActive}`);
 
     let currentOrderId = 0;
     let currentTotalOrder = 0;

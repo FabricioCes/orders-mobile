@@ -113,6 +113,7 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
 
     async function getOrderDetails(orderId: number) {
         const url = `http://${settings}:5001/orden/${orderId}/detalle`;
+
         try {
             const res = await fetch(url, {
                 method: "GET",
