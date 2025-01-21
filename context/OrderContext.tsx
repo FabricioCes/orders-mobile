@@ -1,13 +1,25 @@
-import { Order, Product } from "@/types/types";
+import { Order, OrderDetail } from "@/types/types";
 import { router } from "expo-router";
-import { createContext, useContext } from "react";
+import { createContext, useContext, useState } from "react";
 import { Alert } from "react-native";
 import { useSettings } from "./SettingsContext";
 import { useTable } from "./TablesContext";
 
 interface OrderContextType {
     saveOrder: (order: Order) => void;
+    getOrderDetails: (orderId: number) => void;
+    apiOrderDetails: OrderDetail[];
 }
+
+type APIOrderDetail = {
+    identificadorProducto: number;
+    nombreProducto: string;
+    cantidad: number;
+    costoUnitario: number;
+    porcentajeDescuento: number;
+    ingrediente: boolean;
+    impuestoProducto: number;
+};
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
@@ -36,7 +48,7 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
             if (res.status === 200) {
                 getActiveTables();
                 showOrder(true);
-            }else if(res.status === 409){
+            } else if (res.status === 409) {
                 Alert.alert(
                     "Error 🚫",
                     "Mesa ocupada, debe actualizar la orden.",
@@ -44,7 +56,7 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
                         {
                             text: "Aceptar",
                             onPress: () => {
-                                
+
                                 return;
                             },
                         },
@@ -52,7 +64,7 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
                     { cancelable: false }
                 );
             }
-            else{
+            else {
                 showOrder(false);
             }
             console.log(JSON.stringify(order, null, 2))
@@ -95,11 +107,51 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
                 { cancelable: false }
             );
         }
-
-
     }
 
-    return <OrderContext.Provider value={{ saveOrder }}>
+    const [apiOrderDetails, setApiOrderDetails] = useState<OrderDetail[]>([]);
+
+    async function getOrderDetails(orderId: number) {
+        const url = `http://${settings}:5001/orden/${orderId}/detalle`;
+        try {
+            const res = await fetch(url, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!res.ok) {
+                console.error("Error fetching order details:", res.statusText);
+                return;
+            }
+
+            const data = await res.json();
+
+            if (data.resultado && Array.isArray(data.resultado)) {
+                const details: OrderDetail[] = (data.resultado as APIOrderDetail[]).map((item) => ({
+                    idProducto: item.identificadorProducto,
+                    nombreProducto: item.nombreProducto,
+                    cantidad: item.cantidad,
+                    precio: (item.costoUnitario + item.impuestoProducto),
+                    porcentajeDescProducto: item.porcentajeDescuento,
+                    ingrediente: item.ingrediente,
+                    quitarIngrediente: false,
+                }));
+
+                setApiOrderDetails(details);
+            } else {
+                console.warn("Unexpected response format:", data);
+                setApiOrderDetails([]);
+            }
+        } catch (error) {
+            console.error("Error fetching order details:", error);
+            setApiOrderDetails([]);
+        }
+    }
+
+    return <OrderContext.Provider value={{ saveOrder, getOrderDetails, apiOrderDetails }}>
         {children}
     </OrderContext.Provider>
 }

@@ -23,13 +23,15 @@ type Props = {
   tableId: number;
   place: string;
   isActive: boolean;
+  orderId: number;
+  totalOrder: number;
 }
 
-export default function Menu({ tableId, place, isActive }: Props) {
+export default function Menu({ tableId, place, isActive, orderId, totalOrder }: Props) {
 
   const [expandedSubCategory, setExpandedSubCategory] = useState<string | null>(null);
   const [expandedSubSubCategory, setExpandedSubSubCategory] = useState<string | null>(null);
-  const { saveOrder } = useOrder();
+  const { saveOrder, getOrderDetails, apiOrderDetails } = useOrder();
   const { selectedClient, clearClient } = useClients();
   const { orderedProducts } = useProducts();
   const { userName } = useSettings();
@@ -85,6 +87,22 @@ export default function Menu({ tableId, place, isActive }: Props) {
       }
     }
   }, [searchQuery]);
+
+  //revisar si la orden está activa
+
+  useEffect(() => {
+    const fetchOrderDetails = async () => {
+      if(isActive){
+        getOrderDetails(orderId);
+        if(apiOrderDetails.length > 0){
+          setOrderDetails(apiOrderDetails);
+        }
+      }
+    }
+    
+    fetchOrderDetails();
+  },[isActive])
+
 
   //actualizar cliente de la orden
 
@@ -299,7 +317,7 @@ export default function Menu({ tableId, place, isActive }: Props) {
                 <View key={item.idProducto} style={styles.orderItem}>
                   <View style={styles.orderDetails}>
                     <Text>{item.nombreProducto}</Text>
-                    <Text>{`₡${item.precio}`}</Text>
+                    <Text>{`₡${item.precio.toFixed()}`}</Text>
                   </View>
                   <TextInput
                     className="border border-gray-400 px-5 text-center mr-2 h-full rounded-lg"
@@ -326,7 +344,7 @@ export default function Menu({ tableId, place, isActive }: Props) {
               ))}
 
               <View className="container my-4">
-                <Text className="text-2xl font-bold">Total: ₡{order.totalSinDescuento}</Text>
+                <Text className="text-2xl font-bold">Total: ₡{order.totalSinDescuento.toFixed()}</Text>
               </View>
               <View className="mt-5 items-center">
                 <TouchableOpacity
