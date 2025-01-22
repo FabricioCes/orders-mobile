@@ -31,7 +31,7 @@ export default function Menu({ tableId, place, isActive, orderId, totalOrder }: 
 
   const [expandedSubCategory, setExpandedSubCategory] = useState<string | null>(null);
   const [expandedSubSubCategory, setExpandedSubSubCategory] = useState<string | null>(null);
-  const { saveOrder, getOrderDetails, apiOrderDetails } = useOrder();
+  const { saveOrder, getOrderDetails, apiOrderDetails, deleteOrderDetail } = useOrder();
   const { selectedClient, clearClient } = useClients();
   const { orderedProducts } = useProducts();
   const { userName } = useSettings();
@@ -134,6 +134,7 @@ export default function Menu({ tableId, place, isActive, orderId, totalOrder }: 
       }
 
       const newDetail: OrderDetail = {
+        identificadorOrdenDetalle: 0,
         idProducto: product.id,
         nombreProducto: product.name,
         cantidad: 1,
@@ -146,9 +147,34 @@ export default function Menu({ tableId, place, isActive, orderId, totalOrder }: 
       return [...prevDetails, newDetail];
     });
   };
+
   // Eliminar producto de la orden
-  const removeFromOrder = (productId: number) => {
-    setOrderDetails((prevDetails) => prevDetails.filter((detail) => detail.idProducto !== productId));
+  const removeFromOrder = async (productId: number, detailId: number) => {
+    Alert.alert(
+      "Confirmación",
+      "¿Estás seguro de que deseas eliminar este detalle de la orden?",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            const success = await deleteOrderDetail(detailId);
+            if (success) {
+              setOrderDetails((prevDetails) =>
+                prevDetails.filter((detail) => detail.idProducto !== productId)
+              ); // Eliminar el detalle de la orden si se eliminó de la base de datos
+            } else {
+              console.log("Error al eliminar el detalle de la orden");
+            }
+          },
+        },
+      ],
+      { cancelable: false }
+    );
   };
 
   useEffect(() => {
@@ -342,7 +368,7 @@ export default function Menu({ tableId, place, isActive, orderId, totalOrder }: 
                   />
                   <TouchableOpacity
                     className="bg-red-500 p-3 rounded-md flex-row items-center"
-                    onPress={() => removeFromOrder(item.idProducto)}
+                    onPress={() => removeFromOrder(item.idProducto, item.identificadorOrdenDetalle)}
                   >
                     <Text className="text-white font-bold">Eliminar</Text>
                     <EvilIcons name="trash" size={25} color="white" />

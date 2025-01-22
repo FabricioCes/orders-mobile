@@ -46,6 +46,7 @@ export type Order = {
 }
 
 export type OrderDetail = {
+    identificadorOrdenDetalle: number;
     idProducto: number;
     nombreProducto: string;
     cantidad: number;
