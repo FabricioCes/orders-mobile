@@ -6,7 +6,7 @@ import { useSettings } from "./SettingsContext";
 import { useTable } from "./TablesContext";
 
 interface OrderContextType {
-    saveOrder: (order: Order) => void;
+    saveOrder: (order: Order, method: string) => void;
     getOrderDetails: (orderId: number) => void;
     apiOrderDetails: OrderDetail[];
 }
@@ -28,13 +28,14 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
     const { settings, token } = useSettings();
     const { getActiveTables } = useTable();
 
-    async function saveOrder(order: Order) {
+    async function saveOrder(order: Order, method: string) {
 
         const url = `http://${settings}:5001/orden`
-
+        console.log(method)
+        console.log(JSON.stringify(order, null, 2))
         try {
             const res = await fetch(url, {
-                method: 'POST',
+                method: `${method}`,
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,

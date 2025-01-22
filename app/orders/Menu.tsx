@@ -37,7 +37,7 @@ export default function Menu({ tableId, place, isActive, orderId, totalOrder }: 
   const { userName } = useSettings();
 
   const [order, setOrder] = useState<Order>({
-    numeroOrden: 0,
+    numeroOrden: isActive ? orderId : 0,
     numeroLugar: tableId.toString(),
     ubicacion: place.toUpperCase(),
     observaciones: "",
@@ -45,9 +45,9 @@ export default function Menu({ tableId, place, isActive, orderId, totalOrder }: 
     idCliente: 0,
     idUsuario: userName,
     autorizado: true,
-    totalSinDescuento: 0,
+    totalSinDescuento: totalOrder | 0,
     detalles: [],
-    listaEliminacion:[0]
+    listaEliminacion: [0]
   });
   const [orderDetails, setOrderDetails] = useState<OrderDetail[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -92,17 +92,20 @@ export default function Menu({ tableId, place, isActive, orderId, totalOrder }: 
   useEffect(() => {
     const fetchOrderDetails = async () => {
       if (isActive) {
-        await getOrderDetails(orderId); // Esperar a que se obtengan los detalles de la orden
-        if (apiOrderDetails.length > 0) {
-          setOrderDetails(apiOrderDetails); // Actualizar el estado de los detalles de la orden
-        } else {
-          console.log("No se encontraron detalles para la orden activa.");
-        }
+        // Obtener detalles de la orden
+        await getOrderDetails(orderId); // Asegúrate de que actualiza apiOrderDetails en el contexto
       }
     };
-  
+
     fetchOrderDetails();
-  }, [isActive, orderId, apiOrderDetails]);
+  }, [isActive, orderId]); // Dependemos solo de isActive y orderId
+
+  // Escucha cambios en apiOrderDetails
+  useEffect(() => {
+    if (isActive && apiOrderDetails.length > 0) {
+      setOrderDetails(apiOrderDetails); // Actualizar el estado local si hay datos
+    }
+  }, [apiOrderDetails, isActive]);
 
 
   //actualizar cliente de la orden
@@ -169,7 +172,7 @@ export default function Menu({ tableId, place, isActive, orderId, totalOrder }: 
     setOrderDetails((prevDetails) =>
       prevDetails.map((detail) =>
         detail.idProducto === productId
-          ? { ...detail, cantidad: Math.max(0, quantity) }
+          ? { ...detail, cantidad: quantity } // Actualiza la cantidad del producto
           : detail
       )
     );
@@ -185,14 +188,18 @@ export default function Menu({ tableId, place, isActive, orderId, totalOrder }: 
       );
       return;
     }
-  
+
     // Si todo está bien, guarda la orden
     const completeOrder = {
       ...order,
       detalles: orderDetails,
     };
-  
-    saveOrder(completeOrder); // Llamar al contexto para guardar la orden
+
+    if (isActive) {
+      saveOrder(completeOrder, "PUT");
+    } else {
+      saveOrder(completeOrder, "POST");
+    }
     clearClient(); // Limpiar cliente seleccionado
   };
   const handleAddClient = () => {
@@ -212,7 +219,7 @@ export default function Menu({ tableId, place, isActive, orderId, totalOrder }: 
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView className="container mx-auto p-5"
-          contentContainerStyle={{ paddingBottom: 160}}
+          contentContainerStyle={{ paddingBottom: 160 }}
           keyboardShouldPersistTaps="handled"
           ref={scrollViewRef}
         >
@@ -323,9 +330,10 @@ export default function Menu({ tableId, place, isActive, orderId, totalOrder }: 
                   <TextInput
                     className="border border-gray-400 px-5 text-center mr-2 h-full rounded-lg"
                     keyboardType="numeric"
-                    defaultValue={String(item.cantidad)} //default value para que se pueda editar
+                    defaultValue={String(item.cantidad)}
+                    value={String(item.cantidad)}
                     onChangeText={(text) => {
-                      const newQuantity = text === "" ? 0 : parseInt(text, 10);
+                      const newQuantity = text === "" ? 0 : Math.max(0, parseInt(text, 10));
                       if (!isNaN(newQuantity)) {
                         updateQuantity(item.idProducto, newQuantity);
                       }
