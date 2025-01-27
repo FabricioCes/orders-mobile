@@ -43,7 +43,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
       <Text className="text-2xl font-semibold tracking-wide py-5">Orden:</Text>
       {orderDetails.map((item) => (
         <View key={item.idProducto} style={styles.orderItem}>
-          <View style={styles.orderDetails}>
+          <View className="flex-col">
             <Text>{item.nombreProducto}</Text>
             <Text>{`₡${item.precio.toFixed()}`}</Text>
           </View>
