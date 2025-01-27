@@ -1,4 +1,10 @@
-import { View, Text, TextInput, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 import React, { useState } from "react";
 import { useSettings } from "@/context/SettingsContext";
 import { router } from "expo-router";

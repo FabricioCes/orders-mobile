@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import { Alert } from "react-native";
 
 // Define la interfaz del contexto
@@ -17,15 +17,19 @@ interface SettingsContextType {
 }
 
 // Crea el contexto
-const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
+const SettingsContext = createContext<SettingsContextType | undefined>(
+  undefined
+);
 
 // Proveedor del contexto
-export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [settings, setSettings] = useState<string>("");
   const [hasUser, setHasUser] = useState<boolean>(false);
   const [userName, setUserName] = useState<string>("");
   const [token, setToken] = useState<string>("");
-  
+
   // Función para guardar configuraciones
   const saveSettings = async (value: string) => {
     try {
@@ -36,20 +40,30 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (
+    username: string,
+    password: string
+  ): Promise<boolean> => {
     try {
-      const response = await fetch(`http://${settings}:5001/autenticacion/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nombre: username,
-          clave: password,
-        }),
-      });
-  
+      const response = await fetch(
+        `http://${settings}:5001/autenticacion/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nombre: username,
+            clave: password,
+          }),
+        }
+      );
+
       const data = await response.json();
-      if(!response.ok){
-        Alert.alert(`No se pudo conectar con la base de datos: ${JSON.stringify(response)}`)
+      if (!response.ok) {
+        Alert.alert(
+          `No se pudo conectar con la base de datos: ${JSON.stringify(
+            response
+          )}`
+        );
       }
       if (response.ok && data.resultado) {
         await AsyncStorage.setItem("token", data.resultado);
@@ -60,11 +74,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setUserName(username);
         return true; // Login exitoso
       } else {
-        Alert.alert("Error iniciando sesión")
+        Alert.alert("Error iniciando sesión");
         return false; // Login fallido
       }
     } catch (error) {
-      
       return false; // Error de red o servidor
     }
   };
@@ -77,7 +90,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch (error) {
       console.error("Error al iniciar sesión:", error);
     }
-  }
+  };
 
   // Cargar el valor inicial desde AsyncStorage
   useEffect(() => {
@@ -87,7 +100,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const userStatus = await AsyncStorage.getItem("hasUser");
         const savedToken = await AsyncStorage.getItem("token");
         const savedUserName = await AsyncStorage.getItem("userName");
-  
+
         if (savedUserName) setUserName(savedUserName);
         if (storedValue) setSettings(storedValue);
         if (userStatus === "true") setHasUser(true);
@@ -99,13 +112,13 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         console.error("Error al cargar datos de AsyncStorage:", error);
       }
     };
-  
+
     loadSettings();
   }, []);
 
   const checkTokenExpiration = async () => {
     if (!token) return; // Si no hay token, salir de la función
-    
+
     try {
       const decodedToken: { exp: number } = jwtDecode(token);
       const currentTime = Math.floor(Date.now() / 1000); // Tiempo actual en segundos
@@ -121,7 +134,18 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   return (
-    <SettingsContext.Provider value={{ settings, saveSettings, login, hasUser, userName, logOut, token, checkTokenExpiration }}>
+    <SettingsContext.Provider
+      value={{
+        settings,
+        saveSettings,
+        login,
+        hasUser,
+        userName,
+        logOut,
+        token,
+        checkTokenExpiration,
+      }}
+    >
       {children}
     </SettingsContext.Provider>
   );

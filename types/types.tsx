@@ -12,12 +12,12 @@ export type Product = {
     id: number;
     name: string;
     price: number;
-    idSubCategoria: number;
-    subCategoria: string;
-    idSubSubCategoria: number;
-    subSubCategoria: string;
-    quantity: number;
-};
+    idSubCategoria?: number;
+    subCategoria?: string;
+    idSubSubCategoria?: number;
+    subSubCategoria?: string;
+    quantity?: number;
+  }
 
 export type Client = {
     id: number;
@@ -42,7 +42,6 @@ export type Order = {
     autorizado: boolean;
     totalSinDescuento: number;
     detalles: OrderDetail[];
-    listaEliminacion: [number] | null;
 }
 
 export type OrderDetail = {
