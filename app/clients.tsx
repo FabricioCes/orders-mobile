@@ -69,6 +69,16 @@ export default function ClientsScreen() {
         accessibilityLabel="Buscar clientes"
       />
 
+      <View style={styles.listContent}>
+        <TouchableOpacity
+          className={`${searchQuery.length <= 0 ? "hidden" : "block"}`}
+          style={styles.itemContainer}
+          accessibilityRole="button"
+        >
+          <Text style={styles.nameText}>{searchQuery.length <= 0 ? "Sin Nombre" : searchQuery}</Text>
+        </TouchableOpacity>
+      </View>
+
       <FlatList
         data={filteredClients}
         keyExtractor={(item) => item.id.toString()}

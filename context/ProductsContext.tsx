@@ -36,7 +36,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const getProducts = async (page: string, size: string) => {
     try {
-      const response = await fetch(`http://${settings}:5001/producto?pagina=${page}&tamanoPagina=${size}`, {
+      const response = await fetch(`http://${settings?.idComputadora}:5001/producto?pagina=${page}&tamanoPagina=${size}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
