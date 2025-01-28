@@ -32,7 +32,7 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
 
     async function saveOrder(order: Order, method: string) {
 
-        const url = `http://${settings}:5001/orden`
+        const url = `http://${settings?.idComputadora}:5001/orden`
         try {
             const res = await fetch(url, {
                 method: `${method}`,
@@ -126,7 +126,7 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
     const [apiOrderDetails, setApiOrderDetails] = useState<OrderDetail[]>([]);
 
     async function getOrderDetails(orderId: number) {
-        const url = `http://${settings}:5001/orden/${orderId}/detalle`;
+        const url = `http://${settings?.idComputadora}:5001/orden/${orderId}/detalle`;
 
         try {
             const res = await fetch(url, {
@@ -168,7 +168,7 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     const deleteOrderDetail = async (idDetail: number): Promise<boolean> => {
-        const url = `http://${settings}:5001/orden/detalle/${idDetail}`;
+        const url = `http://${settings?.idComputadora}:5001/orden/detalle/${idDetail}`;
 
         try {
             const res = await fetch(url, {

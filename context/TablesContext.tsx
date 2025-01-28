@@ -27,7 +27,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Función para obtener mesas activas
   const getActiveTables = async () => {
-    const url = `http://${settings}:5001/orden/activa`
+    const url = `http://${settings?.idComputadora}:5001/orden/activa`
     try {
       const response = await fetch(url, {
         method: "GET",
