@@ -29,20 +29,13 @@ const Menu: React.FC<Props> = ({
   orderId,
   totalOrder,
 }) => {
-  const { selectedClient, clearClient } = useClients();
-
   const scrollViewRef = useRef<ScrollView>(null);
 
   const {
-    order,
-    orderDetails,
     filteredMenu,
     searchQuery,
     setSearchQuery,
     addToOrder,
-    removeFromOrder,
-    updateQuantity,
-    handleSaveOrder,
     expandedSubCategory,
     setExpandedSubCategory,
     expandedSubSubCategory,
@@ -105,16 +98,7 @@ const Menu: React.FC<Props> = ({
             </CategoryItem>
           ))}
 
-          <OrderSummary
-            orderDetails={orderDetails}
-            selectedClient={selectedClient}
-            removeFromOrder={removeFromOrder}
-            updateQuantity={updateQuantity}
-            total={order.totalSinDescuento ?? 0}
-            handleSaveOrder={handleSaveOrder}
-            clearClient={clearClient}
-            handleAddClient={() => router.navigate("/clients")}
-          />
+
         </ScrollView>
       </KeyboardAvoidingView>
     </View>

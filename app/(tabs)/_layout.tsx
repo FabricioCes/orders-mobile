@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Tabs } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useSettings } from "../../context/SettingsContext";
