@@ -107,7 +107,7 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
                     {
                         text: "Aceptar",
                         onPress: () => {
-                            router.replace("/(tabs)");
+                            router.replace("/(tabs)/comedor");
                         },
                     },
                 ],

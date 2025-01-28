@@ -152,7 +152,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         `http://${settings.idComputadora}:5001/Parametro/cantidad/mesas`,
         {
           method: "GET",
-          headers: { Accept: "application/json" },
+          headers: { 
+            Accept: "application/json",
+            'Authorization': `Bearer ${token}`,
+           },
         }
       );
 

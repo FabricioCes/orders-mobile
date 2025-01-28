@@ -20,7 +20,7 @@ export default function Login() {
     setError(""); // Limpiar error previo
     const success = await login(user, pswd); // Ahora login retorna un booleano
     if (success) {
-      router.replace("/(tabs)");
+      router.replace("/(tabs)/comedor");
     } else {
       setError("Usuario o contraseña incorrectos"); // Establecer mensaje de error
     }
