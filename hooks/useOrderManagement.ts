@@ -4,6 +4,7 @@ import { useOrder } from '@/context/OrderContext'
 import { useProducts } from '@/context/ProductsContext'
 import { useClients } from '@/context/ClientsContext'
 import { Alert } from 'react-native'
+import { useSettings } from '@/context/SettingsContext'
 
 export function useOrderManagement (
   isActive: boolean,
@@ -12,6 +13,8 @@ export function useOrderManagement (
   tableId: number,
   place: string
 ) {
+  const {userName} = useSettings();
+
   const [order, setOrder] = useState<Order>({
     numeroOrden: isActive ? orderId : 0,
     numeroLugar: tableId.toString(),
@@ -19,11 +22,11 @@ export function useOrderManagement (
     observaciones: '',
     nombreCliente: '',
     idCliente: 0,
-    idUsuario: '',
+    idUsuario: userName.toUpperCase(),
     autorizado: true,
     totalSinDescuento: totalOrder | 0,
-    detalles: [],
-    imprimir: true
+    imprimir: true,
+    detalles: []
   })
 
   const [expandedSubCategory, setExpandedSubCategory] = useState<string | null>(
@@ -114,7 +117,6 @@ export function useOrderManagement (
       }
 
       const newDetail: OrderDetail = {
-        identificadorOrdenDetalle: 0,
         idProducto: product.id,
         nombreProducto: product.name,
         cantidad: 1,

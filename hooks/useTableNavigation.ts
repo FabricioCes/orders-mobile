@@ -62,5 +62,5 @@ export const useTableNavigation = (place: string) => {
     );
 
   return { handleTablePress, isTableActive: (tableId: number) => 
-    activeTables.some(table => table.numeroMesa === tableId) };
+    activeTables.some(table => table.numeroMesa === tableId && table.zona === place.toUpperCase())};
 };

@@ -43,6 +43,8 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
                 body: JSON.stringify(order)
             })
 
+            console.log(method, JSON.stringify(order, null, 2))
+
             if (res.status === 200) {
                 getActiveTables();
                 showOrder(true);
@@ -81,7 +83,7 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
                 );
             }
             else {
-                showOrder(false);
+                showOrder(true);
             }
 
         } catch (error) {
