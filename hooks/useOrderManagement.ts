@@ -1,4 +1,3 @@
-// eslint-disable no-unused-vars
 import { useState, useEffect } from 'react'
 import { Order, OrderDetail, Product } from '@/types/types'
 import { useOrder } from '@/context/OrderContext'
@@ -24,7 +23,7 @@ export function useOrderManagement (
     autorizado: true,
     totalSinDescuento: totalOrder | 0,
     detalles: [],
-    imprimir: false
+    imprimir: true
   })
 
   const [expandedSubCategory, setExpandedSubCategory] = useState<string | null>(

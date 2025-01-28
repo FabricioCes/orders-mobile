@@ -19,8 +19,6 @@ export default function Tables({ place, qty: propQty }: TablesProps) {
   const { zonas, loadingZonas } = useSettings();
 
   // Obtener la cantidad dinámicamente del contexto
-  console.log("Zonas:", zonas);
-  console.log("Place:", place);
   const qty = propQty || zonas[place] || 0;
   const isTablet = width >= 768;
   const columns = isTablet ? 9 : 3;

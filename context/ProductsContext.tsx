@@ -36,7 +36,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const getProducts = async (page: string, size: string) => {
     try {
-      const response = await fetch(`http://${settings}:5001/producto?pagina=${page}&tamanoPagina=${size}`, {
+      const response = await fetch(`http://${settings?.idComputadora}:5001/producto?pagina=${page}&tamanoPagina=${size}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -46,6 +46,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const data = await response.json();
       console.log("Productos:", data.resultado);
       setProducts(data.resultado || []); // Asegurarse de no setear 'null'
+      console.log(data)
     } catch (error) {
       //console.error("Error al obtener productos:", error);
       setProducts([]); // Fallback a array vacío en caso de error

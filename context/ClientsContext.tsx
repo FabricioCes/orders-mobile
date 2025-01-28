@@ -17,7 +17,7 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const [selectedClient, setSelectedClient] = useState<Client | undefined>(undefined);
 
     const getClients = async () => {
-        const url = `http://${settings}:5001/cliente?pagina=1&tamanoPagina=100`;
+        const url = `http://${settings?.idComputadora}:5001/cliente?pagina=1&tamanoPagina=100`;
 
         try {
             const response = await fetch(url, {

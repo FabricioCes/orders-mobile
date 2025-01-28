@@ -37,7 +37,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const updatedSettings: SettingsType = { ...(settings || {}), ...value };
       await AsyncStorage.setItem("settings", JSON.stringify(updatedSettings));
       setSettings(updatedSettings);
-      console.log("Configuración guardada correctamente:", updatedSettings);
     } catch (error) {
       console.error("Error al guardar en AsyncStorage:", error);
     }
@@ -52,7 +51,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       if (storedSettings) {
         setSettings(JSON.parse(storedSettings));
-        console.log("Configuración cargada:", storedSettings);
       }
 
       if (userStatus === "true") {
@@ -164,7 +162,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
 
       const data = await response.json();
-      console.log("Zonas y mesas obtenidas:", data.resultado);
       setZonas(data.resultado || {});
     } catch (error) {
       console.error("Error obteniendo zonas:", error);
