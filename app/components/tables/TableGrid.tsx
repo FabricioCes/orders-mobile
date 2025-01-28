@@ -18,13 +18,12 @@ const TableGrid = ({
   onTablePress,
   place = "default",
 }: TableGridProps) => {
-  // Memoiza la generación de filas para evitar recálculos innecesarios
+
   const rows = useMemo(
     () => generateTableRows(tables, columns),
     [tables, columns]
   );
 
-  // Renderizar estado vacío
   if (!rows.length) {
     return (
       <View className="flex-1 justify-center items-center p-4">
@@ -41,7 +40,7 @@ const TableGrid = ({
     >
       {rows.map((row, rowIndex) => (
         <TableRow
-          key={`${place}-row-${rowIndex}`} // Mejor key única
+          key={getRowKey(place, rowIndex)}
           tables={row}
           isActive={isActive}
           onTablePress={onTablePress}

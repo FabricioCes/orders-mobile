@@ -107,7 +107,6 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
                     {
                         text: "Aceptar",
                         onPress: () => {
-                            // Reemplazar ruta después de aceptar
                             router.replace("/(tabs)");
                         },
                     },

@@ -23,34 +23,28 @@ const TableRow = memo(
       [onTablePress]
     );
 
-    // Calcular márgenes dinámicos
-    const rowStyle = {
-      marginBottom: rowIndex < totalColumns - 1 ? 16 : 0,
-    };
-
     return (
-      <View
-        className="flex flex-row justify-center"
-        style={rowStyle}
-        accessibilityRole="list"
-      >
-        {tables.map((table) => (
-          <Pressable
-            key={`table-${table}-row-${rowIndex}`}
-            accessible
-            accessibilityLabel={`Mesa ${table}`}
-            accessibilityRole="button"
-            onPress={() => handlePress(table)}
-            accessibilityState={{ selected: isActive(table) }}
-          >
-            <TableItem
-              tableNumber={table}
-              isActive={isActive(table)}
-              testID={`table-item-${table}`}
-            />
-          </Pressable>
-        ))}
-      </View>
+        <View
+          className="flex flex-row justify-center mb-4"
+          accessibilityRole="list"
+        >
+          {tables.map((table) => (
+            <Pressable
+              key={`table-${table}-row-${rowIndex}`}
+              accessible
+              accessibilityLabel={`Mesa ${table}`}
+              accessibilityRole="button"
+              onPress={() => handlePress(table)}
+              accessibilityState={{ selected: isActive(table) }}
+            >
+              <TableItem
+                tableNumber={table}
+                isActive={isActive(table)}
+                testID={`table-item-${table}`}
+              />
+            </Pressable>
+          ))}
+        </View>
     );
   }
 );
