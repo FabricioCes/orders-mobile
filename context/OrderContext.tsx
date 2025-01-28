@@ -33,8 +33,6 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
     async function saveOrder(order: Order, method: string) {
 
         const url = `http://${settings}:5001/orden`
-        console.log(method)
-        console.log(JSON.stringify(order, null, 2))
         try {
             const res = await fetch(url, {
                 method: `${method}`,
@@ -44,16 +42,12 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
                 },
                 body: JSON.stringify(order)
             })
-            //console.log(JSON.stringify(order, null, 2))
-
-            console.log(res);
 
             if (res.status === 200) {
                 getActiveTables();
                 showOrder(true);
             } else if (res.status === 409) {
                 const result = await res.json();
-                console.log(result);
                 Alert.alert(
                     "Error 🚫",
                     result.mensaje,
@@ -71,7 +65,6 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
             }
             else if (res.status === 400) {
                 const result = await res.json();
-                console.log(result);
                 Alert.alert(
                     "Error 🚫",
                     result.message,
@@ -90,7 +83,6 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
             else {
                 showOrder(false);
             }
-            console.log(JSON.stringify(order, null, 2))
 
         } catch (error) {
 
@@ -191,8 +183,7 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
                 console.error(`Error deleting order detail: ${res.statusText}`);
                 return false;
             }
-
-            console.log(`Order detail ${idDetail} deleted successfully.`);
+            
             return true;
         } catch (e) {
             console.error("Error deleting order detail:", e);

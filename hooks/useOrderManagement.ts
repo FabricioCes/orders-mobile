@@ -1,10 +1,8 @@
-// eslint-disable no-unused-vars
 import { useState, useEffect } from 'react'
 import { Order, OrderDetail, Product } from '@/types/types'
 import { useOrder } from '@/context/OrderContext'
 import { useProducts } from '@/context/ProductsContext'
 import { useClients } from '@/context/ClientsContext'
-import { useSettings } from '@/context/SettingsContext'
 import { Alert } from 'react-native'
 
 export function useOrderManagement (
@@ -24,7 +22,8 @@ export function useOrderManagement (
     idUsuario: '',
     autorizado: true,
     totalSinDescuento: totalOrder | 0,
-    detalles: []
+    detalles: [],
+    imprimir: true
   })
 
   const [expandedSubCategory, setExpandedSubCategory] = useState<string | null>(
