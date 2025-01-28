@@ -52,9 +52,29 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
                 getActiveTables();
                 showOrder(true);
             } else if (res.status === 409) {
+                const result = await res.json();
+                console.log(result);
                 Alert.alert(
                     "Error 🚫",
-                    "Mesa ocupada, debe actualizar la orden.",
+                    result.mensaje,
+                    [
+                        {
+                            text: "Aceptar",
+                            onPress: () => {
+
+                                return;
+                            },
+                        },
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else if (res.status === 400) {
+                const result = await res.json();
+                console.log(result);
+                Alert.alert(
+                    "Error 🚫",
+                    result.message,
                     [
                         {
                             text: "Aceptar",

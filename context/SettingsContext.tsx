@@ -4,67 +4,93 @@ import { router } from "expo-router";
 import { jwtDecode } from "jwt-decode";
 import { Alert } from "react-native";
 
-// Define la interfaz del contexto
-interface SettingsContextType {
-  saveSettings: (value: string) => void;
+type SettingsType = {
+  idComputadora?: string;
+};
+
+type SettingsContextType = {
+  saveSettings: (value: Partial<SettingsType>) => void;
   login: (username: string, password: string) => Promise<boolean>;
   logOut: () => void;
-  settings: string;
+  settings: SettingsType | null;
   hasUser: boolean;
   userName: string;
   token: string;
   checkTokenExpiration: () => void;
-}
+  zonas: Record<string, number>;
+  fetchZonasMesas: () => Promise<void>;
+  loadingZonas: boolean;
+};
 
-// Crea el contexto
-const SettingsContext = createContext<SettingsContextType | undefined>(
-  undefined
-);
+const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
-// Proveedor del contexto
-export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const [settings, setSettings] = useState<string>("");
+export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [settings, setSettings] = useState<SettingsType | null>(null);
   const [hasUser, setHasUser] = useState<boolean>(false);
   const [userName, setUserName] = useState<string>("");
   const [token, setToken] = useState<string>("");
+  const [zonas, setZonas] = useState<Record<string, number>>({});
+  const [loadingZonas, setLoadingZonas] = useState(false);
 
-  // Función para guardar configuraciones
-  const saveSettings = async (value: string) => {
+  const saveSettings = async (value: Partial<SettingsType>) => {
     try {
-      await AsyncStorage.setItem("idComputadora", value); // Guardar en AsyncStorage
-      setSettings(value); // Actualizar el estado
+      const updatedSettings: SettingsType = { ...(settings || {}), ...value };
+      await AsyncStorage.setItem("settings", JSON.stringify(updatedSettings));
+      setSettings(updatedSettings);
+      console.log("Configuración guardada correctamente:", updatedSettings);
     } catch (error) {
       console.error("Error al guardar en AsyncStorage:", error);
     }
   };
 
-  const login = async (
-    username: string,
-    password: string
-  ): Promise<boolean> => {
+  const loadSettings = async () => {
+    try {
+      const storedSettings = await AsyncStorage.getItem("settings");
+      const userStatus = await AsyncStorage.getItem("hasUser");
+      const savedToken = await AsyncStorage.getItem("token");
+      const savedUserName = await AsyncStorage.getItem("userName");
+
+      if (storedSettings) {
+        setSettings(JSON.parse(storedSettings));
+        console.log("Configuración cargada:", storedSettings);
+      }
+
+      if (userStatus === "true") {
+        setHasUser(true);
+      }
+
+      if (savedToken) {
+        setToken(savedToken);
+      }
+
+      if (savedUserName) {
+        setUserName(savedUserName);
+      }
+
+      checkTokenExpiration();
+    } catch (error) {
+      console.error("Error al cargar datos de AsyncStorage:", error);
+    }
+  };
+
+  const login = async (username: string, password: string): Promise<boolean> => {
     try {
       const response = await fetch(
-        `http://${settings}:5001/autenticacion/login`,
+        `http://${settings?.idComputadora}:5001/autenticacion/login`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            nombre: username,
-            clave: password,
-          }),
+          body: JSON.stringify({ nombre: username, clave: password }),
         }
       );
 
       const data = await response.json();
+
       if (!response.ok) {
-        Alert.alert(
-          `No se pudo conectar con la base de datos: ${JSON.stringify(
-            response
-          )}`
-        );
+        Alert.alert(`No se pudo conectar con la base de datos: ${response.status}`);
+        return false;
       }
+
       if (response.ok && data.resultado) {
         await AsyncStorage.setItem("token", data.resultado);
         await AsyncStorage.setItem("hasUser", "true");
@@ -78,60 +104,84 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
         return false; // Login fallido
       }
     } catch (error) {
+      console.error("Error de red o servidor", error);
       return false; // Error de red o servidor
     }
   };
 
+  // Función para cerrar sesión
   const logOut = async () => {
     try {
       await AsyncStorage.removeItem("hasUser");
+      await AsyncStorage.removeItem("token");
       setHasUser(false);
       setUserName("");
+      setToken("");
+      router.navigate("/login"); // Redirige al login
     } catch (error) {
-      console.error("Error al iniciar sesión:", error);
+      console.error("Error al cerrar sesión:", error);
     }
   };
 
-  // Cargar el valor inicial desde AsyncStorage
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const storedValue = await AsyncStorage.getItem("idComputadora");
-        const userStatus = await AsyncStorage.getItem("hasUser");
-        const savedToken = await AsyncStorage.getItem("token");
-        const savedUserName = await AsyncStorage.getItem("userName");
-
-        if (savedUserName) setUserName(savedUserName);
-        if (storedValue) setSettings(storedValue);
-        if (userStatus === "true") setHasUser(true);
-        checkTokenExpiration();
-        if (savedToken) {
-          setToken(savedToken);
-        }
-      } catch (error) {
-        console.error("Error al cargar datos de AsyncStorage:", error);
-      }
-    };
-
-    loadSettings();
-  }, []);
-
+  // Verificar expiración del token
   const checkTokenExpiration = async () => {
-    if (!token) return; // Si no hay token, salir de la función
+    if (!token) return;
 
     try {
       const decodedToken: { exp: number } = jwtDecode(token);
-      const currentTime = Math.floor(Date.now() / 1000); // Tiempo actual en segundos
+      const currentTime = Math.floor(Date.now() / 1000);
       if (decodedToken.exp < currentTime) {
-        await logOut(); // Hacer logout
-        router.navigate("/login"); // Redirigir al login
+        await logOut();
       }
     } catch (error) {
       console.error("Error al decodificar el token:", error);
       await logOut();
-      router.navigate("/login");
     }
   };
+
+  const fetchZonasMesas = async () => {
+    if (!settings?.idComputadora || !token) {
+      console.error(`No se han configurado las credenciales {${settings?.idComputadora}, ${token}}`);
+      setLoadingZonas(false);
+      return;
+    }
+
+    try {
+      setLoadingZonas(true);
+      const response = await fetch(
+        `http://${settings.idComputadora}:5001/Parametro/cantidad/mesas`,
+        {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Zonas y mesas obtenidas:", data.resultado);
+      setZonas(data.resultado || {});
+    } catch (error) {
+      console.error("Error obteniendo zonas:", error);
+      Alert.alert("Error", "No se pudieron obtener las zonas y mesas");
+      setZonas({});
+    } finally {
+      setLoadingZonas(false);
+    }
+  };
+  const init = async () => {
+    await loadSettings();
+    if (settings?.idComputadora && token) {
+      await fetchZonasMesas(); // Llamada solo cuando settings y token están disponibles
+    }
+  };
+
+  useEffect(() => {
+    init(); // Ejecutar la inicialización al montar el componente
+  }, [settings?.idComputadora, token]); // Dependencias para ejecutar cuando estén disponibles settings.idComputadora y token
+
 
   return (
     <SettingsContext.Provider
@@ -144,6 +194,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
         logOut,
         token,
         checkTokenExpiration,
+        zonas,
+        fetchZonasMesas,
+        loadingZonas,
       }}
     >
       {children}
@@ -151,7 +204,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-// Hook personalizado para usar el contexto
 export const useSettings = (): SettingsContextType => {
   const context = useContext(SettingsContext);
   if (!context) {

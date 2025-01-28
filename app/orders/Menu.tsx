@@ -110,7 +110,7 @@ const Menu: React.FC<Props> = ({
             selectedClient={selectedClient}
             removeFromOrder={removeFromOrder}
             updateQuantity={updateQuantity}
-            total={order.totalSinDescuento}
+            total={order.totalSinDescuento ?? 0}
             handleSaveOrder={handleSaveOrder}
             clearClient={clearClient}
             handleAddClient={() => router.navigate("/clients")}

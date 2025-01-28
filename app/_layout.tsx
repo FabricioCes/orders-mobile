@@ -11,7 +11,8 @@ const SCREENS_CONFIG: ScreenConfig[] = [
     options: {
       type: "tabs",
       title: "Inicio",
-      animation: "fade"
+      animation: "fade",
+      headerShown: false
     }
   },
   {
@@ -64,6 +65,7 @@ interface ScreenConfig {
     type?: 'tabs' | 'modal' | 'default';
     title: string;
     animation?: 'fade' | 'slide_from_right' | 'slide_from_bottom';
+    headerShown?: boolean;
   };
 }
 

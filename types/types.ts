@@ -32,16 +32,17 @@ export type Client = {
 }
 
 export type Order = {
-    numeroOrden: number;
-    numeroLugar: string;
+    numeroOrden?: number;
+    numeroLugar?: string;
     ubicacion: string;
-    observaciones: string;
-    nombreCliente: string;
-    idCliente: number;
+    observaciones?: string;
+    nombreCliente?: string;
+    idCliente?: number;
     idUsuario: string;
     autorizado: boolean;
-    totalSinDescuento: number;
+    totalSinDescuento?: number;
     detalles: OrderDetail[];
+    imprimir: boolean;
 }
 
 export type OrderDetail = {

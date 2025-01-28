@@ -1,60 +1,61 @@
-// app/components/TabLayout.tsx
-import { useEffect } from 'react';
-import { Alert, useColorScheme } from 'react-native';
-import { router, Tabs } from 'expo-router';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { tabsConfig } from '@/config/tabs';
-import { useSettings } from '../../context/SettingsContext';
+import { useEffect } from "react";
+import { Tabs } from "expo-router";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useSettings } from "../../context/SettingsContext";
+import { useColorScheme } from "react-native";
 
 const TabLayout = () => {
+  const { zonas } = useSettings();
   const colorScheme = useColorScheme();
-  const isDarkMode = colorScheme === 'dark';
-  const { checkTokenExpiration, settings } = useSettings();
+  const isDarkMode = colorScheme === "dark";
 
-  useEffect(() => {
-    checkTokenExpiration();
-    if (!settings.length) {
-      showConfigurationAlert();
-    }
-  }, []);
 
-  const showConfigurationAlert = () =>
-    Alert.alert(
-      'Oops! 🤚🏼',
-      'No has configurado la ip del Servidor 🚫',
-      [
-        {
-          text: 'Aceptar',
-          onPress: () => router.navigate('/(tabs)/settings'),
-        },
-      ],
-      { cancelable: false }
-    );
+  // Define static tabs
+  const staticTabs = [
+    { name: "comedor", title: "Comedor", iconName: "home" },
+    { name: "barra", title: "Barra", iconName: "glass" },
+    { name: "express", title: "Express", iconName: "bolt" },
+    { name: "llevar", title: "Para Llevar", iconName: "shopping-bag" },
+    { name: "terraza", title: "Terraza", iconName: "tree" },
+  ];
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#60A5FACC',
+        tabBarActiveTintColor: "#60A5FACC",
         headerStyle: {
-          backgroundColor: '#60A5FACC',
+          backgroundColor: "#60A5FACC",
         },
-        headerTintColor: isDarkMode ? '#fff' : '#000',
+        headerTintColor: isDarkMode ? "#fff" : "#000",
       }}
     >
-      {tabsConfig
-        .filter((tab) => tab.enabled)
-        .map((tab) => (
-          <Tabs.Screen
-            key={tab.name}
-            name={tab.name}
-            options={{
-              title: tab.title,
-              tabBarIcon: ({ color }) => (
-                <FontAwesome size={28} name={tab.iconName} color={color} />
-              ),
-            }}
-          />
-        ))}
+      {staticTabs.map((tab) => (
+        <Tabs.Screen
+          key={tab.name}
+          name={tab.name}
+          initialParams={{
+            qty: zonas[tab.name] || 0, // Use dynamic data for table quantities
+            place: tab.title,
+          }}
+          options={{
+            title: tab.title,
+            tabBarIcon: ({ color }) => (
+              <FontAwesome size={28} name={tab.iconName as keyof typeof FontAwesome.glyphMap} color={color} />
+            ),
+          }}
+        />
+      ))}
+
+      {/* Fixed settings tab */}
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "Configuración",
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="cog" size={28} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 };
