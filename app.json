@@ -17,9 +17,7 @@
         "foregroundImage": "./assets/images/splashscreen_logo.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions": [
-        "INTERNET"
-      ],
+      "permissions": ["INTERNET"],
       "package": "com.fcespedes.ordersagil"
     },
     "web": {
@@ -45,6 +43,14 @@
           "android": {
             "usesCleartextTraffic": true
           }
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#232323",
+          "image": "./assets/images/splashscreen_logo.png",
+          "imageWidth": 200
         }
       ]
     ]
