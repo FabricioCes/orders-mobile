@@ -17,13 +17,13 @@ export const useTableNavigation = (place: string) => {
     const isActive = activeTables.some(
       table =>
         table.numeroMesa === tableId &&
-        table.zona.toUpperCase() === place.toUpperCase()
+        table.zona.trim().toUpperCase() === place.trim().toUpperCase()
     )
 
     const activeTable = activeTables.find(
       table =>
         table.numeroMesa === tableId &&
-        table.zona.toUpperCase() === place.toUpperCase()
+        table.zona.trim().toUpperCase() === place.trim().toUpperCase()
     )
 
     const navigationParams = {
