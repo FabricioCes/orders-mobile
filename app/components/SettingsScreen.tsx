@@ -25,7 +25,7 @@ const SettingsScreen = () => {
 
   const handleLogout = () => {
     logOut();
-    router.navigate("/(tabs)/comedor"); // Asegúrate de que esta ruta sea correcta
+    router.navigate("/login"); // Asegúrate de que esta ruta sea correcta
   };
 
   const renderUserSection = () => (
