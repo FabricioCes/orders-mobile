@@ -29,17 +29,12 @@ export function useOrderManagement (
     detalles: []
   })
 
-  const [expandedSubCategory, setExpandedSubCategory] = useState<string | null>(
-    null
-  )
-  const [expandedSubSubCategory, setExpandedSubSubCategory] = useState<
-    string | null
-  >(null)
+  const [expandedSubCategory, setExpandedSubCategory] = useState<string | null>(null)
+  const [expandedSubSubCategory, setExpandedSubSubCategory] = useState<string | null>(null)
   const [orderDetails, setOrderDetails] = useState<OrderDetail[]>([])
   const [searchQuery, setSearchQuery] = useState<string>('')
 
-  const { saveOrder, getOrderDetails, apiOrderDetails, deleteOrderDetail } =
-    useOrder()
+  const { saveOrder, getOrderDetails, apiOrderDetails, deleteOrderDetail } = useOrder()
   const { selectedClient, clearClient } = useClients()
   const { orderedProducts } = useProducts()
 
@@ -101,7 +96,6 @@ export function useOrderManagement (
     }
   }, [selectedClient])
 
-  // Agregar producto a la orden
   const addToOrder = (product: Product) => {
     setOrderDetails(prevDetails => {
       const existingDetail = prevDetails.find(
@@ -123,14 +117,14 @@ export function useOrderManagement (
         precio: product.price,
         porcentajeDescProducto: 0,
         ingrediente: false,
-        quitarIngrediente: false
+        quitarIngrediente: false,
+        identificadorOrdenDetalle: 0
       }
 
       return [...prevDetails, newDetail]
     })
   }
 
-  // Eliminar producto de la orden
   const removeFromOrder = async (productId: number, detailId: number) => {
     Alert.alert(
       'Confirmación',
@@ -148,7 +142,7 @@ export function useOrderManagement (
             if (success) {
               setOrderDetails(prevDetails =>
                 prevDetails.filter(detail => detail.idProducto !== productId)
-              ) // Eliminar el detalle de la orden si se eliminó de la base de datos
+              )
             } else {
               console.log('Error al eliminar el detalle de la orden')
             }
@@ -163,7 +157,6 @@ export function useOrderManagement (
     if (orderDetails.length === 0) clearClient()
   }, [orderDetails])
 
-  // Actualizar el total de la orden
   useEffect(() => {
     const total = orderDetails.reduce(
       (acc, detail) => acc + detail.cantidad * detail.precio,
@@ -175,7 +168,6 @@ export function useOrderManagement (
     }))
   }, [orderDetails])
 
-  // Actualizar cantidad de un producto
   const updateQuantity = (productId: number, quantity: number) => {
     setOrderDetails(prevDetails =>
       prevDetails.map(detail =>
@@ -186,29 +178,55 @@ export function useOrderManagement (
     )
   }
 
-  // Guardar la orden
   const handleSaveOrder = () => {
-    const invalidItems = orderDetails.filter(detail => detail.cantidad === 0)
+    const invalidItems = orderDetails.filter(detail => detail.cantidad === 0);
+    
+    // Validar items con cantidad 0
     if (invalidItems.length > 0) {
       Alert.alert(
         'Error',
         'No puedes guardar la orden con productos en cantidad 0. Por favor, verifica los productos.'
-      )
-      return
+      );
+      return;
     }
-
-    const completeOrder = {
-      ...order,
-      detalles: orderDetails
-    }
-
-    if (isActive) {
-      saveOrder(completeOrder, 'PUT')
-    } else {
-      saveOrder(completeOrder, 'POST')
-    }
-    clearClient()
-  }
+  
+    // Mostrar diálogo de confirmación
+    Alert.alert(
+      'Imprimir orden',
+      '¿Deseas imprimir la orden?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel', // Solo para iOS, pero no afecta en Android
+        },
+        {
+          text: 'No Imprimir',
+          onPress: () => {
+            const completeOrder = {
+              ...order,
+              detalles: orderDetails,
+              imprimir: false // Actualizar propiedad según la respuesta
+            };
+            saveOrder(completeOrder, isActive ? 'PUT' : 'POST');
+            clearClient();
+          },
+        },
+        {
+          text: 'Imprimir',
+          onPress: () => {
+            const completeOrder = {
+              ...order,
+              detalles: orderDetails,
+              imprimir: true // Actualizar propiedad según la respuesta
+            };
+            saveOrder(completeOrder, isActive ? 'PUT' : 'POST');
+            clearClient();
+          },
+        },
+      ],
+      { cancelable: true } // Permite cerrar el diálogo tocando fuera
+    );
+  };
 
   return {
     order,
