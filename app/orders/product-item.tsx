@@ -3,21 +3,20 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { Product } from "@/types/types";
 import { FontAwesome } from "@expo/vector-icons";
 
-
-const ProductItem = ({ 
-  product, 
+const ProductItem = ({
+  product,
   addToOrder,
-  showDetails = false 
+  showDetails = false,
 }: {
   product: Product;
-  addToOrder: () => void;
+  addToOrder: (producto: Product) => void;
   showDetails?: boolean;
 }) => (
   <View className="p-3 bg-gray-50 rounded-lg mb-2">
     <View className="flex-row justify-between items-center">
       <Text className="text-base font-medium">{product.name}</Text>
       {!showDetails && (
-        <TouchableOpacity onPress={addToOrder}>
+        <TouchableOpacity onPress={() => addToOrder(product)}>
           <FontAwesome name="plus-circle" size={20} color="#3b82f6" />
         </TouchableOpacity>
       )}

@@ -65,6 +65,7 @@ const ProductsScreen: React.FC<Props> = ({
                 >
                   {subSubCategory.products.map((product) => (
                     <ProductItem
+                      key={product.id}
                       product={product}
                       addToOrder={() => {
                         addToOrder(product);

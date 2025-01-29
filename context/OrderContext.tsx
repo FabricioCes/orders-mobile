@@ -48,7 +48,7 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
         body: JSON.stringify(order),
       });
 
-      console.log(method, JSON.stringify(order, null, 2));
+
 
 
       switch (res.status) {
