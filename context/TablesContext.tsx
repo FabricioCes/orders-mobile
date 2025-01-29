@@ -62,7 +62,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({
 
 
 useEffect(() => {
-  const interval = setInterval(getActiveTables, 150000000000); // Cada 30 segundos
+  const interval = setInterval(getActiveTables, 15000);
   return () => clearInterval(interval);
 }, [token]);
 
