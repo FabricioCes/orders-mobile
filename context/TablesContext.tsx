@@ -24,7 +24,7 @@ const TableContext = createContext<TableContextType | undefined>(undefined);
 export const TableProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { token, settings } = useSettings();
+  const { token, settings, hasUser } = useSettings();
   const [activeTables, setActiveTables] = useState<ActiveTable[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -54,18 +54,19 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({
       }
       setActiveTables(data.resultado || []);
     } catch (error) {
-      console.error("Error fetching active tables:", error);
+      //console.error("Error fetching active tables:", error);
       setActiveTables([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-
-useEffect(() => {
-  const interval = setInterval(getActiveTables, 15000);
-  return () => clearInterval(interval);
-}, [token]);
+  useEffect(() => {
+    if (token) {
+      const interval = setInterval(getActiveTables, 15000);
+      return () => clearInterval(interval);
+    }
+  }, [token, hasUser]);
 
   return (
     <TableContext.Provider value={{ activeTables, getActiveTables }}>

@@ -16,7 +16,7 @@ type TablesProps = {
 
 export default function Tables({ place, qty: propQty }: TablesProps) {
   const { width } = useWindowDimensions();
-  const { zonas, loadingZonas } = useSettings();
+  const { zonas, loadingZonas, token } = useSettings();
 
   // Obtener la cantidad dinámicamente del contexto
   const qty = propQty || zonas[place] || 0;
@@ -35,12 +35,18 @@ export default function Tables({ place, qty: propQty }: TablesProps) {
     );
   }
 
-  if (!qty) {
+  if (!qty || !token) {
     return (
       <View className="flex-1 justify-center items-center">
-        <Text className="text-lg text-red-500">
-          No hay mesas configuradas para {place}
-        </Text>
+        {token ?
+          <Text className="text-lg text-red-500">
+            No hay mesas configuradas para {place}
+          </Text>
+          :
+          <Text className="text-lg text-red-500">
+            Debe Iniciar Sesión para ver las mesas.
+          </Text>
+        }
       </View>
     );
   }
