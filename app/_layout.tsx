@@ -3,7 +3,7 @@ import { View, StyleSheet } from "react-native";
 import "../global.css";
 import Providers from "./providers";
 import { useEffect, useState } from "react";
-import SplashScreenAnimated from "./SplashScreen";
+
 
 const SCREENS_CONFIG: ScreenConfig[] = [
   {
@@ -79,8 +79,6 @@ export default function RootLayout() {
     };
     initializeApp();
   }, []);
-
-  if (!isAppReady) return <SplashScreenAnimated />;
 
   return (
     <Providers>
