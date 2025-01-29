@@ -14,7 +14,7 @@ const TabLayout = () => {
     { name: "comedor", title: "Comedor", iconName: "home" },
     { name: "barra", title: "Barra", iconName: "glass" },
     { name: "express", title: "Express", iconName: "bolt" },
-    { name: "llevar", title: "Para Llevar", iconName: "shopping-bag" },
+    { name: "llevar", title: "Llevar", iconName: "shopping-bag" },
     { name: "terraza", title: "Terraza", iconName: "tree" },
   ];
 
@@ -25,7 +25,7 @@ const TabLayout = () => {
         headerStyle: {
           backgroundColor: "#60A5FACC",
         },
-        headerTintColor: isDarkMode ? "#fff" : "#000",
+        headerTintColor: !isDarkMode ? "#fff" : "#000",
       }}
     >
       {staticTabs.map((tab) => (
@@ -33,7 +33,7 @@ const TabLayout = () => {
           key={tab.name}
           name={tab.name}
           initialParams={{
-            qty: zonas[tab.name] || 0, // Use dynamic data for table quantities
+            qty: zonas[tab.name] || 0,
             place: tab.title,
           }}
           options={{

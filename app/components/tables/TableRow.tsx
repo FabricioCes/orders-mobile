@@ -12,7 +12,7 @@ const TableRow = memo(
     rowIndex,
     totalColumns,
   }: TableRowProps & { rowIndex: number; totalColumns: number }) => {
-    // Memoizar el handler de press
+
     const handlePress = useCallback(
       (tableId: number) => {
         onTablePress(tableId);

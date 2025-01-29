@@ -103,6 +103,7 @@ const Menu: React.FC<Props> = ({
             </CategoryItem>
           ))}
           <OrderSummary
+            isActive={isActive}
             orderDetails={orderDetails}
             selectedClient={selectedClient}
             removeFromOrder={removeFromOrder}

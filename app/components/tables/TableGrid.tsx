@@ -16,9 +16,8 @@ const TableGrid = ({
   columns,
   isActive,
   onTablePress,
-  place = "default",
+  place = "comedor",
 }: TableGridProps) => {
-
   const rows = useMemo(
     () => generateTableRows(tables, columns),
     [tables, columns]

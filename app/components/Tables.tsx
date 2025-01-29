@@ -23,7 +23,7 @@ export default function Tables({ place, qty: propQty }: TablesProps) {
   const isTablet = width >= 768;
   const columns = isTablet ? 9 : 3;
   const tables = Array.from({ length: qty }, (_, i) => i + 1);
-
+console.log('place', place);
   const { handleTablePress, isTableActive } = useTableNavigation(place);
 
   if (loadingZonas) {
@@ -44,7 +44,10 @@ export default function Tables({ place, qty: propQty }: TablesProps) {
       </View>
     );
   }
-
+console.log('tables', tables);
+console.log('columns', columns);
+console.log('isTableActive', isTableActive);
+console.log('handleTablePress', handleTablePress);
   return (
     <View className="container p-5 flex-row items-center justify-center">
       <TableGrid

@@ -2,8 +2,8 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useSettings } from "./SettingsContext";
 
 interface TableContextType {
-  activeTables: ActiveTable[]; // Estado para almacenar las mesas activas
-  getActiveTables: () => Promise<void>; // Función para obtener mesas activas
+  activeTables: ActiveTable[];
+  getActiveTables: () => Promise<void>;
 }
 
 interface ActiveTable {
@@ -21,19 +21,23 @@ interface ActiveTable {
 
 const TableContext = createContext<TableContextType | undefined>(undefined);
 
-export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const TableProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const { token, settings } = useSettings();
   const [activeTables, setActiveTables] = useState<ActiveTable[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Función para obtener mesas activas
   const getActiveTables = async () => {
-    const url = `http://${settings?.idComputadora}:5001/orden/activa`
+    const url = `http://${settings?.idComputadora}:5001/orden/activa`;
+    if (isLoading) return;
+    setIsLoading(true);
     try {
       const response = await fetch(url, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -41,26 +45,26 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return;
       }
 
-      const text = await response.text(); // Obtener la respuesta como texto
-      if (!text) {
+      const data = await response.json();
+      if (!data) {
         console.warn("Respuesta vacía del servidor.");
-        setActiveTables([]); // Devolver un array vacío si no hay datos
+        setActiveTables([]);
         return;
       }
-      const data = JSON.parse(text); // Parsear a JSON
-      setActiveTables(data.resultado || []); // Establecer mesas activas
+      setActiveTables(data.resultado || []);
     } catch (error) {
-      //console.error("Error al obtener mesas activas:", error);
-      setActiveTables([]); // Fallback para evitar errores
+      console.error("Error fetching active tables:", error);
+      setActiveTables([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Cargar mesas activas cuando el token cambia
-  useEffect(() => {
-    if (token) {
-      getActiveTables();
-    }
-  }, [token]);
+
+useEffect(() => {
+  const interval = setInterval(getActiveTables, 150000000000); // Cada 30 segundos
+  return () => clearInterval(interval);
+}, [token]);
 
   return (
     <TableContext.Provider value={{ activeTables, getActiveTables }}>

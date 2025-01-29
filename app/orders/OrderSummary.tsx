@@ -12,6 +12,7 @@ type OrderSummaryProps = {
   handleSaveOrder: () => void;
   clearClient: () => void;
   handleAddClient: () => void;
+  isActive: boolean;
 };
 
 const OrderSummary: React.FC<OrderSummaryProps> = ({
@@ -23,6 +24,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
   handleSaveOrder,
   clearClient,
   handleAddClient,
+  isActive,
 }) => {
   return (
     <View className="mt-5 border-t border-t-gray-400 pt-2">
@@ -77,7 +79,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
           className="bg-blue-500 p-3 rounded-lg flex-row items-center gap-2"
           onPress={handleSaveOrder}
         >
-          <Text className="text-white font-bold text-xl">Guardar Orden</Text>
+           <Text className="text-white font-bold text-xl">{isActive ? "Editar Orden" : "Guardar Orden"}</Text>
           <AntDesign name="check" size={20} color="white" />
         </TouchableOpacity>
       </View>
