@@ -49,7 +49,7 @@ const TabLayout = () => {
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Configuración",
+          title: "Conf",
           tabBarIcon: ({ color }) => (
             <FontAwesome name="cog" size={28} color={color} />
           ),

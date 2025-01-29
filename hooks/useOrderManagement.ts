@@ -13,12 +13,12 @@ export function useOrderManagement (
   tableId: number,
   place: string
 ) {
-  const {userName} = useSettings();
+  const { userName } = useSettings()
 
   const [order, setOrder] = useState<Order>({
     numeroOrden: isActive ? orderId : 0,
-    numeroLugar: tableId.toString(),
-    ubicacion: place.toUpperCase(),
+    numeroLugar: tableId?.toString(),
+    ubicacion: place?.toUpperCase(),
     observaciones: '',
     nombreCliente: '',
     idCliente: 0,
@@ -28,13 +28,18 @@ export function useOrderManagement (
     imprimir: true,
     detalles: []
   })
-
-  const [expandedSubCategory, setExpandedSubCategory] = useState<string | null>(null)
-  const [expandedSubSubCategory, setExpandedSubSubCategory] = useState<string | null>(null)
+  const [selectedProducts, setSelectedProducts] = useState<Product[]>([])
+  const [expandedSubCategory, setExpandedSubCategory] = useState<string | null>(
+    null
+  )
+  const [expandedSubSubCategory, setExpandedSubSubCategory] = useState<
+    string | null
+  >(null)
   const [orderDetails, setOrderDetails] = useState<OrderDetail[]>([])
   const [searchQuery, setSearchQuery] = useState<string>('')
 
-  const { saveOrder, getOrderDetails, apiOrderDetails, deleteOrderDetail } = useOrder()
+  const { saveOrder, getOrderDetails, apiOrderDetails, deleteOrderDetail } =
+    useOrder()
   const { selectedClient, clearClient } = useClients()
   const { orderedProducts } = useProducts()
 
@@ -97,6 +102,7 @@ export function useOrderManagement (
   }, [selectedClient])
 
   const addToOrder = (product: Product) => {
+    setSelectedProducts(prev => [...prev, product])
     setOrderDetails(prevDetails => {
       const existingDetail = prevDetails.find(
         detail => detail.idProducto === product.id
@@ -179,17 +185,17 @@ export function useOrderManagement (
   }
 
   const handleSaveOrder = () => {
-    const invalidItems = orderDetails.filter(detail => detail.cantidad === 0);
-    
+    const invalidItems = orderDetails.filter(detail => detail.cantidad === 0)
+
     // Validar items con cantidad 0
     if (invalidItems.length > 0) {
       Alert.alert(
         'Error',
         'No puedes guardar la orden con productos en cantidad 0. Por favor, verifica los productos.'
-      );
-      return;
+      )
+      return
     }
-  
+
     // Mostrar diálogo de confirmación
     Alert.alert(
       'Imprimir orden',
@@ -197,7 +203,7 @@ export function useOrderManagement (
       [
         {
           text: 'Cancelar',
-          style: 'cancel', // Solo para iOS, pero no afecta en Android
+          style: 'cancel' // Solo para iOS, pero no afecta en Android
         },
         {
           text: 'No Imprimir',
@@ -206,10 +212,10 @@ export function useOrderManagement (
               ...order,
               detalles: orderDetails,
               imprimir: false // Actualizar propiedad según la respuesta
-            };
-            saveOrder(completeOrder, isActive ? 'PUT' : 'POST');
-            clearClient();
-          },
+            }
+            saveOrder(completeOrder, isActive ? 'PUT' : 'POST')
+            clearClient()
+          }
         },
         {
           text: 'Imprimir',
@@ -218,15 +224,15 @@ export function useOrderManagement (
               ...order,
               detalles: orderDetails,
               imprimir: true // Actualizar propiedad según la respuesta
-            };
-            saveOrder(completeOrder, isActive ? 'PUT' : 'POST');
-            clearClient();
-          },
-        },
+            }
+            saveOrder(completeOrder, isActive ? 'PUT' : 'POST')
+            clearClient()
+          }
+        }
       ],
       { cancelable: true } // Permite cerrar el diálogo tocando fuera
-    );
-  };
+    )
+  }
 
   return {
     order,
@@ -242,6 +248,7 @@ export function useOrderManagement (
     expandedSubCategory,
     setExpandedSubCategory,
     expandedSubSubCategory,
-    setExpandedSubSubCategory
+    setExpandedSubSubCategory,
+    selectedProducts
   }
 }

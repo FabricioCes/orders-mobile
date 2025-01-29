@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useRef } from "react";
 import {
   View,
   ScrollView,
@@ -7,10 +7,10 @@ import {
   Platform,
 } from "react-native";
 import { useClients } from "@/context/ClientsContext";
-import SearchBar from "./SerchBar";
-import ProductItem from "./ProductItem";
-import OrderSummary from "./OrderSummary";
-import CategoryItem, { SubCategoryItem } from "./CategoryItem";
+import SearchBar from "./serch-bar";
+import ProductItem from "./product-item";
+import OrderSummary from "./order-summary-item";
+import CategoryItem, { SubCategoryItem } from "./category-Item";
 import { router } from "expo-router";
 import { useOrderManagement } from "@/hooks/useOrderManagement";
 
@@ -103,7 +103,7 @@ const Menu: React.FC<Props> = ({
             </CategoryItem>
           ))}
           <OrderSummary
-            isActive={isActive}
+            isActive={isActive === "true"}
             orderDetails={orderDetails}
             selectedClient={selectedClient}
             removeFromOrder={removeFromOrder}

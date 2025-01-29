@@ -44,8 +44,9 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({
       if (!response.ok) {
         return;
       }
-
+      console.log("Respuesta del servidor:", response);
       const data = await response.json();
+      console.log("Active tables:", data);
       if (!data) {
         console.warn("Respuesta vacía del servidor.");
         setActiveTables([]);

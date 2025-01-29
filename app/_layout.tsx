@@ -3,7 +3,7 @@ import { View, StyleSheet } from "react-native";
 import "../global.css";
 import Providers from "./providers";
 import { useEffect, useState } from "react";
-import SplashScreenAnimated from "./SplashScreen";
+import SplashScreenAnimated from "./Splash-screen";
 
 const SCREENS_CONFIG: ScreenConfig[] = [
   {
@@ -12,32 +12,41 @@ const SCREENS_CONFIG: ScreenConfig[] = [
       type: "tabs",
       title: "Inicio",
       animation: "fade",
-      headerShown: false
-    }
+      headerShown: false,
+    },
   },
   {
-    name: "Order",
+    name: "order",
     options: {
-      title: "Orden",
-      animation: "slide_from_right"
-    }
+      title: "Detalle de Orden",
+      animation: "slide_from_right",
+      type: "default",
+    },
+  },
+  {
+    name: "products-screen",
+    options: {
+      type: "modal",
+      title: "Seleccionar Productos",
+      animation: "slide_from_bottom",
+    },
+  },
+  {
+    name: "clients",
+    options: {
+      type: "modal",
+      title: "Gestión de Clientes",
+      animation: "slide_from_bottom",
+    },
   },
   {
     name: "login",
     options: {
       type: "modal",
       title: "Iniciar Sesión",
-      animation: "slide_from_bottom"
-    }
+      animation: "slide_from_bottom",
+    },
   },
-  {
-    name: "clients",
-    options: {
-      type: "modal",
-      title: "Agregar Cliente",
-      animation: "slide_from_bottom"
-    }
-  }
 ] as const;
 
 const THEME = {
@@ -45,26 +54,43 @@ const THEME = {
     primary: "#60A5FACC",
     background: "#F3F4F6",
     textLight: "#fff",
-    textDark: "#60A5FA"
+    textDark: "#60A5FA",
   },
   headers: {
     default: {
-      headerStyle: { backgroundColor: "#60A5FACC" },
-      headerTintColor: "#fff"
+      headerStyle: {
+        backgroundColor: "#60A5FACC",
+        elevation: 2,
+        shadowOpacity: 0.1,
+      },
+      headerTitleStyle: {
+        fontWeight: "bold",
+        fontSize: 18,
+      },
+      headerTintColor: "#fff",
     },
     modal: {
-      headerStyle: { backgroundColor: "#F3F4F6" },
-      headerTintColor: "#60A5FA"
-    }
-  }
+      headerStyle: {
+        backgroundColor: "#F3F4F6",
+        elevation: 4,
+        shadowOpacity: 0.15,
+      },
+      headerTitleStyle: {
+        fontWeight: "bold",
+        color: "#1E3A8A",
+        fontSize: 18,
+      },
+      headerTintColor: "#60A5FA",
+    },
+  },
 };
 
 interface ScreenConfig {
   name: string;
   options: {
-    type?: 'tabs' | 'modal' | 'default';
+    type?: "tabs" | "modal" | "default";
     title: string;
-    animation?: 'fade' | 'slide_from_right' | 'slide_from_bottom';
+    animation?: "fade" | "slide_from_right" | "slide_from_bottom";
     headerShown?: boolean;
   };
 }
@@ -74,7 +100,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     const initializeApp = async () => {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       setIsAppReady(true);
     };
     initializeApp();
@@ -85,22 +111,38 @@ export default function RootLayout() {
   return (
     <Providers>
       <View style={styles.container}>
-        <Stack screenOptions={THEME.headers.default}>
-          {SCREENS_CONFIG.map(({ name, options }: ScreenConfig) => (
+        <Stack
+          screenOptions={{
+            ...THEME.headers.default,
+            gestureEnabled: true,
+            fullScreenGestureEnabled: true,
+          }}
+        >
+          {SCREENS_CONFIG.map(({ name, options }) => (
             <Stack.Screen
               key={name}
               name={name}
               options={{
                 title: options.title,
-                headerShown: options.type === 'tabs' ? false : undefined,
-                presentation: options.type === 'modal' ? 'modal' : undefined,
-                headerStyle: options.type === 'modal'
-                  ? THEME.headers.modal.headerStyle
-                  : THEME.headers.default.headerStyle,
-                headerTintColor: options.type === 'modal'
-                  ? THEME.headers.modal.headerTintColor
-                  : THEME.headers.default.headerTintColor,
-                animation: options.animation as any
+                headerShown: options.type === "tabs" ? false : true,
+                presentation: options.type === "modal" ? "modal" : "card",
+                headerStyle:
+                  options.type === "modal"
+                    ? THEME.headers.modal.headerStyle
+                    : THEME.headers.default.headerStyle,
+                headerTitleStyle:
+                  options.type === "modal"
+                    ? THEME.headers.modal.headerTitleStyle
+                    : THEME.headers.default.headerTitleStyle,
+                headerTintColor:
+                  options.type === "modal"
+                    ? THEME.headers.modal.headerTintColor
+                    : THEME.headers.default.headerTintColor,
+                animation: options.animation,
+                gestureDirection:
+                  options.animation === "slide_from_bottom"
+                    ? "vertical"
+                    : "horizontal",
               }}
             />
           ))}
@@ -113,6 +155,6 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: THEME.colors.background
-  }
+    backgroundColor: THEME.colors.background,
+  },
 });
