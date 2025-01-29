@@ -10,7 +10,6 @@ export default function Order() {
   const { tableId, place, isActive, orderId, totalOrder } =
     useLocalSearchParams();
   const {
-    selectedProducts,
     order,
     handleSaveOrder
   } = useOrderManagement(
@@ -32,7 +31,7 @@ export default function Order() {
       <ScrollView className="p-4">
         <ClientSection />
         <ProductSection
-          products={selectedProducts}
+          products={order.detalles}
           onAddProduct={() => router.navigate({ pathname: "/products-screen" })}
         />
       </ScrollView>

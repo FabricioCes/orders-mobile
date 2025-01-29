@@ -69,7 +69,7 @@ const ProductsScreen: React.FC<Props> = ({
                       product={product}
                       addToOrder={() => {
                         addToOrder(product);
-                        router.back();
+                        //router.back();
                       }}
                     />
                   ))}

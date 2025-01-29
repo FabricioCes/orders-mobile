@@ -1,15 +1,11 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import ProductItem from "./orders/product-item";
+import { OrderDetail } from "@/types/types";
+import ProductDetail from "./orders/product-detail";
 
 interface ProductSectionProps {
-  products: Array<{
-    id: number;
-    name: string;
-    price: number;
-    description?: string;
-  }>;
+  products: OrderDetail[];
   onAddProduct?: () => void;
 }
 
@@ -33,9 +29,9 @@ const ProductSection: React.FC<ProductSectionProps> = ({
 
       {products.length > 0 ? (
         products.map((product) => (
-          <TouchableOpacity key={product.id} className="mb-3">
-            <ProductItem
-              key={product.id}
+          <TouchableOpacity key={product.idProducto} className="mb-3">
+            <ProductDetail
+              key={product.idProducto}
               product={product}
               addToOrder={() => {}}
               showDetails={true}

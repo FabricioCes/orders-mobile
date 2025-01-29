@@ -28,7 +28,6 @@ export function useOrderManagement (
     imprimir: true,
     detalles: []
   })
-  const [selectedProducts, setSelectedProducts] = useState<Product[]>([])
   const [expandedSubCategory, setExpandedSubCategory] = useState<string | null>(
     null
   )
@@ -102,7 +101,6 @@ export function useOrderManagement (
   }, [selectedClient])
 
   const addToOrder = (product: Product) => {
-    setSelectedProducts(prev => [...prev, product])
     setOrderDetails(prevDetails => {
       const existingDetail = prevDetails.find(
         detail => detail.idProducto === product.id
@@ -248,7 +246,6 @@ export function useOrderManagement (
     expandedSubCategory,
     setExpandedSubCategory,
     expandedSubSubCategory,
-    setExpandedSubSubCategory,
-    selectedProducts
+    setExpandedSubSubCategory
   }
 }
