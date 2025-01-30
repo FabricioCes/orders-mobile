@@ -1,6 +1,6 @@
 import { Order, OrderDetail } from "@/types/types";
 import { router } from "expo-router";
-import { createContext, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useState } from "react";
 import { Alert } from "react-native";
 import { useSettings } from "./SettingsContext";
 import { useTable } from "./TablesContext";
@@ -110,7 +110,7 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [apiOrderDetails, setApiOrderDetails] = useState<OrderDetail[]>([]);
 
-  async function getOrderDetails(orderId: number) {
+  const getOrderDetails = useCallback( async (orderId: number) => {
     const url = `http://${settings?.idComputadora}:5001/orden/${orderId}/detalle`;
 
     try {
@@ -152,7 +152,7 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
       console.error("Error fetching order details:", error);
       setApiOrderDetails([]);
     }
-  }
+  },[]);
 
   const deleteOrderDetail = async (idDetail: number): Promise<boolean> => {
     const url = `http://${settings?.idComputadora}:5001/orden/detalle/${idDetail}`;

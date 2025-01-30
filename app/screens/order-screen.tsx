@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { View, Alert, BackHandler, Text, ScrollView, TouchableOpacity } from "react-native";
+import {
+  View,
+  Alert,
+  BackHandler,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ClientSection from "../components/client-section";
@@ -10,14 +17,26 @@ import ProductDetail from "../components/orders/product-detail";
 import { Order } from "@/types/types";
 
 export default function OrderScreen() {
-  const { tableId, place, isActive, orderId, totalOrder } = useLocalSearchParams();
-  const { order, setOrderDetails, handleSaveOrder } = useOrderManagement(
-    isActive === "true",
-    Number(orderId),
-    Number(totalOrder),
-    Number(tableId),
-    String(place)
+  const { tableId, place, isActive, orderId, totalOrder } =
+    useLocalSearchParams();
+  console.log(
+    "Datos de la orden:",
+    tableId,
+    place,
+    isActive,
+    orderId,
+    totalOrder
   );
+  const { order, orderDetails, setOrderDetails, handleSaveOrder } =
+    useOrderManagement(
+      isActive === "true",
+      Number(orderId),
+      Number(totalOrder),
+      Number(tableId),
+      String(place)
+    );
+  console.log("Datos de la orden:", order);
+  console.log("Detalles de la orden:", orderDetails);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
 
   // Guardar temporalmente la orden
@@ -29,11 +48,13 @@ export default function OrderScreen() {
     }
   };
 
-  // Cargar orden al entrar en la pantalla
   const loadOrderLocally = async () => {
     const savedOrder = await AsyncStorage.getItem("currentOrder");
     if (savedOrder) {
-      setOrderDetails(JSON.parse(savedOrder));
+      const parsedOrder = JSON.parse(savedOrder);
+      if (JSON.stringify(parsedOrder) !== JSON.stringify(orderDetails)) {
+        setOrderDetails(parsedOrder);
+      }
     }
   };
 
@@ -41,6 +62,9 @@ export default function OrderScreen() {
   const clearLocalOrder = async () => {
     await AsyncStorage.removeItem("currentOrder");
   };
+  useEffect(() => {
+    console.log("Productos en la orden actual:", orderDetails);
+  }, [orderDetails]);
 
   useEffect(() => {
     loadOrderLocally();
@@ -66,12 +90,14 @@ export default function OrderScreen() {
       return false;
     };
 
-    const backHandler = BackHandler.addEventListener("hardwareBackPress", handleBackAction);
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      handleBackAction
+    );
 
     return () => backHandler.remove();
   }, [unsavedChanges]);
 
-  // Monitorear cambios en los detalles
   useEffect(() => {
     saveOrderLocally(order);
     setUnsavedChanges(true);

@@ -44,7 +44,7 @@ export function useOrderManagement (
   >(null)
   const normalizeText = (text: string) =>
     text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-  // Filtrar productos basado en la búsqueda
+
   const filteredMenu = useMemo(
     () =>
       groupedProducts.map(subCategory => ({
@@ -83,11 +83,12 @@ export function useOrderManagement (
     fetchOrderDetails()
   }, [isActive, orderId, getOrderDetails])
 
-  useEffect(() => {
-    if (isActive) {
-      setOrderDetails(apiOrderDetails)
-    }
-  }, [isActive])
+ useEffect(() => {
+  if (isActive && orderDetails !== apiOrderDetails) {
+    setOrderDetails(apiOrderDetails);
+  }
+}, [isActive, apiOrderDetails]);
+
 
   useEffect(() => {
     if (selectedClient) {
@@ -108,24 +109,28 @@ export function useOrderManagement (
       const total = orderDetails.reduce(
         (sum, detail) => sum + (detail.precio || 0),
         0
-      )
+      );
       setOrder(prevOrder => {
-        if (prevOrder.totalSinDescuento !== total || prevOrder.detalles !== orderDetails) {
-          return { ...prevOrder, totalSinDescuento: total, detalles: orderDetails };
+        if (prevOrder.totalSinDescuento !== total || prevOrder.detalles.length !== orderDetails.length) {
+          return { ...prevOrder, totalSinDescuento: total, detalles: [...orderDetails] };
         }
         return prevOrder;
-      })
+      });
     } else {
-      console.warn('orderDetails no es un arreglo')
+      console.warn('orderDetails no es un arreglo');
     }
-  }, [orderDetails])
+  }, [orderDetails]);
+  
 
   const addToOrder = (product: Product, cantidad: number = 1) => {
+    console.log('Añadiendo producto a la orden:', product);
     setOrderDetails(prevDetails => {
-      const existingDetail = prevDetails.find(
-        detail => detail.idProducto === product.id
-      )
+      console.log('Detalles de la orden:', prevDetails)
+      const existingDetail = prevDetails.find(detail => detail.idProducto === product.id);
+
+      console.log('Detalle existente:', prevDetails.find(detail => detail.idProducto === product.id))
       if (existingDetail) {
+        console.log('El producto ya existe en la orden:', existingDetail)
         return prevDetails.map(detail =>
           detail.idProducto === product.id
             ? { ...detail, cantidad: detail.cantidad + cantidad }
@@ -142,7 +147,10 @@ export function useOrderManagement (
         quitarIngrediente: false,
         identificadorOrdenDetalle: 0
       }
-      return [...prevDetails, newDetail]
+      console.log('Añadiendo nuevo detalle a la orden:', newDetail)
+      const nuevaOrden = [...prevDetails, newDetail]
+      console.log('Nueva orden:', nuevaOrden)
+      return nuevaOrden;
     })
   }
 

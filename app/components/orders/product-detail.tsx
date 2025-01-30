@@ -24,7 +24,7 @@ const ProductDetail = ({
         )}
       </View>
       {!showDetails && (
-        <TouchableOpacity onPress={addToOrder}>
+        <TouchableOpacity onPress={() => addToOrder()}>
           <FontAwesome name="plus-circle" size={20} color="#3b82f6" />
         </TouchableOpacity>
       )}
