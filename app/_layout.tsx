@@ -16,7 +16,7 @@ const SCREENS_CONFIG: ScreenConfig[] = [
     },
   },
   {
-    name: "order-screen",
+    name: "screens/order-screen",
     options: {
       title: "Detalle de Orden",
       animation: "slide_from_right",
@@ -24,7 +24,7 @@ const SCREENS_CONFIG: ScreenConfig[] = [
     },
   },
   {
-    name: "products-screen",
+    name: "screens/products-screen",
     options: {
       type: "modal",
       title: "Seleccionar Productos",
@@ -32,7 +32,7 @@ const SCREENS_CONFIG: ScreenConfig[] = [
     },
   },
   {
-    name: "clients-screen",
+    name: "screens/clients-screen",
     options: {
       type: "modal",
       title: "Gestión de Clientes",
@@ -40,7 +40,7 @@ const SCREENS_CONFIG: ScreenConfig[] = [
     },
   },
   {
-    name: "login",
+    name: "components/login",
     options: {
       type: "modal",
       title: "Iniciar Sesión",

@@ -115,7 +115,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setHasUser(false);
       setUserName("");
       setToken("");
-      router.navigate("/login"); // Redirige al login
+      router.navigate("/components/login"); // Redirige al login
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
     }

@@ -66,7 +66,7 @@ export const useTableNavigation = (place: string) => {
     Alert.alert(
       'Oops! 🥺🏼',
       'Debes Iniciar Sesión 🧑',
-      [{ text: 'Aceptar', onPress: () => router.navigate('/login') }],
+      [{ text: 'Aceptar', onPress: () => router.navigate('/components/login') }],
       { cancelable: false }
     )
 
