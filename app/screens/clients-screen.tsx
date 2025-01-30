@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, FlatList, StyleSheet } from "react-native";
 import { useClients } from "@/context/ClientsContext";
-import ClientListItem from "./client-list-item";
+import ClientListItem from "../components/client-list-item";
 import { router } from "expo-router";
 import { Client } from "@/types/clientTypes";
 

@@ -3,10 +3,10 @@ import { View, FlatList } from "react-native";
 import { useProducts } from "@/context/ProductsContext";
 import { useOrderManagement } from "@/hooks/useOrderManagement";
 
-import CategoryAccordion from "./CategoryAccordion";
-import SearchBar from "./orders/serch-bar";
-import LoadingState from "./LoadingState";
-import ErrorState from "./ErrorState";
+import CategoryAccordion from "../components/CategoryAccordion";
+import SearchBar from "../components/orders/serch-bar";
+import LoadingState from "../components/LoadingState";
+import ErrorState from "../components/ErrorState";
 
 const ProductsScreen: React.FC = () => {
   const { groupedProducts, loading, error } = useProducts();

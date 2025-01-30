@@ -25,7 +25,7 @@ const SettingsScreen = () => {
 
   const handleLogout = () => {
     logOut();
-    router.navigate("/login"); // Asegúrate de que esta ruta sea correcta
+    router.navigate("/components/login"); // Asegúrate de que esta ruta sea correcta
   };
 
   const renderUserSection = () => (
@@ -48,7 +48,7 @@ const SettingsScreen = () => {
         Oops! No has iniciado sesión. ⚠️
       </Text>
       <Link
-        href="/login"
+        href="/components/login"
         className="mt-5 py-3 px-4 bg-blue-500 text-white font-bold text-center rounded-lg"
       >
         Iniciar Sesión

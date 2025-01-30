@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { View, Alert, BackHandler, Text, ScrollView, TouchableOpacity } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import ClientSection from "./client-section";
-import ProductSection from "./product-section";
+import ClientSection from "../components/client-section";
+import ProductSection from "../components/product-section";
 import { useOrderManagement } from "@/hooks/useOrderManagement";
-import OrderSummaryItem from "./orders/order-summary-item";
-import ProductDetail from "./orders/product-detail";
+import OrderSummaryItem from "../components/orders/order-summary-item";
+import ProductDetail from "../components/orders/product-detail";
 import { Order } from "@/types/types";
 
 export default function OrderScreen() {
@@ -89,7 +89,7 @@ export default function OrderScreen() {
         <ClientSection />
         <View className="flex-1 border-t border-gray-200">
           <ProductSection
-            onAddProduct={() => router.navigate("/products-screen")}
+            onAddProduct={() => router.navigate("/screens/products-screen")}
           />
           <ScrollView className="flex-1">
             <View className="p-4">

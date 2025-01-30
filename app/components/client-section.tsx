@@ -13,7 +13,7 @@ const ClientSection = () => {
         <Text className="text-lg font-semibold">Cliente</Text>
         <TouchableOpacity
           className="flex-row items-center gap-2"
-          onPress={() => router.navigate("/clients-screen")}
+          onPress={() => router.navigate("/screens/clients-screen")}
         >
           <FontAwesome
             name={selectedClient ? "exchange" : "plus"}

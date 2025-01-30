@@ -46,7 +46,7 @@ export const useTableNavigation = (place: string) => {
   }) => {
     if (hasUser) {
       checkTokenExpiration()
-      router.navigate({ pathname: '/order-screen', params })
+      router.navigate({ pathname: '/screens/order-screen', params })
     } else if (!settings) {
       showConfigurationAlert()
     } else {
