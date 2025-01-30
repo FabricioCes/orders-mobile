@@ -73,7 +73,7 @@ const TabLayout = memo(() => {
               ),
               tabBarBadge: activeCount > 0 ? activeCount : undefined,
               tabBarBadgeStyle: {
-                backgroundColor: "#3b82f6",
+                backgroundColor: "#34D399CC",
                 color: "white",
                 fontSize: 8,
                 fontWeight: "bold",
