@@ -32,6 +32,16 @@ const OrderSummaryItem: React.FC<OrderSummaryProps> = ({
       }),
     ]).start();
   }, []);
+  useEffect(() => {
+    return () => {
+      Animated.parallel([
+        Animated.timing(fadeAnim,
+          { toValue: 0, duration: 300, useNativeDriver: true }),
+        Animated.timing(slideAnim,
+          { toValue: 100, duration: 400, useNativeDriver: true })
+      ]).start();
+    };
+  }, []);
   const animatedStyles = {
     opacity: fadeAnim,
     transform: [{ translateY: slideAnim }],

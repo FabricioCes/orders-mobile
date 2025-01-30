@@ -32,7 +32,7 @@ const SCREENS_CONFIG: ScreenConfig[] = [
     },
   },
   {
-    name: "clients",
+    name: "clients-screen",
     options: {
       type: "modal",
       title: "Gestión de Clientes",
