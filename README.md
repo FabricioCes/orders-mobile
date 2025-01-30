@@ -1,50 +1,56 @@
-# Welcome to your Expo app 👋
+# Aplicacion para la Gestion de Ordenes de Restaurante
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicación móvil para gestión de mesas, pedidos y clientes en establecimientos gastronómicos.
 
-## Get started
+![App Preview](https://via.placeholder.com/300x600/3b82f6/ffffff?text=Demo+App) <!-- Reemplazar con capturas reales -->
 
-1. Install dependencies
+## 🚀 Características Principales
 
-   ```bash
-   npm install
-   ```
+- **Gestión de Mesas**
+  - Seguimiento en tiempo real del estado de las mesas
+  - Sistema de colores para estados (libre, ocupado, pendiente pago)
+  - Cronómetro integrado para tiempo de servicio
 
-2. Start the app
+- **Gestión de Pedidos**
+  - Creación de pedidos multi-producto
+  - Cálculo automático de totales con descuentos
+  - Integración con impresora fiscal (OPCIONAL)
 
-   ```bash
-    npx expo start
-   ```
+- **Clientes**
+  - Búsqueda inteligente por nombre o cédula
+  - Historial de pedidos por cliente
+  - Multiples métodos de contacto (teléfono, correo)
 
-In the output, you'll find options to open the app in a
+- **Productos**
+  - Catálogo jerárquico (Categoría > Subcategoría)
+  - Búsqueda rápida con sugerencias
+  - Modificadores y opciones personalizables
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- **Seguridad**
+  - Autenticación JWT
+  - Roles de usuario (Admin, Mesero, Caja)
+  - Encriptación de datos sensibles
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
+## 🛠 Stack Tecnológico
+| Capa             | Tecnologías                                                                 |
+|-------------------|-----------------------------------------------------------------------------|
+| **Frontend**      | React Native, Expo, TypeScript, React Navigation                            |
+| **Estado**        | Context API, useReducer, react-query                                        |
+| **Estilos**       | Tailwind CSS, React Native Reanimated                                       |
+| **Utilidades**    | date-fns, react-hook-form, Zod, react-native-vector-icons     
+              |
+## 📥 Instalación
 ```bash
-npm run reset-project
-```
+# 1. Clonar repositorio
+git clone https://github.com/tu-usuario/restaurant-app.git
+cd restaurant-app
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+# 2. Instalar dependencias
+npm install --legacy-peer-deps
 
-## Learn more
+# 3. Configurar ambiente
+cp .env.example .env
 
-To learn more about developing your project with Expo, look at the following resources:
+# 4. Iniciar aplicación
+npx expo start
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.

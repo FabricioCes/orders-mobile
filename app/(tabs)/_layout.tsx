@@ -27,7 +27,7 @@ const THEME = {
         shadowOpacity: 0.1,
       },
       headerTitleStyle: {
-        fontWeight: "bold",
+        fontWeight: "700",
         fontSize: 18,
       },
       headerTintColor: "#fff",
