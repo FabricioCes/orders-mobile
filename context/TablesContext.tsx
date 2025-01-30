@@ -63,8 +63,7 @@ export const TableProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     if (token) {
-      const interval = setInterval(getActiveTables, 15000);
-      return () => clearInterval(interval);
+      getActiveTables();
     }
   }, [token, hasUser]);
 

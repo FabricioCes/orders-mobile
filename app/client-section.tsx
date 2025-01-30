@@ -8,7 +8,7 @@ const ClientSection = () => {
   const { selectedClient, clearClient } = useClients();
 
   return (
-    <View className="bg-white rounded-lg p-4 mb-6 shadow-sm">
+    <View className="bg-white rounded-lg p-4 mb-6 shadow-sm border-t border-gray-200 mt-2" >
       <View className="flex-row items-center justify-between mb-4">
         <Text className="text-lg font-semibold">Cliente</Text>
         <TouchableOpacity

@@ -100,7 +100,7 @@ export function useOrderManagement (
     }
   }, [selectedClient])
 
-  const addToOrder = (product: Product) => {
+  const addToOrder = (product: Product, cantidad?: number) => {
     setOrderDetails(prevDetails => {
       const existingDetail = prevDetails.find(
         detail => detail.idProducto === product.id
@@ -117,7 +117,7 @@ export function useOrderManagement (
       const newDetail: OrderDetail = {
         idProducto: product.id,
         nombreProducto: product.name,
-        cantidad: 1,
+        cantidad: cantidad || 1,
         precio: product.price,
         porcentajeDescProducto: 0,
         ingrediente: false,
@@ -162,15 +162,18 @@ export function useOrderManagement (
   }, [orderDetails])
 
   useEffect(() => {
+    console.log(orderDetails)
     const total = orderDetails.reduce(
       (acc, detail) => acc + detail.cantidad * detail.precio,
       0
-    )
+    );
+    console.log(total)
     setOrder(prevOrder => ({
       ...prevOrder,
-      totalSinDescuento: total
-    }))
-  }, [orderDetails])
+      totalSinDescuento: total,
+      detalles: orderDetails
+    }));
+  }, [orderDetails]);
 
   const updateQuantity = (productId: number, quantity: number) => {
     setOrderDetails(prevDetails =>

@@ -1,6 +1,5 @@
 import React from "react";
-import { ScrollView, TouchableOpacity, View } from "react-native";
-import { Link, router } from "expo-router";
+import { ScrollView, View } from "react-native";
 import SearchBar from "./orders/serch-bar";
 import CategoryItem, { SubCategoryItem } from "./orders/category-Item";
 import ProductItem from "./orders/product-item";
@@ -67,10 +66,8 @@ const ProductsScreen: React.FC<Props> = ({
                     <ProductItem
                       key={product.id}
                       product={product}
-                      addToOrder={() => {
-                        addToOrder(product);
-                        //router.back();
-                      }}
+                      showDetails={false}
+                      addToOrder={() => addToOrder && addToOrder(product)}
                     />
                   ))}
                 </SubCategoryItem>

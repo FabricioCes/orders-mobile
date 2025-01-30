@@ -14,16 +14,21 @@ const ProductItem = ({
 }) => (
   <View className="p-3 bg-gray-50 rounded-lg mb-2">
     <View className="flex-row justify-between items-center">
-      <Text className="text-base font-medium">{product.name}</Text>
+    <View className="flex-1">
+        <Text className="text-base font-medium">{product.name}</Text>
+        {showDetails && (
+          <Text className="text-gray-600">${product.price.toFixed(2)}</Text>
+        )}
+      </View>
       {!showDetails && (
-        <TouchableOpacity onPress={addToOrder}>
-          <FontAwesome name="plus-circle" size={20} color="#3b82f6" />
+        <TouchableOpacity 
+          onPress={addToOrder}
+          className="ml-2"
+        >
+          <FontAwesome name="plus-circle" size={25} color="#3b82f6" />
         </TouchableOpacity>
       )}
     </View>
-    {showDetails && (
-      <Text className="text-gray-600">${product.price.toFixed(2)}</Text>
-    )}
   </View>
 );
 
