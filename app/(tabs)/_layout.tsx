@@ -95,7 +95,7 @@ const TabLayout = memo(() => {
         tabBarActiveTintColor: THEME.colors.primary,
         tabBarInactiveTintColor: isDarkMode ? "#888" : "#333",
         headerStyle: THEME.headers.default.headerStyle,
-        headerTintColor: !isDarkMode ? "#fff" : "#000",
+        headerTintColor: !isDarkMode ? "#fff" : "#0s00",
         lazy: true,
       }}
     >
@@ -106,8 +106,12 @@ const TabLayout = memo(() => {
         options={{
           title: "Conf",
           tabBarIcon: ({ color }) => (
-            <FontAwesome name="cog" size={28} color={color} />
+            <FontAwesome name="cog" size={24} color="#888" />
           ),
+          tabBarLabelStyle: {
+            fontSize: 10,
+            color: "#888",
+          },
           headerStyle: THEME.headers.default.headerStyle,
           headerTitleStyle: THEME.headers.default.headerTitleStyle,
           headerTintColor: THEME.headers.default.headerTintColor,
