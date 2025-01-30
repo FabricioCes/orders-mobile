@@ -10,7 +10,6 @@ const TableRow = memo(
     isActive,
     onTablePress,
     rowIndex,
-    totalColumns,
   }: TableRowProps & { rowIndex: number; totalColumns: number }) => {
 
     const handlePress = useCallback(

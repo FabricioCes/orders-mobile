@@ -58,7 +58,6 @@ const SettingsScreen = () => {
 
   return (
     <View className="flex-1 bg-gray-100 items-center p-5">
-      {/* Sección de ID de Computadora */}
       <View className="w-full p-4 bg-white shadow-md rounded-lg mb-10">
         <Text className="text-lg font-semibold text-gray-700">
           ID Computadora
@@ -77,7 +76,6 @@ const SettingsScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Mostrar sección según el estado del usuario */}
       {hasUser ? renderUserSection() : renderLoginPrompt()}
     </View>
   );

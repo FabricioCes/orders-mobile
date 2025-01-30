@@ -1,9 +1,9 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import { Product } from "@/types/types";
+import { Product } from "@/types/productTypes";
 import { FontAwesome } from "@expo/vector-icons";
 
-const ProductItem = ({
+const ProductListItem = ({
   product,
   addToOrder,
   showDetails = false,
@@ -32,4 +32,4 @@ const ProductItem = ({
   </View>
 );
 
-export default ProductItem;
+export default ProductListItem;

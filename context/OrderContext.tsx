@@ -48,9 +48,6 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
         body: JSON.stringify(order),
       });
 
-
-
-
       switch (res.status) {
         case 200:
           getActiveTables();

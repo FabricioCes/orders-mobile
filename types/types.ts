@@ -8,18 +8,6 @@ export type OrderTable = {
     place: string;
 }
 
-export type Product = {
-    id: number;
-    name: string;
-    price: number;
-    idSubCategoria?: number;
-    subCategoria?: string;
-    idSubSubCategoria?: number;
-    subSubCategoria?: string;
-    quantity?: number;
-  }
-
-
 export type Order = {
     numeroOrden?: number;
     numeroLugar?: string;

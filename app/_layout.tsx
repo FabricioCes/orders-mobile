@@ -16,7 +16,7 @@ const SCREENS_CONFIG: ScreenConfig[] = [
     },
   },
   {
-    name: "order",
+    name: "order-screen",
     options: {
       title: "Detalle de Orden",
       animation: "slide_from_right",

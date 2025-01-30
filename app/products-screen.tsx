@@ -1,83 +1,56 @@
-import React from "react";
-import { ScrollView, View } from "react-native";
-import SearchBar from "./orders/serch-bar";
-import CategoryItem, { SubCategoryItem } from "./orders/category-Item";
-import ProductItem from "./orders/product-item";
+import React, { useMemo, useState } from "react";
+import { View, FlatList } from "react-native";
+import { useProducts } from "@/context/ProductsContext";
 import { useOrderManagement } from "@/hooks/useOrderManagement";
 
-type Props = {
-  tableId: number;
-  place: string;
-  isActive: boolean;
-  orderId: number;
-  totalOrder: number;
-};
-const ProductsScreen: React.FC<Props> = ({
-  tableId,
-  place,
-  isActive,
-  orderId,
-  totalOrder,
-}) => {
-  const {
-    addToOrder,
-    filteredMenu,
-    searchQuery,
-    setSearchQuery,
-    expandedSubCategory,
-    setExpandedSubCategory,
-    expandedSubSubCategory,
-    setExpandedSubSubCategory,
-  } = useOrderManagement(isActive, orderId, totalOrder, tableId, place);
+import CategoryAccordion from "./CategoryAccordion";
+import SearchBar from "./orders/serch-bar";
+import LoadingState from "./LoadingState";
+import ErrorState from "./ErrorState";
+
+const ProductsScreen: React.FC = () => {
+  const { groupedProducts, loading, error } = useProducts();
+  const [searchQuery, setSearchQuery] = useState("");
+  const { addToOrder } = useOrderManagement(true, 1, 100, 1, "Main");
+
+  const filteredGroups = useMemo(() => {
+    if (!searchQuery) return groupedProducts;
+
+    const query = searchQuery.toLowerCase();
+    return groupedProducts
+      .map((group) => ({
+        ...group,
+        subCategories: group.subCategories.map((subCat) => ({
+          ...subCat,
+          products: subCat.products.filter(
+            (p) =>
+              p.name.toLowerCase().includes(query) ||
+              p.subCategory.toLowerCase().includes(query)
+          ),
+        })),
+      }))
+      .filter((group) =>
+        group.subCategories.some((subCat) => subCat.products.length > 0)
+      );
+  }, [groupedProducts, searchQuery]);
+
+  if (loading) return <LoadingState />;
+  if (error) return <ErrorState message={error} />;
 
   return (
-    <View className="flex-1 bg-white">
-      <ScrollView className="p-4">
-        <SearchBar
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          filteredMenu={filteredMenu}
-        />
+    <View className="flex-1 bg-white p-4">
+      <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} filteredMenu={filteredGroups} />
 
-        <View className="mt-4">
-          {filteredMenu.map((subCategory) => (
-            <CategoryItem
-              key={subCategory.name}
-              categoryName={subCategory.name}
-              expandedCategory={expandedSubCategory}
-              toggleCategory={() =>
-                setExpandedSubCategory((prev) =>
-                  prev === subCategory.name ? null : subCategory.name
-                )
-              }
-            >
-              {subCategory.subSubCategories.map((subSubCategory) => (
-                <SubCategoryItem
-                  key={subSubCategory.name}
-                  subCategoryName={subSubCategory.name}
-                  expandedSubCategory={expandedSubSubCategory}
-                  toggleSubCategory={() =>
-                    setExpandedSubSubCategory((prev) =>
-                      prev === subSubCategory.name ? null : subSubCategory.name
-                    )
-                  }
-                >
-                  {subSubCategory.products.map((product) => (
-                    <ProductItem
-                      key={product.id}
-                      product={product}
-                      showDetails={false}
-                      addToOrder={() => addToOrder && addToOrder(product)}
-                    />
-                  ))}
-                </SubCategoryItem>
-              ))}
-            </CategoryItem>
-          ))}
-        </View>
-      </ScrollView>
+      <FlatList
+        data={filteredGroups}
+        keyExtractor={(item) => item.category}
+        renderItem={({ item }) => (
+          <CategoryAccordion category={item} onAddProduct={addToOrder} />
+        )}
+        contentContainerStyle={{ paddingBottom: 20 }}
+      />
     </View>
   );
 };
 
-export default ProductsScreen;
+export default React.memo(ProductsScreen);

@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useClients } from "@/context/ClientsContext";
 import SearchBar from "./serch-bar";
-import ProductItem from "./product-item";
+import ProductItem from "./product-list-item";
 import OrderSummary from "./order-summary-item";
 import CategoryItem, { SubCategoryItem } from "./category-Item";
 import { router } from "expo-router";
@@ -111,7 +111,7 @@ const Menu: React.FC<Props> = ({
             total={order.totalSinDescuento ?? 0}
             handleSaveOrder={handleSaveOrder}
             clearClient={clearClient}
-            handleAddClient={() => router.navigate("/clients")}
+            handleAddClient={() => router.navigate("/clients-screen")}
           />
         </ScrollView>
       </KeyboardAvoidingView>
