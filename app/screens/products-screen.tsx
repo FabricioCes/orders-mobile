@@ -7,11 +7,20 @@ import CategoryAccordion from "../components/CategoryAccordion";
 import SearchBar from "../components/orders/serch-bar";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
+import { useLocalSearchParams } from "expo-router";
 
 const ProductsScreen: React.FC = () => {
   const { groupedProducts, loading, error } = useProducts();
   const [searchQuery, setSearchQuery] = useState("");
-  const { addToOrder } = useOrderManagement(true, 1, 100, 1, "Main");
+    const { tableId, place, isActive, orderId, totalOrder } =
+      useLocalSearchParams();
+  const { addToOrder } = useOrderManagement(
+    isActive === "true",
+    Number(orderId),
+    Number(totalOrder),
+    Number(tableId),
+    String(place)
+  );
 
   const filteredGroups = useMemo(() => {
     if (!searchQuery) return groupedProducts;

@@ -19,14 +19,7 @@ import { Order } from "@/types/types";
 export default function OrderScreen() {
   const { tableId, place, isActive, orderId, totalOrder } =
     useLocalSearchParams();
-  console.log(
-    "Datos de la orden:",
-    tableId,
-    place,
-    isActive,
-    orderId,
-    totalOrder
-  );
+
   const { order, orderDetails, setOrderDetails, handleSaveOrder } =
     useOrderManagement(
       isActive === "true",
@@ -35,11 +28,9 @@ export default function OrderScreen() {
       Number(tableId),
       String(place)
     );
-  console.log("Datos de la orden:", order);
-  console.log("Detalles de la orden:", orderDetails);
+
   const [unsavedChanges, setUnsavedChanges] = useState(false);
 
-  // Guardar temporalmente la orden
   const saveOrderLocally = async (currentOrder: Order) => {
     try {
       await AsyncStorage.setItem("currentOrder", JSON.stringify(currentOrder));
@@ -63,8 +54,8 @@ export default function OrderScreen() {
     await AsyncStorage.removeItem("currentOrder");
   };
   useEffect(() => {
-    console.log("Productos en la orden actual:", orderDetails);
-  }, [orderDetails]);
+console.log('order', order)
+  }, [order]);
 
   useEffect(() => {
     loadOrderLocally();

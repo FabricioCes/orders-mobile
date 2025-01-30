@@ -42,6 +42,7 @@ export function useOrderManagement (
   const [expandedSubSubCategory, setExpandedSubSubCategory] = useState<
     string | null
   >(null)
+
   const normalizeText = (text: string) =>
     text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 
@@ -83,12 +84,14 @@ export function useOrderManagement (
     fetchOrderDetails()
   }, [isActive, orderId, getOrderDetails])
 
- useEffect(() => {
-  if (isActive && orderDetails !== apiOrderDetails) {
-    setOrderDetails(apiOrderDetails);
-  }
-}, [isActive, apiOrderDetails]);
-
+  useEffect(() => {
+    if (
+      isActive &&
+      JSON.stringify(orderDetails) !== JSON.stringify(apiOrderDetails)
+    ) {
+      setOrderDetails(apiOrderDetails)
+    }
+  }, [isActive, apiOrderDetails])
 
   useEffect(() => {
     if (selectedClient) {
@@ -98,7 +101,7 @@ export function useOrderManagement (
         idCliente: selectedClient.id || 1000
       }))
     }
-  }, [selectedClient])
+  }, [selectedClient, setOrder])
 
   useEffect(() => {
     if (orderDetails.length === 0) clearClient()
@@ -107,30 +110,35 @@ export function useOrderManagement (
   useEffect(() => {
     if (Array.isArray(orderDetails)) {
       const total = orderDetails.reduce(
-        (sum, detail) => sum + (detail.precio || 0),
+        (sum, detail) => sum + (detail.precio || 0) * (detail.cantidad || 1),
         0
-      );
+      )
+
       setOrder(prevOrder => {
-        if (prevOrder.totalSinDescuento !== total || prevOrder.detalles.length !== orderDetails.length) {
-          return { ...prevOrder, totalSinDescuento: total, detalles: [...orderDetails] };
+        if (
+          prevOrder.totalSinDescuento !== total ||
+          JSON.stringify(prevOrder.detalles) !== JSON.stringify(orderDetails)
+        ) {
+          return {
+            ...prevOrder,
+            totalSinDescuento: total,
+            detalles: [...orderDetails]
+          }
         }
-        return prevOrder;
-      });
+        return prevOrder
+      })
     } else {
-      console.warn('orderDetails no es un arreglo');
+      console.warn('orderDetails no es un arreglo')
     }
-  }, [orderDetails]);
-  
+  }, [orderDetails, setOrder])
 
   const addToOrder = (product: Product, cantidad: number = 1) => {
-    console.log('Añadiendo producto a la orden:', product);
     setOrderDetails(prevDetails => {
-      console.log('Detalles de la orden:', prevDetails)
-      const existingDetail = prevDetails.find(detail => detail.idProducto === product.id);
+      const existingDetail = prevDetails.find(
+        detail => detail.idProducto === product.id
+      )
 
-      console.log('Detalle existente:', prevDetails.find(detail => detail.idProducto === product.id))
       if (existingDetail) {
-        console.log('El producto ya existe en la orden:', existingDetail)
         return prevDetails.map(detail =>
           detail.idProducto === product.id
             ? { ...detail, cantidad: detail.cantidad + cantidad }
@@ -147,10 +155,10 @@ export function useOrderManagement (
         quitarIngrediente: false,
         identificadorOrdenDetalle: 0
       }
-      console.log('Añadiendo nuevo detalle a la orden:', newDetail)
+
       const nuevaOrden = [...prevDetails, newDetail]
-      console.log('Nueva orden:', nuevaOrden)
-      return nuevaOrden;
+
+      return nuevaOrden
     })
   }
 
