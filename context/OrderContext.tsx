@@ -33,7 +33,7 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
     const url = `http://${settings?.idComputadora}:5001/orden`;
 
     const showAlert = (title: string, message: string) => {
-      Alert.alert(title, message, [{ text: "Aceptar", onPress: () => {} }], {
+      Alert.alert(title, message, [{ text: "Aceptar", onPress: () => { } }], {
         cancelable: false,
       });
     };
@@ -110,15 +110,20 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [apiOrderDetails, setApiOrderDetails] = useState<OrderDetail[]>([]);
 
-  const getOrderDetails = useCallback( async (orderId: number) => {
-    const url = `http://${settings?.idComputadora}:5001/orden/${orderId}/detalle`;
+  const getOrderDetails = useCallback(async (orderId: number) => {
+    if (!settings?.idComputadora || !token) {
+      console.warn("settings.idComputadora o token no están disponibles aún.");
+      return;
+    }
+
+    const url = `http://${settings.idComputadora}:5001/orden/${orderId}/detalle`;
 
     try {
       const res = await fetch(url, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`,
         },
       });
 
@@ -152,7 +157,7 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
       console.error("Error fetching order details:", error);
       setApiOrderDetails([]);
     }
-  },[]);
+  }, [settings?.idComputadora, token]); // <-- Agregamos dependencias
 
   const deleteOrderDetail = async (idDetail: number): Promise<boolean> => {
     const url = `http://${settings?.idComputadora}:5001/orden/detalle/${idDetail}`;
