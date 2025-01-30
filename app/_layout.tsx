@@ -106,8 +106,6 @@ export default function RootLayout() {
     initializeApp();
   }, []);
 
-  if (!isAppReady) return <SplashScreenAnimated />;
-
   return (
     <Providers>
       <View style={styles.container}>
