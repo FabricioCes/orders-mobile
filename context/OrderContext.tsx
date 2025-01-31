@@ -6,10 +6,13 @@ import { useSettings } from "./SettingsContext";
 import { useTable } from "./TablesContext";
 
 interface OrderContextType {
+  currentOrder: Order | null;
   saveOrder: (order: Order, method: string) => void;
   getOrderDetails: (orderId: number) => void;
   apiOrderDetails: OrderDetail[];
   deleteOrderDetail: (idDetail: number) => Promise<boolean>;
+  updateOrder: (order: Order) => void;
+  resetOrder: () => void;
 }
 
 type APIOrderDetail = {
@@ -28,7 +31,7 @@ const OrderContext = createContext<OrderContextType | undefined>(undefined);
 export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
   const { settings, token } = useSettings();
   const { getActiveTables } = useTable();
-
+  const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
   async function saveOrder(order: Order, method: string) {
     const url = `http://${settings?.idComputadora}:5001/orden`;
 
@@ -50,6 +53,8 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
 
       switch (res.status) {
         case 200:
+          const savedOrder = await res.json();
+          setCurrentOrder(savedOrder);
           getActiveTables();
           showOrder(true);
           break;
@@ -182,10 +187,18 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
       return false;
     }
   };
+  const updateOrder = (order: Order) => {
+    setCurrentOrder(order); 
+  };
+
+  // Resetear la orden
+  const resetOrder = () => {
+    setCurrentOrder(null); 
+  };
 
   return (
     <OrderContext.Provider
-      value={{ saveOrder, getOrderDetails, apiOrderDetails, deleteOrderDetail }}
+      value={{ currentOrder, updateOrder, resetOrder ,saveOrder, getOrderDetails, apiOrderDetails, deleteOrderDetail }}
     >
       {children}
     </OrderContext.Provider>
