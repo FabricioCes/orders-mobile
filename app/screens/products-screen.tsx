@@ -4,29 +4,26 @@ import { useProducts } from "@/context/ProductsContext";
 import { useOrderManagement } from "@/hooks/useOrderManagement";
 import { useLocalSearchParams } from "expo-router";
 
-import CategoryAccordion from "../components/CategoryAccordion";
 import SearchBar from "../components/orders/serch-bar";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
+import { Product } from "@/types/productTypes";
+import CategoryAccordion from "../components/CategoryAccordion";
 
 const ProductsScreen: React.FC = () => {
   const { tableId, place, isActive, orderId } = useLocalSearchParams();
 
-  const {
-    searchQuery,
-    setSearchQuery,
-    filteredMenu,
-    addToOrder
-  } = useOrderManagement(
-    isActive === "true",
-    Number(orderId),
-    Number(tableId),
-    String(place)
-  );
+  const { searchQuery, setSearchQuery, filteredMenu, addToOrder} =
+    useOrderManagement(
+      isActive === "true",
+      Number(orderId),
+      Number(tableId),
+      String(place)
+    );
 
   const { loading, error } = useProducts();
 
-  if (loading) return <LoadingState />;
+  if (loading) return <LoadingState message="Cargando productos ..."/>;
   if (error) return <ErrorState message={error} />;
 
   return (
@@ -43,7 +40,7 @@ const ProductsScreen: React.FC = () => {
         renderItem={({ item }) => (
           <CategoryAccordion
             category={item}
-            onAddProduct={addToOrder}
+            onAddProduct={(product: Product, quantity: number | undefined) => addToOrder(product, quantity)}
           />
         )}
         contentContainerStyle={{ paddingBottom: 20 }}

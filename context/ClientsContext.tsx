@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useSettings } from "./SettingsContext";
 import { Client, ClientsContextType } from "@/types/clientTypes";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const ClientsContext = createContext<ClientsContextType | null>(null);
 
@@ -60,7 +61,11 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({
         status,
         selectedClient,
         addClient: (client) => setSelectedClient(client),
-        clearClient: () => setSelectedClient(undefined),
+        clearClient: () => {
+          setSelectedClient(undefined);
+          // Agregar limpieza persistente si es necesario
+          AsyncStorage.removeItem('selectedClient'); 
+        },
       }}
     >
       {children}

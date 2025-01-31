@@ -2,15 +2,20 @@ import { useState, useMemo, useCallback, useEffect } from 'react'
 import { Order, OrderDetail } from '@/types/types'
 import { useOrder } from '@/context/OrderContext'
 import { useClients } from '@/context/ClientsContext'
-import { Alert } from 'react-native'
+import { Alert, Settings } from 'react-native'
 import { useSettings } from '@/context/SettingsContext'
 import { useProducts } from '@/context/ProductsContext'
 import { Product } from '@/types/productTypes'
 
-function deepEqual(a: any, b: any): boolean {
+function deepEqual (a: any, b: any): boolean {
   if (a === b) return true
 
-  if (typeof a !== 'object' || a === null || typeof b !== 'object' || b === null) {
+  if (
+    typeof a !== 'object' ||
+    a === null ||
+    typeof b !== 'object' ||
+    b === null
+  ) {
     return false
   }
 
@@ -45,13 +50,29 @@ export function useOrderManagement (
   const { selectedClient, clearClient } = useClients()
   const { groupedProducts, loading, error } = useProducts()
 
-  // Estado inicial basado en currentOrder o valores por defecto
   const [order, setOrder] = useState<Order>(() => {
-    if (isActive && currentOrder?.numeroOrden === orderId) {
-      return currentOrder
-    }
-    return {
-      numeroOrden: isActive ? orderId : 0,
+    // Verificar tanto en currentOrder como en la API
+    const initialOrder = isActive 
+      ? currentOrder?.numeroOrden === orderId 
+        ? currentOrder 
+        : null
+      : {
+          numeroOrden: 0,
+          numeroLugar: tableId?.toString(),
+          ubicacion: place?.toUpperCase(),
+          observaciones: '',
+          nombreCliente: '',
+          idCliente: 0,
+          idUsuario: userName.toUpperCase(),
+          autorizado: true,
+          totalSinDescuento: 0,
+          imprimir: true,
+          detalles: []
+        };
+  
+    return initialOrder || {
+      // Estado por defecto si no hay orden activa
+      numeroOrden: 0,
       numeroLugar: tableId?.toString(),
       ubicacion: place?.toUpperCase(),
       observaciones: '',
@@ -62,8 +83,8 @@ export function useOrderManagement (
       totalSinDescuento: 0,
       imprimir: true,
       detalles: []
-    }
-  })
+    };
+  });
 
   const [orderDetails, setOrderDetails] = useState<OrderDetail[]>(
     isActive && currentOrder?.numeroOrden === orderId
@@ -79,16 +100,13 @@ export function useOrderManagement (
     string | null
   >(null)
 
-  // Memoized calculations
-  const totalSinDescuento = useMemo(
-    () =>{
-      console.log('Orden de detalles:', orderDetails) ;
-      return orderDetails.reduce(
-        (sum, detail) => sum + (detail.precio || 0) * (detail.cantidad || 1),
-        0
-      )},
-    [orderDetails]
-  )
+  const totalSinDescuento = useMemo(() => {
+    console.log('Orden de detalles:', orderDetails)
+    return orderDetails.reduce(
+      (sum, detail) => sum + (detail.precio || 0) * (detail.cantidad || 1),
+      0
+    )
+  }, [orderDetails])
 
   const normalizedSearch = useCallback(
     (text: string) => text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''),
@@ -112,26 +130,35 @@ export function useOrderManagement (
       .filter(subCat => subCat.subCategories.length > 0)
   }, [groupedProducts, searchQuery, normalizedSearch])
 
-  // Efectos principales
   useEffect(() => {
     const syncOrderData = async () => {
       if (isActive) {
-        if (currentOrder?.numeroOrden === orderId) {
+        if (!currentOrder || currentOrder.numeroOrden !== orderId) {
+          await getOrderDetails(orderId)
+
+          if (apiOrderDetails.length > 0) {
+            setOrderDetails(apiOrderDetails)
+            setOrder(prev => ({
+              ...prev,
+              detalles: apiOrderDetails,
+              totalSinDescuento: apiOrderDetails.reduce(
+                (sum, detail) =>
+                  sum + (detail.precio || 0) * (detail.cantidad || 1),
+                0
+              )
+            }))
+          }
+        } else {
           if (!deepEqual(currentOrder, order)) {
             setOrder(currentOrder)
             setOrderDetails(currentOrder.detalles)
-          }
-        } else {
-          await getOrderDetails(orderId)
-          if (apiOrderDetails.length > 0) {
-            setOrderDetails(apiOrderDetails)
           }
         }
       }
     }
 
     syncOrderData()
-  }, [isActive, orderId, currentOrder, apiOrderDetails])
+  }, [isActive, orderId, currentOrder])
 
   useEffect(() => {
     if (searchQuery) {
@@ -153,7 +180,6 @@ export function useOrderManagement (
     }
   }, [searchQuery, filteredMenu])
 
-  // Actualización sincronizada del contexto
   useEffect(() => {
     if (
       !deepEqual(order.detalles, orderDetails) ||
@@ -176,6 +202,13 @@ export function useOrderManagement (
     }
   }, [orderDetails, totalSinDescuento, selectedClient])
 
+  useEffect(() => {
+    return () => {
+      setOrderDetails([]);
+      setSearchQuery('');
+      clearClient()
+    }
+  }, [])
   // Handlers
   const addToOrder = useCallback((product: Product, cantidad: number = 1) => {
     setOrderDetails(prev => {
@@ -262,7 +295,6 @@ export function useOrderManagement (
   }
 }
 
-// Helper function
 function createNewDetail (product: Product): OrderDetail {
   return {
     idProducto: product.id,

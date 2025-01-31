@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import {  useState, useCallback, useEffect } from "react";
 import {
   View,
   Alert,
@@ -14,7 +14,6 @@ import ProductSection from "../components/product-section";
 import { useOrderManagement } from "@/hooks/useOrderManagement";
 import OrderSummaryItem from "../components/orders/order-summary-item";
 import ProductDetail from "../components/orders/product-detail";
-import type { Order } from "@/types/types";
 
 export default function OrderScreen() {
   const params = useLocalSearchParams();
@@ -28,11 +27,9 @@ export default function OrderScreen() {
   const {
     order,
     orderDetails,
-    addToOrder,
     removeFromOrder,
     updateQuantity,
     handleSaveOrder,
-    setSearchQuery,
   } = useOrderManagement(
     isActive === "true",
     Number(orderId),
@@ -95,6 +92,8 @@ export default function OrderScreen() {
     [removeFromOrder, orderDetails]
   );
 
+
+
   const handleBackAction = useCallback(() => {
     if (unsavedChanges) {
       Alert.alert(
@@ -146,21 +145,29 @@ export default function OrderScreen() {
           <ScrollView className="flex-1">
             <View className="p-4">
               {orderDetails.length > 0 ? (
-                orderDetails.map((product) => (
-                  <TouchableOpacity
-                    key={product.identificadorOrdenDetalle}
-                    onPress={() => handleProductPress(product.idProducto, product.identificadorOrdenDetalle)}
-                    className="mb-3"
-                  >
-                    <ProductDetail
-                      product={product}
-                      quantity={product.cantidad}
-                      /* onQuantityChange={(newQty) =>
-                        updateQuantity(product.idProducto, newQty)
-                      } */
-                    />
-                  </TouchableOpacity>
-                ))
+                orderDetails.map((product) => {
+                  console.log(orderDetails); // Mover el log aquí si es necesario
+                  return (
+                    <TouchableOpacity
+                      key={product.identificadorOrdenDetalle}
+                      onPress={() =>
+                        handleProductPress(
+                          product.idProducto,
+                          product.identificadorOrdenDetalle
+                        )
+                      }
+                      className="mb-3"
+                    >
+                      <ProductDetail
+                        product={product}
+                        quantity={product.cantidad}
+                        // onQuantityChange={(newQty) =>
+                        //   updateQuantity(product.idProducto, newQty)
+                        // }
+                      />
+                    </TouchableOpacity>
+                  );
+                })
               ) : (
                 <View className="bg-gray-50 p-3 rounded-lg">
                   <Text className="text-gray-500 text-center">

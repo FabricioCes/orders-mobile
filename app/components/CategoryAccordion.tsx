@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity} from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import type { ProductGroup } from "@/types/productTypes";
-import { Product } from "@/types/productTypes";
+import type { ProductGroup, Product } from "@/types/productTypes";
 import ProductListItem from "./orders/product-list-item";
+
 
 const CategoryAccordion: React.FC<{
   category: ProductGroup;
-  onAddProduct: (product: Product) => void;
+  onAddProduct: (product: Product, quantity: number) => void; // Actualizado para incluir cantidad
 }> = ({ category, onAddProduct }) => {
   const [expanded, setExpanded] = useState(false);
 
@@ -26,7 +26,7 @@ const CategoryAccordion: React.FC<{
       </TouchableOpacity>
 
       {expanded &&
-        category.subCategories.map((subCat: { name: any; products?: Product[]; }) => (
+        category.subCategories.map((subCat) => (
           <SubCategorySection
             key={subCat.name}
             subCategory={{ ...subCat, products: subCat.products || [] }}
@@ -39,7 +39,7 @@ const CategoryAccordion: React.FC<{
 
 const SubCategorySection: React.FC<{
   subCategory: { name: string; products: Product[] };
-  onAddProduct: (product: Product) => void;
+  onAddProduct: (product: Product, quantity: number) => void;
 }> = ({ subCategory, onAddProduct }) => {
   const [expanded, setExpanded] = useState(false);
 
@@ -65,7 +65,7 @@ const SubCategorySection: React.FC<{
             <ProductListItem
               key={product.id}
               product={product}
-              addToOrder={() => onAddProduct(product)}
+              onAddProduct={onAddProduct}
             />
           ))}
         </View>
@@ -74,4 +74,83 @@ const SubCategorySection: React.FC<{
   );
 };
 
-export default React.memo(CategoryAccordion);
+export default CategoryAccordion;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

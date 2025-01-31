@@ -32,11 +32,13 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
   const { settings, token } = useSettings();
   const { getActiveTables } = useTable();
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
+
+
   async function saveOrder(order: Order, method: string) {
     const url = `http://${settings?.idComputadora}:5001/orden`;
 
     const showAlert = (title: string, message: string) => {
-      Alert.alert(title, message, [{ text: "Aceptar", onPress: () => { } }], {
+      Alert.alert(title, message, [{ text: "Aceptar", onPress: () => {} }], {
         cancelable: false,
       });
     };
@@ -55,6 +57,7 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
         case 200:
           const savedOrder = await res.json();
           setCurrentOrder(savedOrder);
+          await getOrderDetails(savedOrder.numeroOrden);
           getActiveTables();
           showOrder(true);
           break;
@@ -115,33 +118,27 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [apiOrderDetails, setApiOrderDetails] = useState<OrderDetail[]>([]);
 
-  const getOrderDetails = useCallback(async (orderId: number) => {
-    if (!settings?.idComputadora || !token) {
-      console.warn("settings.idComputadora o token no están disponibles aún.");
-      return;
-    }
+  const getOrderDetails = useCallback(
+    async (orderId: number) => {
+      if (!settings?.idComputadora || !token) return;
 
-    const url = `http://${settings.idComputadora}:5001/orden/${orderId}/detalle`;
+      const url = `http://${settings.idComputadora}:5001/orden/${orderId}/detalle`;
 
-    try {
-      const res = await fetch(url, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-      });
+      try {
+        const res = await fetch(url, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-      if (!res.ok) {
-        console.error("Error fetching order details:", res.statusText);
-        return;
-      }
+        if (!res.ok) throw new Error("Error obteniendo detalles");
 
-      const data = await res.json();
+        const data = await res.json();
 
-      if (data.resultado && Array.isArray(data.resultado)) {
-        const details: OrderDetail[] = (data.resultado as APIOrderDetail[]).map(
-          (item) => ({
+        if (data.resultado?.length) {
+          const details = data.resultado.map((item: APIOrderDetail) => ({
             identificadorOrdenDetalle: item.identificadorOrdenDetalle,
             idProducto: item.identificadorProducto,
             nombreProducto: item.nombreProducto,
@@ -150,19 +147,20 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
             porcentajeDescProducto: item.porcentajeDescuento,
             ingrediente: item.ingrediente,
             quitarIngrediente: false,
-          })
-        );
+          }));
 
-        setApiOrderDetails(details);
-      } else {
-        console.warn("Unexpected response format:", data);
-        setApiOrderDetails([]);
+          // Actualizar estado global primero
+          setApiOrderDetails(details);
+          return details; // Devolver los detalles para sincronización inmediata
+        }
+        return [];
+      } catch (error) {
+        console.error("Error:", error);
+        return [];
       }
-    } catch (error) {
-      console.error("Error fetching order details:", error);
-      setApiOrderDetails([]);
-    }
-  }, [settings?.idComputadora, token]); // <-- Agregamos dependencias
+    },
+    [settings?.idComputadora, token]
+  );
 
   const deleteOrderDetail = async (idDetail: number): Promise<boolean> => {
     const url = `http://${settings?.idComputadora}:5001/orden/detalle/${idDetail}`;
@@ -188,17 +186,25 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
   const updateOrder = (order: Order) => {
-    setCurrentOrder(order); 
+    setCurrentOrder(order);
   };
 
   // Resetear la orden
   const resetOrder = () => {
-    setCurrentOrder(null); 
+    setCurrentOrder(null);
   };
 
   return (
     <OrderContext.Provider
-      value={{ currentOrder, updateOrder, resetOrder ,saveOrder, getOrderDetails, apiOrderDetails, deleteOrderDetail }}
+      value={{
+        currentOrder,
+        updateOrder,
+        resetOrder,
+        saveOrder,
+        getOrderDetails,
+        apiOrderDetails,
+        deleteOrderDetail,
+      }}
     >
       {children}
     </OrderContext.Provider>

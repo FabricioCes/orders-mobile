@@ -1,5 +1,6 @@
 import React from "react";
-import { TextInput, Text, View } from "react-native";
+import { TextInput, View, StyleSheet} from "react-native";
+import ErrorState from "../ErrorState";
 
 type SearchBarProps = {
   searchQuery: string;
@@ -14,33 +15,34 @@ const SearchBar: React.FC<SearchBarProps> = ({
 }) => {
   // Determina si hay resultados en el menú filtrado
   const hasResults = filteredMenu && filteredMenu.length > 0;
-  const borderColor =
-    hasResults || !searchQuery ? "border-gray-400" : "border-red-400";
 
   return (
     <View>
-      {/* Barra de búsqueda */}
       <TextInput
-        style={{
-          borderColor: borderColor,
-          borderWidth: 1,
-          borderRadius: 8,
-          padding: 10,
-          marginBottom: 8,
-        }}
+        style={styles.searchInput}
         placeholder="Buscar producto..."
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
 
-      {/* Mensaje de no resultados */}
+
       {!hasResults && searchQuery && (
-        <Text style={{ textAlign: "center", color: "gray" }}>
-          No se encontraron productos.
-        </Text>
+        <ErrorState message="No se econtraron Productos"/>
       )}
     </View>
   );
 };
-
+const styles = StyleSheet.create({
+  searchInput: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: "#c7d2fe",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    backgroundColor: "#fff",
+    color: "#1e293b",
+    fontSize: 16,
+  }
+});
 export default SearchBar;

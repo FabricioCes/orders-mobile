@@ -1,6 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
+import { View, Text } from "react-native";
 import type { OrderDetail } from "@/types/types";
 
 type ProductDetailProps = {
