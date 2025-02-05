@@ -1,8 +1,7 @@
-import {  useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import {
   View,
   Alert,
-  BackHandler,
   Text,
   ScrollView,
   TouchableOpacity,
@@ -11,9 +10,10 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import ClientSection from "../components/client-section";
 import ProductSection from "../components/product-section";
-import { useOrderManagement } from "@/hooks/useOrderManagement";
 import OrderSummaryItem from "../components/orders/order-summary-item";
 import ProductDetail from "../components/orders/product-detail";
+import { OrderDetail } from "@/types/types";
+import { useOrderManagement } from "@/hooks/useOrderManagement";
 
 export default function OrderScreen() {
   const params = useLocalSearchParams();
@@ -24,20 +24,14 @@ export default function OrderScreen() {
     orderId = "0",
   } = params;
 
-  const {
+const {
     order,
     orderDetails,
-    removeFromOrder,
-    updateQuantity,
-    handleSaveOrder,
-  } = useOrderManagement(
-    isActive === "true",
-    Number(orderId),
-    Number(tableId),
-    String(place)
-  );
+    removeProduct,
+    saveOrder,
+    undoLastAction,
+  } = useOrderManagement(isActive === "true", Number(orderId), Number(tableId), String(place));
 
-  const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<{
     id: number;
@@ -49,87 +43,55 @@ export default function OrderScreen() {
     if (selectedProduct && inputValue) {
       const quantity = parseInt(inputValue, 10);
       if (!isNaN(quantity)) {
-        updateQuantity(selectedProduct.id, quantity);
+        // Aquí podrías implementar la función para actualizar la cantidad del producto
+        // Por ejemplo: updateProductQuantity(selectedProduct.id, quantity);
       }
     }
     setShowQuantityModal(false);
   };
+
   const handleNavigateToProducts = useCallback(() => {
     router.navigate("/screens/products-screen");
   }, []);
 
   const handleProductPress = useCallback(
     (productId: number, detailId: number) => {
-      Alert.alert(
-        "Modificar producto",
-        "¿Qué deseas hacer con este producto?",
-        [
-          { text: "Cancelar", style: "cancel" },
-          {
-            text: "Eliminar",
-            style: "destructive",
-            onPress: () => removeFromOrder(detailId),
+      Alert.alert("Modificar producto", "¿Qué deseas hacer con este producto?", [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: () => removeProduct(detailId),
+        },
+        {
+          text: "Modificar cantidad",
+          onPress: () => {
+            const product = orderDetails.find(
+              (d: OrderDetail) => d.idProducto === productId
+            );
+            if (product) {
+              setSelectedProduct({
+                id: productId,
+                currentQty: product.cantidad,
+              });
+              setInputValue(product.cantidad.toString());
+              setShowQuantityModal(true);
+            }
           },
-          {
-            text: "Modificar cantidad",
-            onPress: () => {
-              const product = orderDetails.find(
-                (d) => d.idProducto === productId
-              );
-              if (product) {
-                setSelectedProduct({
-                  id: productId,
-                  currentQty: product.cantidad,
-                });
-                setInputValue(product.cantidad.toString());
-                setShowQuantityModal(true);
-              }
-            },
-          },
-        ]
-      );
+        },
+      ]);
     },
-    [removeFromOrder, orderDetails]
+    [removeProduct, orderDetails]
   );
 
 
-
-  const handleBackAction = useCallback(() => {
-    if (unsavedChanges) {
-      Alert.alert(
-        "Salir sin guardar",
-        "Tienes cambios no guardados. ¿Deseas salir y perderlos?",
-        [
-          { text: "Cancelar", style: "cancel" },
-          {
-            text: "Salir",
-            onPress: () => {
-              router.back();
-              setUnsavedChanges(false);
-            },
-          },
-        ]
-      );
-      return true;
-    }
-    return false;
-  }, [unsavedChanges]);
-
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      handleBackAction
-    );
-
-    return () => backHandler.remove();
-  }, [handleBackAction]);
-
-  useEffect(() => {
-    if (orderDetails.length > 0) setUnsavedChanges(true);
-  }, [orderDetails]);
-
   return (
     <View className="flex-1 bg-gray-50">
+      <View>
+        <TouchableOpacity onPress={undoLastAction}>
+          <Text>Deshacer Última Acción</Text>
+        </TouchableOpacity>
+      </View>
       <View className="p-4 bg-white shadow-sm">
         <Text className="text-xl font-semibold text-center">
           Mesa {tableId} - {place}
@@ -145,29 +107,23 @@ export default function OrderScreen() {
           <ScrollView className="flex-1">
             <View className="p-4">
               {orderDetails.length > 0 ? (
-                orderDetails.map((product) => {
-                  console.log(orderDetails); // Mover el log aquí si es necesario
-                  return (
-                    <TouchableOpacity
-                      key={product.identificadorOrdenDetalle}
-                      onPress={() =>
-                        handleProductPress(
-                          product.idProducto,
-                          product.identificadorOrdenDetalle
-                        )
-                      }
-                      className="mb-3"
-                    >
-                      <ProductDetail
-                        product={product}
-                        quantity={product.cantidad}
-                        // onQuantityChange={(newQty) =>
-                        //   updateQuantity(product.idProducto, newQty)
-                        // }
-                      />
-                    </TouchableOpacity>
-                  );
-                })
+                orderDetails.map((product: OrderDetail) => (
+                  <TouchableOpacity
+                    key={product.identificadorOrdenDetalle}
+                    onPress={() =>
+                      handleProductPress(
+                        product.idProducto,
+                        product.identificadorOrdenDetalle
+                      )
+                    }
+                    className="mb-3"
+                  >
+                    <ProductDetail
+                      product={product}
+                      quantity={product.cantidad}
+                    />
+                  </TouchableOpacity>
+                ))
               ) : (
                 <View className="bg-gray-50 p-3 rounded-lg">
                   <Text className="text-gray-500 text-center">
@@ -182,9 +138,9 @@ export default function OrderScreen() {
         <OrderSummaryItem
           total={order?.totalSinDescuento || 0}
           itemsCount={orderDetails.length}
-          onSave={handleSaveOrder}
+          onSave={saveOrder}
           isActive={isActive === "true"}
-          isSaving={false} // Puedes manejar un estado de loading si es necesario
+          isSaving={false}
         />
       </View>
       {showQuantityModal && (
