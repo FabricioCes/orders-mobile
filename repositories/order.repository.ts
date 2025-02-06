@@ -41,16 +41,11 @@ export class OrderApiRepository {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
-      // Parsear la respuesta como JSON
-      const text = await response.text() // Leer la respuesta como texto primero
-
-      const data: ApiResponse<T> = JSON.parse(text) // Convertir a JSON
-
+      const data: ApiResponse<T> = await response.json();
       if (data.error) {
         throw new Error(data.mensaje || 'Error en la respuesta de la API')
       }
 
-      console.log('API data:', data.resultado)
       return data.resultado
     } catch (error) {
       console.error('Error in handleRequest:', error) // Depuración: Capturar errores
@@ -76,7 +71,7 @@ export class OrderApiRepository {
   }
 
   static async getClientByOrderId (orderId: number): Promise<Client> {
-    return this.handleRequest<Client>(`${orderId}/cliente`)
+    return this.handleRequest<Client>(`Orden/${orderId}/cliente`)
   }
 
   static async getActiveTables (): Promise<Order[]> {
@@ -84,8 +79,7 @@ export class OrderApiRepository {
   }
 
   static async getOrderDetails (orderId: number): Promise<OrderDetail[]> {
-    const result = this.handleRequest<OrderDetail[]>(`${orderId}/detalle`)
-    console.log('Resultado2: ', result)
+    const result = await this.handleRequest<OrderDetail[]>(`Orden/${orderId}/detalle`)
     return result
   }
 

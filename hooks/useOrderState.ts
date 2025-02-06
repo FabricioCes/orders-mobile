@@ -1,4 +1,3 @@
-// src/hooks/useOrderState.ts
 import { useState, useEffect } from 'react'
 import { Subscription } from 'rxjs'
 import { Order, OrderDetail } from '@/types/types'
@@ -21,6 +20,7 @@ export const useOrderState = (orderId: number) => {
     const subscriptions: Subscription[] = []
 
     if (orderId) {
+      // Cargar datos iniciales
       subscriptions.push(
         orderService.getOrder$(orderId).subscribe({
           next: order => setState(prev => ({ ...prev, order })),
@@ -28,17 +28,23 @@ export const useOrderState = (orderId: number) => {
         })
       )
 
+      // Suscripción a los detalles en tiempo real
       subscriptions.push(
-        orderService.getOrderDetails$(orderId).subscribe({
-          next: details => setState(prev => ({ ...prev, details })),
-          error: error => setState(prev => ({ ...prev, error: error.message }))
+        orderService.orderDetails$.subscribe(details => {
+          setState(prev => ({
+            ...prev,
+            details,
+            loading: false
+          }))
         })
       )
+
+      // Cargar detalles iniciales
+      orderService.getOrderDetails$(orderId).subscribe()
     }
 
     return () => subscriptions.forEach(sub => sub.unsubscribe())
   }, [orderId])
-
 
   return state
 }

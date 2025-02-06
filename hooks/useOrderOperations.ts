@@ -1,4 +1,4 @@
-// src/hooks/useOrderOperations.ts
+
 import { useCallback } from 'react';
 import { Alert } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
@@ -36,6 +36,17 @@ export const useOrderOperations = (orderId: number, order: Order) => {
     [handleModifyOrder, orderId]
   );
 
+
+  const updateQuantity = useCallback(
+    (productId: number, quantity: number) => {
+      handleModifyOrder(
+        () => orderService.updateProductQuantity(orderId, productId, quantity),
+        'Error al actualizar la cantidad'
+      );
+    },
+    [handleModifyOrder, orderId]
+  );
+
   const updateOrder = useCallback(
     (order: Order) => handleModifyOrder(
       () => orderService.saveOrder(order),
@@ -65,7 +76,7 @@ export const useOrderOperations = (orderId: number, order: Order) => {
         )
       }
     ]);
-  }, [handleModifyOrder, orderId]);
+  }, [handleModifyOrder, orderId, order]);
 
-  return { removeProduct, updateOrder, saveOrder };
+  return { removeProduct, updateOrder, saveOrder, updateQuantity };
 };

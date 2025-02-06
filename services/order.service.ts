@@ -25,28 +25,39 @@ class OrderService {
     }
   }
 
-  getOrder$ (orderId: number): Observable<Order | null> {
-    return from(OrderCacheRepository.getCachedOrder(orderId)).pipe(
-      switchMap(cachedOrder => {
-        if (cachedOrder) return from([cachedOrder])
-        return from(OrderApiRepository.getOrder(orderId)).pipe(
-          tap(order => OrderCacheRepository.cacheOrder(orderId, order))
-        )
-      }),
-      map(order => order || null)
-    )
-  }
+  // getOrder$ (orderId: number): Observable<Order | null> {
+  //   return from(OrderCacheRepository.getCachedOrder(orderId)).pipe(
+  //     switchMap(cachedOrder => {
+  //       if (cachedOrder) return from([cachedOrder])
+  //       return from(OrderApiRepository.getOrder(orderId)).pipe(
+  //         tap(order => OrderCacheRepository.cacheOrder(orderId, order))
+  //       )
+  //     }),
+  //     map(order => order || null)
+  //   )
+  // }
 
-  getOrderDetails$ (orderId: number): Observable<OrderDetail[]> {
-    return from(OrderCacheRepository.getCachedDetails(orderId)).pipe(
-      switchMap(cachedDetails => {
-        if (cachedDetails.length) return from([cachedDetails])
-        return from(OrderApiRepository.getOrderDetails(orderId)).pipe(
-          tap(details => OrderCacheRepository.cacheDetails(orderId, details))
-        )
-      })
-    )
+  getOrder$ (orderId: number): Observable<Order | null> {
+    return from(OrderApiRepository.getOrder(orderId))
   }
+  getOrderDetails$(orderId: number): Observable<OrderDetail[]> {
+    return from(OrderApiRepository.getOrderDetails(orderId)).pipe(
+      tap(details => {
+        this.orderDetailsSubject.next(details);
+        OrderCacheRepository.cacheDetails(orderId, details);
+      })
+    );
+  }
+  // getOrderDetails$ (orderId: number): Observable<OrderDetail[]> {
+  //   return from(OrderCacheRepository.getCachedDetails(orderId)).pipe(
+  //     switchMap(cachedDetails => {
+  //       if (cachedDetails.length) return from([cachedDetails])
+  //       return from(OrderApiRepository.getOrderDetails(orderId)).pipe(
+  //         tap(details => OrderCacheRepository.cacheDetails(orderId, details))
+  //       )
+  //     })
+  //   )
+  // }
 
   async addProduct (orderId: number, product: OrderDetail): Promise<void> {
     const currentDetails = this.orderDetailsSubject.value
@@ -74,7 +85,7 @@ class OrderService {
     newDetail: OrderDetail
   ): OrderDetail[] {
     const existingIndex = current.findIndex(
-      d => d.idProducto === newDetail.idProducto
+      d => d.identificadorProducto === newDetail.identificadorProducto
     )
     if (existingIndex !== -1) {
       const updated = [...current]
@@ -111,6 +122,31 @@ class OrderService {
       await OrderApiRepository.updateOrder(order)
     }
     await OrderCacheRepository.cacheOrder(order.numeroOrden, order)
+  }
+
+  async updateProductQuantity (
+    orderId: number,
+    productId: number,
+    quantity: number
+  ): Promise<void> {
+    const currentDetails = this.orderDetailsSubject.value
+    const productIndex = currentDetails.findIndex(
+      d => d.identificadorProducto === productId
+    )
+    console.log(currentDetails)
+    console.log(orderId, productId,productIndex, quantity)
+    if (productIndex === -1) {
+      throw new Error('Producto no encontrado en la orden')
+    }
+
+    const updatedDetails = [...currentDetails]
+    updatedDetails[productIndex] = {
+      ...updatedDetails[productIndex],
+      cantidad: quantity
+    }
+
+    this.orderDetailsSubject.next(updatedDetails)
+    await OrderCacheRepository.cacheDetails(orderId, updatedDetails)
   }
 }
 

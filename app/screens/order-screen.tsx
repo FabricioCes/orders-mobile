@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import {
   View,
   Alert,
@@ -24,12 +24,8 @@ export default function OrderScreen() {
     orderId = "0",
   } = params;
 
-const {
-    order,
-    orderDetails,
-    removeProduct,
-    saveOrder,
-  } = useOrderManagement(Number(orderId));
+  const { order, orderDetails, removeProduct, saveOrder, updateQuantity } =
+    useOrderManagement(Number(orderId));
 
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<{
@@ -41,13 +37,18 @@ const {
   const handleQuantityChange = () => {
     if (selectedProduct && inputValue) {
       const quantity = parseInt(inputValue, 10);
-      if (!isNaN(quantity)) {
-        // Aquí podrías implementar la función para actualizar la cantidad del producto
-        // Por ejemplo: updateProductQuantity(selectedProduct.id, quantity);
+      if (!isNaN(quantity) && quantity > 0) {
+        updateProductQuantity(selectedProduct.id, quantity);
+      } else {
+        Alert.alert('Cantidad inválida', 'Ingrese un número válido mayor a 0');
       }
     }
     setShowQuantityModal(false);
   };
+  const updateProductQuantity = useCallback((id: number, quantity: number) => {
+    if (isNaN(quantity)) return;
+   updateQuantity(id, quantity)
+  }, [orderId]);
 
   const handleNavigateToProducts = useCallback(() => {
     router.navigate("/screens/products-screen");
@@ -55,35 +56,37 @@ const {
 
   const handleProductPress = useCallback(
     (productId: number, detailId: number) => {
-      Alert.alert("Modificar producto", "¿Qué deseas hacer con este producto?", [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: () => removeProduct(detailId),
-        },
-        {
-          text: "Modificar cantidad",
-          onPress: () => {
-            const product = orderDetails.find(
-              (d: OrderDetail) => d.idProducto === productId
-            );
-            if (product) {
-              setSelectedProduct({
-                id: productId,
-                currentQty: product.cantidad,
-              });
-              setInputValue(product.cantidad.toString());
-              setShowQuantityModal(true);
-            }
+      Alert.alert(
+        "Modificar producto",
+        "¿Qué deseas hacer con este producto?",
+        [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "Eliminar",
+            style: "destructive",
+            onPress: () => removeProduct(detailId),
           },
-        },
-      ]);
+          {
+            text: "Modificar cantidad",
+            onPress: () => {
+              const product = orderDetails.find((d: OrderDetail) => {
+                return d.identificadorProducto === productId;
+              });
+              if (product) {
+                setSelectedProduct({
+                  id: productId,
+                  currentQty: product.cantidad,
+                });
+                setInputValue(product.cantidad.toString());
+                setShowQuantityModal(true);
+              }
+            },
+          },
+        ]
+      );
     },
     [removeProduct, orderDetails]
   );
-  useEffect(() => console.log("Estado ",JSON.stringify(order), orderId), [order])
-  useEffect(() => console.log("Estado ",JSON.stringify(orderDetails), orderId), [orderDetails])
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -107,7 +110,7 @@ const {
                     key={product.identificadorOrdenDetalle}
                     onPress={() =>
                       handleProductPress(
-                        product.idProducto,
+                        product.identificadorProducto,
                         product.identificadorOrdenDetalle
                       )
                     }

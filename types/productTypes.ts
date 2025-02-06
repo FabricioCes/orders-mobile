@@ -1,13 +1,28 @@
 export type Product = {
-  id: number
-  name: string
-  price: number
-  discountPercentage: number
-  subCategoryId: number
-  subCategory: string
-  subSubCategoryId: number
-  subSubCategory: string
-}
+  identificador: number;
+  nombre: string;
+  costo: number;
+  costoDos?: number;
+  costoTres?: number;
+  costoCuatro?: number;
+  precio: number;
+  precioDos?: number;
+  precioTres?: number;
+  precioCuatro?: number;
+  impuesto?: number;
+  impuestoDos?: number;
+  impuestoTres?: number;
+  impuestoCuatro?: number;
+  porcentajeUtilidad?: number;
+  porcentajeUtilidadDos?: number;
+  porcentajeUtilidadTres?: number;
+  porcentajeUtilidadCuatro?: number;
+  identificadorSubCategoria: number;
+  subCategoria: string;
+  identificadorSubSubCategoria: number;
+  subSubCategoria: string;
+  unidad?: number;
+};
 
 export type ProductGroup = {
   category: string

@@ -24,7 +24,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
           {product.nombreProducto}
         </Text>
         <Text className="text-gray-500 mt-1">
-          ₡{product.precio.toFixed(2)}
+          ₡{product.costoUnitario.toFixed(2)}
         </Text>
       </View>
       <View>
@@ -37,30 +37,3 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
 );
 
 export default ProductDetail;
-      // Controles de cantidad
-      // <View className="flex-row items-center gap-3">
-      //   <TouchableOpacity
-      //     onPress={() => onQuantityChange(Math.max(quantity - 1, 1))}
-      //     disabled={quantity === 1}
-      //     className={`p-2 rounded-full ${
-      //       quantity === 1 ? "bg-gray-200" : "bg-blue-100"
-      //     }`}
-      //   >
-      //     <FontAwesome
-      //       name="minus"
-      //       size={16}
-      //       color={quantity === 1 ? "#9CA3AF" : "#3B82F6"}
-      //     />
-      //   </TouchableOpacity>
-
-      //   <Text className="text-base font-medium text-gray-700 min-w-[24px] text-center">
-      //     {quantity}
-      //   </Text>
-
-      //   <TouchableOpacity
-      //     onPress={() => onQuantityChange(quantity + 1)}
-      //     className="p-2 bg-blue-100 rounded-full"
-      //   >
-      //     <FontAwesome name="plus" size={16} color="#3B82F6" />
-      //   </TouchableOpacity>
-      // </View>

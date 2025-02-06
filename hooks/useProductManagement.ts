@@ -15,7 +15,7 @@ export const useProductManagement = (
       nameLC: sub.name.toLowerCase(),
       products: sub.products.map(product => ({
         ...product,
-        nameLC: product.name.toLowerCase()
+        nameLC: (product.nombre || '').toLowerCase()
       }))
     }))
   }))
@@ -35,14 +35,14 @@ export const useProductManagement = (
   const addToOrder = useCallback(
     async (product: Product, quantity: number = 1) => {
       const orderDetail = {
-        idProducto: product.id,
         cantidad: quantity,
-        identificadorOrdenDetalle: Date.now(),
-        nombreProducto: product.name,
-        precio: product.price,
-        porcentajeDescProducto: product.discountPercentage || 0,
-        ingrediente: false,
-        quitarIngrediente: false
+        nombreProducto: product.nombre,
+        precio: product.precio,
+        costoUnitario: product.costo,
+        identificadorOrden: orderId,
+        identificadorOrdenDetalle: 0,
+        identificadorProducto: product.identificador,
+        impuestoProducto: product.impuesto ?? 0
       }
 
       await orderService.addProduct(orderId, orderDetail)

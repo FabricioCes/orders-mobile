@@ -49,15 +49,33 @@ export type Order = {
   versionSistema: string;
 };
 export type OrderDetail = {
-  identificadorOrdenDetalle: number
-  idProducto: number
-  nombreProducto: string
-  cantidad: number
-  precio: number
-  porcentajeDescProducto: number
-  ingrediente: boolean
-  quitarIngrediente: boolean
-}
+  cantidad: number;
+  codigoMitad?: number;
+  consecutivo?: number;
+  costoUnitario: number;
+  creadoPor?: string;
+  encargadoComisionEspecifico?: string;
+  identificadorOrden: number;
+  identificadorOrdenDetalle: number;
+  identificadorProducto: number;
+  identificadorRegistroUnico?: number;
+  identificadorUnicoGrupo?: number;
+  impuestoProducto: number;
+  ingrediente?: boolean;
+  mitad?: boolean;
+  mitadNumeroPlato?: number;
+  modificadoPor?: string;
+  nombreProducto: string;
+  porcentajeDescuento?: number;
+  precioCompra?: number;
+  productoImpreso?: boolean;
+  productoMitad?: boolean;
+  productoPadre?: number;
+  tipoIngrediente?: string;
+  totalCostoUnitario?: number;
+  totalDescProducto?: number;
+  unidad?: number;
+};
 
 export interface GuardarOrdenRequest {
   idUsuario: string
