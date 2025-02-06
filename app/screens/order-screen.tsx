@@ -29,8 +29,7 @@ const {
     orderDetails,
     removeProduct,
     saveOrder,
-    undoLastAction,
-  } = useOrderManagement(isActive === "true", Number(orderId), Number(tableId), String(place));
+  } = useOrderManagement(Number(orderId));
 
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<{
@@ -87,11 +86,6 @@ const {
 
   return (
     <View className="flex-1 bg-gray-50">
-      <View>
-        <TouchableOpacity onPress={undoLastAction}>
-          <Text>Deshacer Última Acción</Text>
-        </TouchableOpacity>
-      </View>
       <View className="p-4 bg-white shadow-sm">
         <Text className="text-xl font-semibold text-center">
           Mesa {tableId} - {place}
@@ -121,6 +115,8 @@ const {
                     <ProductDetail
                       product={product}
                       quantity={product.cantidad}
+                      addToOrder={() => {}}
+                      onQuantityChange={() => {}}
                     />
                   </TouchableOpacity>
                 ))

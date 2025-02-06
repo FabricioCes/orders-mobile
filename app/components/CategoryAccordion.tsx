@@ -1,15 +1,30 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity} from "react-native";
+import React, { useState, useMemo, useEffect } from "react";
+import { View, Text, TouchableOpacity } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import type { ProductGroup, Product } from "@/types/productTypes";
 import ProductListItem from "./orders/product-list-item";
 
-
-const CategoryAccordion: React.FC<{
+interface CategoryAccordionProps {
   category: ProductGroup;
-  onAddProduct: (product: Product, quantity: number) => void; // Actualizado para incluir cantidad
-}> = ({ category, onAddProduct }) => {
-  const [expanded, setExpanded] = useState(false);
+  onAddProduct: (product: Product, quantity: number) => void;
+  searchQuery: string;
+}
+
+const CategoryAccordion: React.FC<CategoryAccordionProps> = ({
+  category,
+  onAddProduct,
+  searchQuery,
+}) => {
+  const [expanded, setExpanded] = useState<boolean>(!!searchQuery.trim());
+
+  // Cuando se realiza una búsqueda se expande la categoría automáticamente
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      setExpanded(true);
+    } else {
+      setExpanded(false);
+    }
+  }, [searchQuery]);
 
   return (
     <View className="mb-4 bg-gray-50 rounded-lg">
@@ -31,17 +46,45 @@ const CategoryAccordion: React.FC<{
             key={subCat.name}
             subCategory={{ ...subCat, products: subCat.products || [] }}
             onAddProduct={onAddProduct}
+            searchQuery={searchQuery}
           />
         ))}
     </View>
   );
 };
 
-const SubCategorySection: React.FC<{
+interface SubCategorySectionProps {
   subCategory: { name: string; products: Product[] };
   onAddProduct: (product: Product, quantity: number) => void;
-}> = ({ subCategory, onAddProduct }) => {
-  const [expanded, setExpanded] = useState(false);
+  searchQuery: string;
+}
+
+const SubCategorySection: React.FC<SubCategorySectionProps> = ({
+  subCategory,
+  onAddProduct,
+  searchQuery,
+}) => {
+  const [expanded, setExpanded] = useState<boolean>(!!searchQuery.trim());
+
+  // Cuando se realiza una búsqueda se expande la subcategoría automáticamente
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      setExpanded(true);
+    }
+  }, [searchQuery]);
+
+  // Filtramos los productos de la subcategoría según el searchQuery
+  const filteredProducts = useMemo(() => {
+    if (!searchQuery.trim()) return subCategory.products;
+    return subCategory.products.filter((product) =>
+      product.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [subCategory.products, searchQuery]);
+
+  // Si no hay productos que coincidan con el search, se omite la subcategoría
+  if (!filteredProducts.length && searchQuery.trim()) {
+    return null;
+  }
 
   return (
     <View className="ml-4">
@@ -61,7 +104,7 @@ const SubCategorySection: React.FC<{
 
       {expanded && (
         <View className="ml-2">
-          {subCategory.products.map((product) => (
+          {filteredProducts.map((product) => (
             <ProductListItem
               key={product.id}
               product={product}
@@ -75,82 +118,3 @@ const SubCategorySection: React.FC<{
 };
 
 export default CategoryAccordion;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -4,8 +4,14 @@ import type { OrderDetail } from "@/types/types";
 
 type ProductDetailProps = {
   product: OrderDetail;
+
+  addToOrder: () => void;
+
+  showDetails?: boolean;
+
   quantity: number;
-  //onQuantityChange: (newQty: number) => void;
+
+  onQuantityChange: (newQty: number) => void;
 };
 
 const ProductDetail: React.FC<ProductDetailProps> = ({

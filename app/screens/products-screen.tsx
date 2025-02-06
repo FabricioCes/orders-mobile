@@ -1,37 +1,61 @@
-import React from "react";
-import { View, FlatList } from "react-native";
-import { useProducts } from "@/context/ProductsContext";
-import { useOrderManagement } from "@/hooks/useOrderManagement";
-import { useLocalSearchParams } from "expo-router";
-
-import SearchBar from "../components/orders/serch-bar";
-import LoadingState from "../components/LoadingState";
-import ErrorState from "../components/ErrorState";
-import { Product } from "@/types/productTypes";
-import CategoryAccordion from "../components/CategoryAccordion";
+// src/screens/ProductsScreen.tsx
+import React from 'react';
+import { View, FlatList } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
+import { useProducts } from '@/context/ProductsContext';
+import { useOrderManagement } from '@/hooks/useOrderManagement';
+import LoadingState from '@/components/LoadingState';
+import ErrorState from '@/components/ErrorState';
+import CategoryAccordion from '@/components/CategoryAccordion';
+import { Product } from '@/types/productTypes';
+import SearchBar from '../components/orders/serch-bar';
 
 const ProductsScreen: React.FC = () => {
-  const { tableId, place, isActive, orderId } = useLocalSearchParams();
+  const { orderId } = useLocalSearchParams();
+  const numericOrderId = Number(orderId);
 
-  const { searchQuery, setSearchQuery, filteredMenu, addToOrder} =
-    useOrderManagement(
-      isActive === "true",
-      Number(orderId),
-      Number(tableId),
-      String(place)
-    );
+  // Estados y métodos del hook de gestión de órdenes
+  const {
+    searchQuery,
+    setSearchQuery,
+    filteredMenu,
+    addToOrder,
+    loading: orderLoading,
+    error: orderError
+  } = useOrderManagement(numericOrderId);
 
-  const { loading, error } = useProducts();
+  // Estados del contexto de productos
+  const {
+    loading: productsLoading,
+    error: productsError
+  } = useProducts();
 
-  if (loading) return <LoadingState message="Cargando productos ..."/>;
-  if (error) return <ErrorState message={error} />;
+  // Manejo de estados de carga y errores
+  if (productsLoading || !orderLoading) {
+    return <LoadingState message="Cargando productos..." />;
+  }
+
+  if (productsError || orderError) {
+    return <ErrorState message={productsError || orderError || 'Error desconocido'} />;
+  }
+
+  const handleAddProduct = (product: Product, quantity: number = 1) => {
+    addToOrder(product, quantity)
+      .then(() => {
+      // Aquí podrías mostrar una notificación de éxito si lo deseas
+      })
+      .catch((error: Error) => {
+      console.error('Error al agregar producto:', error);
+      // Aquí podrías mostrar una notificación de error
+      });
+  };
 
   return (
     <View className="flex-1 bg-white p-4">
       <SearchBar
         searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        filteredMenu={filteredMenu}
+        onSearchChange={setSearchQuery}
+        placeholder="Buscar productos..."
       />
 
       <FlatList
@@ -40,11 +64,13 @@ const ProductsScreen: React.FC = () => {
         renderItem={({ item }) => (
           <CategoryAccordion
             category={item}
-            onAddProduct={(product: Product, quantity: number | undefined) => addToOrder(product, quantity)}
+            onAddProduct={handleAddProduct}
+            searchQuery={searchQuery}
           />
         )}
         contentContainerStyle={{ paddingBottom: 20 }}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       />
     </View>
   );

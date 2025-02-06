@@ -1,123 +1,116 @@
-import { BehaviorSubject, Observable } from 'rxjs'
-import { map } from 'rxjs/operators'
-import { orderRepository } from '../services/order.repository'
+// src/services/order.service.ts
+import { BehaviorSubject, Observable, from } from 'rxjs'
+import { map, switchMap, tap } from 'rxjs/operators'
+import {
+  OrderApiRepository,
+  OrderCacheRepository
+} from '@/repositories/order.repository'
 import { Order, OrderDetail } from '@/types/types'
 
 class OrderService {
   private ordersSubject = new BehaviorSubject<Order[]>([])
   private orderDetailsSubject = new BehaviorSubject<OrderDetail[]>([])
 
-  // Exponemos los observables generales
   orders$ = this.ordersSubject.asObservable()
   orderDetails$ = this.orderDetailsSubject.asObservable()
 
-  // Método para cargar todas las órdenes activas
-  async loadActiveOrders() {
+  async loadActiveOrders (): Promise<void> {
     try {
-      const orders = await orderRepository.getActiveTables()
+      const orders = await OrderApiRepository.getActiveTables()
       this.ordersSubject.next(orders)
+      await OrderCacheRepository.cacheOrders(orders)
     } catch (error) {
       console.error('Error loading active orders:', error)
+      throw error
     }
   }
 
-  // Método para cargar los detalles de una orden
-  async loadOrderDetails(orderId: number) {
-    try {
-      const details = await orderRepository.getOrderDetails(orderId)
-      this.orderDetailsSubject.next(details)
-    } catch (error) {
-      console.error(`Error loading order details for order ${orderId}:`, error)
-    }
-  }
-
-  // Devuelve un observable con la orden filtrada por orderId
-  getOrder$(orderId: number): Observable<Order | null> {
-    // Primero se asegura que se hayan cargado las órdenes (en una implementación real quizás se invoque loadActiveOrders en otro sitio)
-    return this.orders$.pipe(
-      map((orders) => orders.find((o) => o.numeroOrden === orderId) || null)
+  getOrder$ (orderId: number): Observable<Order | null> {
+    return from(OrderCacheRepository.getCachedOrder(orderId)).pipe(
+      switchMap(cachedOrder => {
+        if (cachedOrder) return from([cachedOrder])
+        return from(OrderApiRepository.getOrder(orderId)).pipe(
+          tap(order => OrderCacheRepository.cacheOrder(orderId, order))
+        )
+      }),
+      map(order => order || null)
     )
   }
 
-  // Devuelve un observable con los detalles de la orden.
-  // Se asegura de cargar los detalles si aún no se han obtenido.
-  getOrderDetails$(orderId: number): Observable<OrderDetail[]> {
-    // Si aún no se han cargado, se dispara la carga (aunque en un escenario más robusto se podría verificar el id)
-    if (!this.orderDetailsSubject.getValue().length) {
-      this.loadOrderDetails(orderId)
-    }
-    return this.orderDetails$
+  getOrderDetails$ (orderId: number): Observable<OrderDetail[]> {
+    return from(OrderCacheRepository.getCachedDetails(orderId)).pipe(
+      switchMap(cachedDetails => {
+        if (cachedDetails.length) return from([cachedDetails])
+        return from(OrderApiRepository.getOrderDetails(orderId)).pipe(
+          tap(details => OrderCacheRepository.cacheDetails(orderId, details))
+        )
+      })
+    )
   }
 
-  async addProduct(orderId: number, product: OrderDetail) {
+  async addProduct (orderId: number, product: OrderDetail): Promise<void> {
+    const currentDetails = this.orderDetailsSubject.value
     try {
-      const currentOrderDetails = await this.getCachedOrServerOrderDetails(orderId)
-      const existingProduct = currentOrderDetails.find(
-        (detail) => detail.idProducto === product.idProducto
-      )
+      const updatedDetails = this.mergeProductDetails(currentDetails, product)
 
-      if (existingProduct) {
-        existingProduct.cantidad += product.cantidad
-      } else {
-        currentOrderDetails.push(product)
-      }
-
-      this.orderDetailsSubject.next([...currentOrderDetails])
-    } catch (error) {
-      console.error(`Error adding product to order ${orderId}:`, error)
-    }
-  }
-
-  async removeProduct(orderId: number, detailId: number) {
-    try {
-      await orderRepository.deleteOrderDetail(detailId)
-      const updatedDetails = await this.getCachedOrServerOrderDetails(orderId)
+      // Optimistic update
       this.orderDetailsSubject.next(updatedDetails)
+      await OrderCacheRepository.cacheDetails(orderId, updatedDetails)
+
+      // Persist to API
+      await OrderApiRepository.updateOrder({
+        numeroOrden: orderId,
+        detalles: updatedDetails
+      } as Order)
     } catch (error) {
-      console.error(`Error removing product from order ${orderId}:`, error)
+      // Rollback on error
+      this.orderDetailsSubject.next(currentDetails)
+      throw error
     }
   }
 
-  async saveOrder(order: Order) {
-    try {
-      if (!order.numeroOrden) {
-        throw new Error('Order number is required to save an order.')
-      }
-      await orderRepository.createOrder(order)
-      console.log(`Order ${order.numeroOrden} saved successfully.`)
-    } catch (error) {
-      console.error('Error saving order:', error)
+  private mergeProductDetails (
+    current: OrderDetail[],
+    newDetail: OrderDetail
+  ): OrderDetail[] {
+    const existingIndex = current.findIndex(
+      d => d.idProducto === newDetail.idProducto
+    )
+    if (existingIndex !== -1) {
+      const updated = [...current]
+      updated[existingIndex].cantidad += newDetail.cantidad
+      return updated
     }
+    return [...current, newDetail]
   }
 
-  async updateOrder(order: Order) {
+  async removeProduct (orderId: number, detailId: number): Promise<void> {
+    const currentDetails = this.orderDetailsSubject.value
     try {
-      if (!order.numeroOrden) {
-        throw new Error('Order number is required to update an order.')
-      }
-      await orderRepository.updateOrder(order)
-      console.log(`Order ${order.numeroOrden} updated successfully.`)
-    } catch (error) {
-      console.error('Error updating order:', error)
-    }
-  }
-
-  private async getCachedOrServerOrderDetails(
-    orderId: number
-  ): Promise<OrderDetail[]> {
-    try {
-      const cachedDetails = this.orderDetailsSubject.getValue()
-      if (cachedDetails.length) return cachedDetails
-      const details = await orderRepository.getOrderDetails(orderId)
-      this.orderDetailsSubject.next(details)
-      return details
-    } catch (error) {
-      console.error(
-        `Error fetching cached or server order details for order ${orderId}:`,
-        error
+      const updatedDetails = currentDetails.filter(
+        d => d.identificadorOrdenDetalle !== detailId
       )
-      return []
+
+      // Optimistic update
+      this.orderDetailsSubject.next(updatedDetails)
+      await OrderCacheRepository.cacheDetails(orderId, updatedDetails)
+
+      // Persist to API
+      await OrderApiRepository.deleteOrderDetail(detailId)
+    } catch (error) {
+      this.orderDetailsSubject.next(currentDetails)
+      throw error
     }
+  }
+
+  async saveOrder (order: Order): Promise<void> {
+    if (!order.numeroOrden) {
+      const newOrderId = await OrderApiRepository.createOrder(order)
+      order.numeroOrden = newOrderId
+    } else {
+      await OrderApiRepository.updateOrder(order)
+    }
+    await OrderCacheRepository.cacheOrder(order.numeroOrden, order)
   }
 }
 

@@ -105,6 +105,7 @@ const transformApiProduct = (apiProduct: any): Product => ({
   subCategory: apiProduct.subCategoria,
   subSubCategoryId: Number(apiProduct.idSubSubCategoria),
   subSubCategory: apiProduct.subSubCategoria,
+  discountPercentage: 0
 });
 
 export const useProducts = () => {

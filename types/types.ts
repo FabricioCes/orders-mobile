@@ -47,3 +47,20 @@ export interface MesasOcupadasDTO {
   mesa: string
   numeroOrden: number
 }
+
+
+export interface Paginacion {
+  PaginaActual: number;
+  TotalPaginas: number;
+  TotalRegistros: number;
+  RegistrosPorPagina: number;
+}
+
+
+export interface ApiResponse<T> {
+   CodigoRespuesta: number;
+  Resultado: T;
+  Mensaje?: string;
+  Error?: boolean;
+  Paginacion?: Paginacion;
+}

@@ -1,9 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { orderService } from "./order.service";
+import { Order } from "@/types/types";
 
 export const offlineService = {
-  async saveOfflineOrder(orderId: number, details: any) {
-    await AsyncStorage.setItem(`offline_order_${orderId}`, JSON.stringify(details));
+  async saveOfflineOrder(orderId: number, order: Order) {
+    await AsyncStorage.setItem(`offline_order_${orderId}`, JSON.stringify(order));
   },
 
   async getOfflineOrder(orderId: number) {

@@ -2,6 +2,7 @@ export type Product = {
   id: number
   name: string
   price: number
+  discountPercentage: number
   subCategoryId: number
   subCategory: string
   subSubCategoryId: number

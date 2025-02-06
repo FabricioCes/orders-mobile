@@ -34,7 +34,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const saveSettings = async (value: Partial<SettingsType>) => {
     try {
-      const updatedSettings: SettingsType = { ...(settings || {}), ...value };
+      const updatedSettings: SettingsType = { ...settings, ...value };
       await AsyncStorage.setItem("settings", JSON.stringify(updatedSettings));
       setSettings(updatedSettings);
     } catch (error) {
