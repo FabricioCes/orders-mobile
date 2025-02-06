@@ -4,24 +4,21 @@ import type { OrderDetail } from "@/types/types";
 
 type ProductDetailProps = {
   product: OrderDetail;
-
-  addToOrder: () => void;
-
   showDetails?: boolean;
-
   quantity: number;
-
+  addToOrder: () => void;
   onQuantityChange: (newQty: number) => void;
 };
 
 const ProductDetail: React.FC<ProductDetailProps> = ({
   product,
   quantity,
-  //onQuantityChange,
+  showDetails,
+  onQuantityChange,
+  addToOrder,
 }) => (
   <View className="p-3 bg-gray-50 rounded-lg mb-2">
     <View className="flex-row justify-between items-center">
-      {/* Información del producto */}
       <View className="flex-1 mr-4">
         <Text className="text-base font-medium text-gray-800">
           {product.nombreProducto}

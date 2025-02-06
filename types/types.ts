@@ -9,20 +9,45 @@ export type OrderTable = {
 }
 
 export type Order = {
-  numeroOrden?: number
-  numeroLugar?: string
-  ubicacion: string
-  observaciones?: string
-  nombreCliente?: string
-  idCliente?: number
-  idUsuario: string
-  autorizado: boolean
-  totalSinDescuento?: number
-  detalles: OrderDetail[]
-  imprimir: boolean
-  estado?: 'Pendiente' | 'Anulada' | 'Finalizada'
-}
-
+  codigoAleatorio: string;
+  creadoPor: string;
+  descripcion: string | null;
+  detalles: OrderDetail[] | null;
+  direccion: string | null;
+  encargado: string;
+  estado: 'Pendiente' | 'Anulada' | 'Finalizada';
+  fechaCreacion: string;
+  fechaEntrada: string;
+  fechaHoraOrdenProgramada: string | null;
+  fechaModificacion: string;
+  hora: string;
+  idCliente: number | null;
+  idUsuario: string;
+  imprimir: boolean;
+  modificadoPor: string | null;
+  nombreCliente: string | null;
+  nombreCompletoCliente: string | null;
+  numeroMesa: string;
+  numeroOrden: number;
+  porcDescuento: number;
+  prioridad: string;
+  prioridadNumerica: number;
+  regimenTributacion: string | null;
+  telefonoCliente1: string | null;
+  telefonoCliente2: string | null;
+  telefonoNotificar: string | null;
+  tipoOrden: string;
+  totalConDescuento: number;
+  totalExento: number;
+  totalGravado: number;
+  totalIVA: number;
+  totalPrecioCompra: number;
+  totalServicio: number;
+  totalSinDescuento: number;
+  ubicacion: string;
+  vendedor: string;
+  versionSistema: string;
+};
 export type OrderDetail = {
   identificadorOrdenDetalle: number
   idProducto: number
@@ -50,17 +75,17 @@ export interface MesasOcupadasDTO {
 
 
 export interface Paginacion {
-  PaginaActual: number;
-  TotalPaginas: number;
-  TotalRegistros: number;
-  RegistrosPorPagina: number;
+  offset: number;
+  paginas: number;
+  totalRegistros: number;
+  primeraPagina: number;
+  ultimaPagina: number;
 }
 
-
 export interface ApiResponse<T> {
-   CodigoRespuesta: number;
-  Resultado: T;
-  Mensaje?: string;
-  Error?: boolean;
-  Paginacion?: Paginacion;
+  codigoRespuesta: number;
+  resultado: T;
+  mensaje?: string;
+  error?: boolean;
+  paginacion?: Paginacion;
 }

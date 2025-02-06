@@ -26,7 +26,10 @@ export const useOrderManagement = (orderId: number) => {
     orderId
   )
 
-  const { removeProduct, updateOrder, saveOrder } = order ? useOrderOperations(orderId, order) : { removeProduct: () => {}, updateOrder: () => {}, saveOrder: () => {} }
+  const { removeProduct, updateOrder, saveOrder } = useOrderOperations(
+    orderId,
+    order!
+  )
 
   return {
     order,

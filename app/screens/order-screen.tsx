@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   View,
   Alert,
@@ -82,7 +82,8 @@ const {
     },
     [removeProduct, orderDetails]
   );
-
+  useEffect(() => console.log("Estado ",JSON.stringify(order), orderId), [order])
+  useEffect(() => console.log("Estado ",JSON.stringify(orderDetails), orderId), [orderDetails])
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -113,6 +114,7 @@ const {
                     className="mb-3"
                   >
                     <ProductDetail
+                      key={product.identificadorOrdenDetalle}
                       product={product}
                       quantity={product.cantidad}
                       addToOrder={() => {}}

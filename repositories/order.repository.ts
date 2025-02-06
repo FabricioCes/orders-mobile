@@ -3,27 +3,76 @@ import { getBaseUrl } from '@/services/config'
 import { ApiResponse, Order, OrderDetail } from '@/types/types'
 import { Client } from '@/types/clientTypes'
 
+const getToken = async (): Promise<string | null> => {
+  try {
+    const token = await AsyncStorage.getItem('token')
+    return token
+  } catch (error) {
+    console.error('Error al obtener el token:', error)
+    return null
+  }
+}
 export class OrderApiRepository {
   private static async handleRequest<T> (
     endpoint: string,
     init?: RequestInit
   ): Promise<T> {
-    const response = await fetch(`${getBaseUrl()}/${endpoint}`, init)
-    const data: ApiResponse<T> = await response.json()
+    const token = await getToken()
 
-    if (!response.ok || data.Error) {
-      throw new Error(data.Mensaje || `HTTP error! status: ${response.status}`)
+    if (!token) {
+      throw new Error(
+        'No se encontró un token válido. Inicie sesión nuevamente.'
+      )
     }
 
-    return data.Resultado
+    const headers = {
+      ...init?.headers,
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    }
+
+    try {
+      const response = await fetch(`${await getBaseUrl()}/${endpoint}`, {
+        ...init,
+        headers
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      // Parsear la respuesta como JSON
+      const text = await response.text() // Leer la respuesta como texto primero
+
+      const data: ApiResponse<T> = JSON.parse(text) // Convertir a JSON
+
+      if (data.error) {
+        throw new Error(data.mensaje || 'Error en la respuesta de la API')
+      }
+
+      console.log('API data:', data.resultado)
+      return data.resultado
+    } catch (error) {
+      console.error('Error in handleRequest:', error) // Depuración: Capturar errores
+      throw new Error(
+        'Error al procesar la solicitud: ' + (error as Error).message
+      )
+    }
   }
 
   static async getOrder (orderId: number): Promise<Order> {
-    return this.handleRequest<Order>(`${orderId}`)
+    try {
+      const result = await this.handleRequest<Order>(`Orden/${orderId}`)
+      return result
+    } catch (error) {
+      throw new Error(
+        'No se pudo obtener la orden: ' + (error as Error).message
+      )
+    }
   }
 
   static async getOrderIdByTable (zona: string, mesa: string): Promise<number> {
-    return this.handleRequest<number>(`${zona.toUpperCase()}/${mesa}`)
+    return this.handleRequest<number>(`Orden/${zona.toUpperCase()}/${mesa}`)
   }
 
   static async getClientByOrderId (orderId: number): Promise<Client> {
@@ -35,7 +84,9 @@ export class OrderApiRepository {
   }
 
   static async getOrderDetails (orderId: number): Promise<OrderDetail[]> {
-    return this.handleRequest<OrderDetail[]>(`${orderId}/detalle`)
+    const result = this.handleRequest<OrderDetail[]>(`${orderId}/detalle`)
+    console.log('Resultado2: ', result)
+    return result
   }
 
   static async createOrder (request: Order): Promise<number> {
@@ -108,10 +159,8 @@ export class OrderCacheRepository {
 
   static async cacheOrders (orders: Order[]): Promise<void> {
     try {
-      // Convertir la lista de órdenes a una cadena JSON
       const ordersJson = JSON.stringify(orders)
 
-      // Almacenar las órdenes en AsyncStorage con una clave única
       await AsyncStorage.setItem('cached_orders', ordersJson)
 
       console.log('Órdenes almacenadas en caché correctamente.')
@@ -123,15 +172,12 @@ export class OrderCacheRepository {
 
   static async getCachedOrders (): Promise<Order[]> {
     try {
-      // Obtener las órdenes almacenadas en AsyncStorage
       const cachedOrders = await AsyncStorage.getItem('cached_orders')
 
-      // Si no hay órdenes almacenadas, devolver un array vacío
       if (!cachedOrders) {
         return []
       }
 
-      // Parsear las órdenes desde JSON a un array de objetos Order
       const orders: Order[] = JSON.parse(cachedOrders)
 
       return orders
@@ -142,7 +188,6 @@ export class OrderCacheRepository {
   }
   static async clearAllCachedOrders (): Promise<void> {
     try {
-      // Eliminar la clave 'cached_orders' de AsyncStorage
       await AsyncStorage.removeItem('cached_orders')
 
       console.log('Todas las órdenes almacenadas han sido eliminadas.')
