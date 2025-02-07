@@ -12,10 +12,17 @@ class OrderService {
   private orderSubject = new BehaviorSubject<Order|null>(null)
   private activeTableSubject = new BehaviorSubject<ActiveTable[]>([])
   private orderDetailsSubject = new BehaviorSubject<OrderDetail[]>([])
+  private currentOrderId: number | null = null;
 
   order$ = this.orderSubject.asObservable()
   activeTables$ = this.activeTableSubject.asObservable()
   orderDetails$ = this.orderDetailsSubject.asObservable()
+
+  clearCurrentOrder() {
+    this.currentOrderId = null;
+    this.orderSubject.next(null);
+    this.orderDetailsSubject.next([]);
+  }
 
   loadActiveOrders$ (): Observable<ActiveTable[]> {
     return from(OrderApiRepository.getActiveTables()).pipe(
@@ -34,6 +41,10 @@ class OrderService {
   }
 
   getOrder$ (orderId: number): Observable<Order | null> {
+    if (this.currentOrderId !== orderId) {
+      this.currentOrderId = orderId;
+      this.orderSubject.next(null);
+    }
     return from(OrderApiRepository.getOrder(orderId)).pipe(
       tap({
         next: orden => {

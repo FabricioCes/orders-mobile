@@ -78,5 +78,7 @@ export const useOrderOperations = (orderId: number, order: Order) => {
     ]);
   }, [handleModifyOrder, orderId, order]);
 
-  return { removeProduct, updateOrder, saveOrder, updateQuantity };
+  const clearCurrentOrder = () => orderService.clearCurrentOrder()
+
+  return { removeProduct, updateOrder, saveOrder, updateQuantity, clearCurrentOrder };
 };

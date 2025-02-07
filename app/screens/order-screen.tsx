@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   View,
   Alert,
@@ -26,7 +26,7 @@ export default function OrderScreen() {
     token = ""
   } = params;
 
-  const { order, orderDetails, removeProduct, saveOrder, updateQuantity } =
+  const { order, orderDetails, removeProduct, saveOrder, updateQuantity, clearCurrentOrder } =
     useOrderManagement(Number(orderId), String(userName), String(token), "");
 
   const [showQuantityModal, setShowQuantityModal] = useState(false);
@@ -90,7 +90,11 @@ export default function OrderScreen() {
     [removeProduct, orderDetails]
   );
 
-  console.log("Orden screen",order?.idCliente)
+  useEffect(() => {
+    return () => {
+      clearCurrentOrder();
+    };
+  }, []);
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -101,7 +105,7 @@ export default function OrderScreen() {
       </View>
 
       <View className="flex-1">
-        <ClientSection customerId={Number(order?.idCliente)} />
+        <ClientSection customerId={Number(order?.idCliente ?? 0)} orderId={Number(orderId)} />
 
         <View className="flex-1 border-t border-gray-200">
           <ProductSection onAddProduct={handleNavigateToProducts} />

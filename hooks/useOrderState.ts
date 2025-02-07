@@ -23,10 +23,12 @@ export const useOrderState = (
     loading: true,
     error: null
   })
+
   useEffect(() => {
     const subscriptions: Subscription[] = []
 
     if (orderId) {
+      orderService.clearCurrentOrder();
       subscriptions.push(
         orderService.order$.subscribe(order => {
           setState(prev => ({
@@ -51,7 +53,10 @@ export const useOrderState = (
       orderService.getOrderDetails$(orderId).subscribe()
     }
 
-    return () => subscriptions.forEach(sub => sub.unsubscribe())
+    return () => {
+      subscriptions.forEach(sub => sub.unsubscribe());
+      orderService.clearCurrentOrder(); // Limpieza al desmontar
+    };
   }, [orderId])
 
   useEffect(() => {

@@ -2,7 +2,8 @@ import { useOrderState } from './useOrderState'
 import { useOrderOperations } from './useOrderOperations'
 import { useProductManagement } from './useProductManagement'
 import { useProducts } from '@/context/ProductsContext'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { orderService } from '@/services/order.service'
 
 
 export const useOrderManagement = (orderId: number, userName: string, token: string, zona: string) => {
@@ -27,16 +28,17 @@ export const useOrderManagement = (orderId: number, userName: string, token: str
     orderId
   )
 
-  const { removeProduct, updateOrder, saveOrder, updateQuantity } = useOrderOperations(
+  const { removeProduct, updateOrder, saveOrder, updateQuantity, clearCurrentOrder} = useOrderOperations(
     orderId,
     order!
   )
 
 
-  // useEffect(() => {
-  //   const subscription = orderService.getOrderDetails$(orderId).subscribe();
-  //   return () => subscription.unsubscribe();
-  // }, [orderId]);
+  useEffect(() => {
+    if (orderId && !order) {
+      orderService.getOrder$(orderId).subscribe();
+    }
+  }, [orderId, order]);
 
   return {
     order,
@@ -53,6 +55,7 @@ export const useOrderManagement = (orderId: number, userName: string, token: str
     updateOrder,
     saveOrder,
     addToOrder,
-    updateQuantity
+    updateQuantity,
+    clearCurrentOrder
   }
 }

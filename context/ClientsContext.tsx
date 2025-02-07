@@ -48,6 +48,11 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const clearClient = () => {
+    setSelectedClient(undefined);
+    AsyncStorage.removeItem("selectedClient").catch(() => {});
+  };
+
   useEffect(() => {
     const controller = new AbortController();
     if (token && settings) fetchClients(controller.signal);
@@ -61,11 +66,7 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({
         status,
         selectedClient,
         addClient: (client) => setSelectedClient(client),
-        clearClient: () => {
-          setSelectedClient(undefined);
-          // Agregar limpieza persistente si es necesario
-          AsyncStorage.removeItem('selectedClient'); 
-        },
+        clearClient,
       }}
     >
       {children}
