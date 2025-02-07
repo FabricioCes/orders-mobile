@@ -11,7 +11,7 @@ import { Product } from '@/types/productTypes';
 import SearchBar from '../components/orders/serch-bar';
 
 const ProductsScreen: React.FC = () => {
-  const { orderId } = useLocalSearchParams();
+  const { orderId, token, userName  } = useLocalSearchParams();
   const numericOrderId = Number(orderId);
 
   // Estados y métodos del hook de gestión de órdenes
@@ -22,7 +22,7 @@ const ProductsScreen: React.FC = () => {
     addToOrder,
     loading: orderLoading,
     error: orderError
-  } = useOrderManagement(numericOrderId);
+  } = useOrderManagement(numericOrderId, String(userName), String(token), '');
 
   // Estados del contexto de productos
   const {

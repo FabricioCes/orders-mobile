@@ -28,13 +28,10 @@ export const useOrderState = (
 
     if (orderId) {
       subscriptions.push(
-        orderService.orders$.subscribe(orders => {
-          const currentOrder =
-            orders.find(o => o.numeroOrden === orderId) || null
+        orderService.order$.subscribe(order => {
           setState(prev => ({
             ...prev,
-            order: currentOrder,
-            orders: orders,
+            order: order,
             loading: false
           }))
         })

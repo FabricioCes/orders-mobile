@@ -7,47 +7,47 @@ export type OrderTable = {
   tableId: number
   place: string
 }
-
 export type Order = {
-  codigoAleatorio: string;
-  creadoPor: string;
-  descripcion: string | null;
-  detalles: OrderDetail[] | null;
-  direccion: string | null;
-  encargado: string;
-  estado: 'Pendiente' | 'Anulada' | 'Finalizada';
-  fechaCreacion: string;
-  fechaEntrada: string;
-  fechaHoraOrdenProgramada: string | null;
-  fechaModificacion: string;
+  codigoAleatorio?: string;
+  creadoPor?: string;
+  descripcion?: string | null;
+  detalles?: OrderDetail[] | null;
+  direccion?: string | null;
+  encargado?: string;
+  estado?: 'Pendiente' | 'Anulada' | 'Finalizada';
+  fechaCreacion?: string;
+  fechaEntrada?: string;
+  fechaHoraOrdenProgramada?: string | null;
+  fechaModificacion?: string;
   hora?: string;
-  idCliente: number | null;
-  idUsuario: string;
-  imprimir: boolean;
-  modificadoPor: string | null;
-  nombreCliente: string;
-  nombreCompletoCliente: string;
-  numeroMesa: string;
-  numeroOrden: number;
-  porcDescuento: number;
+  idCliente?: number | null;
+  idUsuario?: string;
+  imprimir?: boolean;
+  modificadoPor?: string | null;
+  nombreCliente?: string;
+  nombreCompletoCliente?: string;
+  numeroMesa?: string;
+  numeroOrden?: number;
+  porcDescuento?: number;
   prioridad?: string;
   prioridadNumerica?: number;
-  regimenTributacion: string | null;
-  telefonoCliente1: string | null;
-  telefonoCliente2: string | null;
-  telefonoNotificar: string | null;
+  regimenTributacion?: string | null;
+  telefonoCliente1?: string | null;
+  telefonoCliente2?: string | null;
+  telefonoNotificar?: string | null;
   tipoOrden?: string;
-  totalConDescuento: number;
+  totalConDescuento?: number;
   totalExento?: number;
   totalGravado?: number;
   totalIVA?: number;
   totalPrecioCompra?: number;
   totalServicio?: number;
   totalSinDescuento?: number;
-  ubicacion: string;
+  ubicacion?: string;
   vendedor?: string;
   versionSistema?: string;
 };
+
 export type OrderDetail = {
   cantidad: number;
   codigoMitad?: number;

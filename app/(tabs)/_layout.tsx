@@ -1,7 +1,7 @@
-import { Tabs } from "expo-router";
+import { Tabs, useFocusEffect } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useColorScheme } from "react-native";
-import { useMemo, memo } from "react";
+import { useMemo, memo, useCallback } from "react";
 import { useTableNavigation } from "@/hooks/useTableNavigation";
 
 const staticTabs = [
@@ -36,7 +36,7 @@ const THEME = {
 };
 
 const TabLayout = memo(() => {
-  const { activeTables = [] } = useTableNavigation('');
+  const { activeTables = [], loadActiveTables} = useTableNavigation('');
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === "dark";
   const tablesByZone = useMemo(() => {
@@ -47,6 +47,11 @@ const TabLayout = memo(() => {
     }, {} as Record<string, number>);
   }, [activeTables]);
 
+  useFocusEffect(
+    useCallback(() => {
+      loadActiveTables();
+    }, [])
+  );
   const renderedTabs = useMemo(
     () =>
       staticTabs.map((tab) => {
@@ -104,6 +109,7 @@ const TabLayout = memo(() => {
         name="settings"
         options={{
           title: "Conf",
+          headerTitle: "Configuraciones",
           tabBarIcon: () => (
             <FontAwesome name="cog" size={24} color="#888" />
           ),

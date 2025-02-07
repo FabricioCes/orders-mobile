@@ -3,10 +3,15 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useClients } from "@/context/ClientsContext";
 import { router } from "expo-router";
+import { CustomerApiRepository } from "@/repositories/customer.repository";
+type ClientSectionProps = {
+  customerId: number;
+};
 
-const ClientSection = () => {
-  const { selectedClient, clearClient } = useClients();
-
+const ClientSection: React.FC<ClientSectionProps> = ({ customerId }) => {
+  const { selectedClient, clearClient, addClient} = useClients();
+  console.log(customerId)
+ CustomerApiRepository.getCustomer(customerId).then(client => addClient(client));
   return (
     <View className="bg-white rounded-lg p-4 mb-6 shadow-sm border-t border-gray-200 mt-2" >
       <View className="flex-row items-center justify-between mb-4">
@@ -26,9 +31,9 @@ const ClientSection = () => {
         </TouchableOpacity>
       </View>
 
-      {selectedClient && (
+      {(selectedClient) && (
         <View className="flex-row items-center justify-between bg-blue-50 p-3 rounded-lg">
-          <Text className="text-base flex-1">{selectedClient.name}</Text>
+          <Text className="text-base flex-1">{selectedClient?.nombre}</Text>
           <TouchableOpacity onPress={clearClient}>
             <FontAwesome name="times-circle" size={20} color="#ef4444" />
           </TouchableOpacity>

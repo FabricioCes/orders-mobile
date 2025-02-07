@@ -74,15 +74,15 @@ export const ClientsProvider: React.FC<{ children: React.ReactNode }> = ({
 };
 
 const createClientFromApi = (apiClient: any): Client => ({
-  id: apiClient.identificador,
-  name: apiClient.nombre,
-  ced: apiClient.cedula || "",
-  priceType: apiClient.tipoPrecio,
-  tel: apiClient.telefono || undefined,
-  tel2: apiClient.telefono2 || undefined,
-  email: apiClient.correo || undefined,
-  email2: apiClient.correo2 || undefined,
-  address: apiClient.direccion?.trim() || undefined,
+  identificacion: apiClient.identificador,
+  nombre: apiClient.nombre,
+  cedula: apiClient.cedula || "",
+  tipoPrecio: apiClient.tipoPrecio,
+  telefono: apiClient.telefono || undefined,
+  telefono2: apiClient.telefono2 || undefined,
+  correo: apiClient.correo || undefined,
+  correo2: apiClient.correo2 || undefined,
+  direccion: apiClient.direccion?.trim() || undefined,
 });
 
 export const useClients = () => {

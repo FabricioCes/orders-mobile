@@ -5,14 +5,14 @@ import { useProducts } from '@/context/ProductsContext'
 import { useState } from 'react'
 
 
-export const useOrderManagement = (orderId: number, userId: string, token: string, zona: string) => {
+export const useOrderManagement = (orderId: number, userName: string, token: string, zona: string) => {
   const {
     order,
     activeTables,
     details: orderDetails,
     loading,
     error
-  } = useOrderState(orderId, userId, token, zona)
+  } = useOrderState(orderId, userName, token, zona)
   const {
     groupedProducts,
     loading: productsLoading,

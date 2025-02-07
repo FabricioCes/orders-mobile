@@ -14,7 +14,7 @@ const initConnection = async (): Promise<void> => {
     .build();
 
   // Configura los listeners después de crear la conexión
-  connection.on('EstadoOrdenActualizado', (ordenId: number) => {
+  connection.on('CambioEstadoOrden', (ordenId: number) => {
     notificationService.sendNotification(
       'Orden Actualizada',
       `La orden #${ordenId} ha sido modificada.`
@@ -25,7 +25,7 @@ const initConnection = async (): Promise<void> => {
 export const signalRService = {
   start: async (): Promise<void> => {
     if (!connection) {
-      await initConnection(); // Espera a que la conexión se inicialice
+      await initConnection();
     }
     try {
       await connection.start();
@@ -34,9 +34,9 @@ export const signalRService = {
       console.error('Error al conectar con SignalR:', err);
     }
   },
-  onOrderUpdated: (callback: (ordenId: number, nuevoEstado: Order) => void): void => {
+  onOrderUpdated: (callback: (ordenId: number, nuevoEstado: Order | string) => void): void => {
     if (connection) {
-      connection.on('EstadoOrdenActualizado', callback); // Nombre del evento debe coincidir con el backend
+      connection.on('CambioEstadoOrden', callback);
     }
   },
 };

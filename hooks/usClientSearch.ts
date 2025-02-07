@@ -10,8 +10,8 @@ const useClientSearch = (clients: Client[], query: string) => {
 
     return clients.filter(
       (client) =>
-        client.name.toLowerCase().includes(normalizedQuery) ||
-        client.ced.includes(normalizedQuery)
+        client.nombre.toLowerCase().includes(normalizedQuery) ||
+        client.cedula.includes(normalizedQuery)
     );
   }, [clients, query]);
 };

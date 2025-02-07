@@ -22,10 +22,12 @@ export default function OrderScreen() {
     place = "",
     isActive = "false",
     orderId = "0",
+    userName = "",
+    token = ""
   } = params;
 
   const { order, orderDetails, removeProduct, saveOrder, updateQuantity } =
-    useOrderManagement(Number(orderId));
+    useOrderManagement(Number(orderId), String(userName), String(token), "");
 
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<{
@@ -88,6 +90,8 @@ export default function OrderScreen() {
     [removeProduct, orderDetails]
   );
 
+  console.log("Orden screen",order?.idCliente)
+
   return (
     <View className="flex-1 bg-gray-50">
       <View className="p-4 bg-white shadow-sm">
@@ -97,7 +101,7 @@ export default function OrderScreen() {
       </View>
 
       <View className="flex-1">
-        <ClientSection />
+        <ClientSection customerId={Number(order?.idCliente)} />
 
         <View className="flex-1 border-t border-gray-200">
           <ProductSection onAddProduct={handleNavigateToProducts} />

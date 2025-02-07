@@ -30,8 +30,8 @@ type APIOrderDetail = {
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
 export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
-  const { settings, token, userName} = useSettings();
-  const { loadActiveTables } = useTableNavigation(userName, token, '');
+  const { settings, token} = useSettings();
+  const { loadActiveTables } = useTableNavigation('');
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
 
 
@@ -156,7 +156,7 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
         }
         return [];
       } catch (error) {
-        console.error("Error:", error);
+        console.log("Error:", error);
         return [];
       }
     },

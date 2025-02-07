@@ -3,16 +3,8 @@ import { getBaseUrl } from '@/services/config'
 import { ApiResponse, Order, OrderDetail } from '@/types/types'
 import { Client } from '@/types/clientTypes'
 import { ActiveTable } from '@/types/tableTypes'
+import { getToken } from '@/utils/tableUtils'
 
-const getToken = async (): Promise<string | null> => {
-  try {
-    const token = await AsyncStorage.getItem('token')
-    return token
-  } catch (error) {
-    console.error('Error al obtener el token:', error)
-    return null
-  }
-}
 export class OrderApiRepository {
   private static async handleRequest<T> (
     endpoint: string,
@@ -33,7 +25,7 @@ export class OrderApiRepository {
     }
 
     try {
-       const response = await fetch(`${await getBaseUrl()}/${endpoint}`, {
+      const response = await fetch(`${await getBaseUrl()}/${endpoint}`, {
         ...init,
         headers
       })
@@ -41,17 +33,13 @@ export class OrderApiRepository {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
-      
 
       const data: ApiResponse<T> = await response.json()
       if (data.error) {
         throw new Error(data.mensaje || 'Error en la respuesta de la API')
       }
 
-
-
-      return data.resultado;
-
+      return data.resultado
     } catch (error) {
       console.log('Error in handleRequest:', error)
       throw new Error(
@@ -62,7 +50,8 @@ export class OrderApiRepository {
 
   static async getOrder (orderId: number): Promise<Order> {
     try {
-      const result = await this.handleRequest<Order>(`Orden/${orderId}`)
+      const result = this.handleRequest<Order>(`Orden/${orderId}`)
+      console.log('orderid', result)
       return result
     } catch (error) {
       throw new Error(

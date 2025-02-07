@@ -1,13 +1,13 @@
 export type Client = {
-  id: number
-  name: string
-  ced: string
-  priceType: number
-  tel?: string
-  tel2?: string
-  email?: string
-  email2?: string
-  address?: string
+  identificacion: number
+  nombre: string
+  cedula: string
+  tipoPrecio: number
+  telefono?: string
+  telefono2?: string
+  correo?: string
+  correo2?: string
+  direccion?: string
 }
 
 export type ClientsContextType = {
