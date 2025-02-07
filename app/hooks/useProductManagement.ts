@@ -1,6 +1,6 @@
 // src/hooks/useProductManagement.ts
 import { useMemo, useCallback } from 'react'
-import { orderService } from '@/services/order.service'
+import { orderService } from '@/core/services/order.service'
 import { Product, ProductGroup } from '@/types/productTypes'
 
 export const useProductManagement = (

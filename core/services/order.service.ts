@@ -4,7 +4,7 @@ import { tap } from 'rxjs/operators'
 import {
   OrderApiRepository,
   OrderCacheRepository
-} from '@/repositories/order.repository'
+} from '@/core/repositories/order.repository'
 import { Order, OrderDetail } from '@/types/types'
 import { ActiveTable } from '@/types/tableTypes'
 

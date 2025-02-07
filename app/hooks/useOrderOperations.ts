@@ -3,8 +3,8 @@ import { useCallback } from 'react';
 import { Alert } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { Order } from '@/types/types';
-import { orderService } from '@/services/order.service';
-import { offlineService } from '@/services/offlineService';
+import { orderService } from '@/core/services/order.service';
+import { offlineService } from '@/core/services/offlineService';
 
 export const useOrderOperations = (orderId: number, order: Order) => {
   const handleModifyOrder = useCallback(

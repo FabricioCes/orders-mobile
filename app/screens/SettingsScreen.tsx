@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import { Link, router } from "expo-router";
-import { useSettings } from "../../context/SettingsContext";
+import { useSettings } from "../context/SettingsContext";
 
 const SettingsScreen = () => {
   const { saveSettings, logOut, settings, hasUser, userName } = useSettings();

@@ -4,7 +4,7 @@ import { router } from 'expo-router'
 import { useSettings } from '@/context/SettingsContext'
 import { useOrderManagement } from '@/hooks/useOrderManagement'
 import { ActiveTable } from '@/types/tableTypes'
-import { orderService } from '@/services/order.service'
+import { orderService } from '@/core/services/order.service'
 
 export const useTableNavigation = (place: string) => {
   const { hasUser, checkTokenExpiration, settings, userName, token } = useSettings()

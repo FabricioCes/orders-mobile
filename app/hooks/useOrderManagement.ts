@@ -3,7 +3,7 @@ import { useOrderOperations } from './useOrderOperations'
 import { useProductManagement } from './useProductManagement'
 import { useProducts } from '@/context/ProductsContext'
 import { useEffect, useState } from 'react'
-import { orderService } from '@/services/order.service'
+import { orderService } from '@/core/services/order.service'
 
 
 export const useOrderManagement = (orderId: number, userName: string, token: string, zona: string) => {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Subscription } from 'rxjs'
 import { Order, OrderDetail } from '@/types/types'
-import { orderService } from '@/services/order.service'
+import { orderService } from '@/core/services/order.service'
 import { ActiveTable } from '@/types/tableTypes'
 
 export const useOrderState = (

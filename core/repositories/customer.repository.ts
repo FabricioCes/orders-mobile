@@ -1,4 +1,4 @@
-import { getBaseUrl } from '@/services/config'
+import { getBaseUrl } from '@/core/services/config'
 import { Client } from '@/types/clientTypes'
 import { ApiResponse } from '@/types/types'
 import { getToken } from '@/utils/tableUtils'

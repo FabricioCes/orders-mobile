@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useClients } from "@/context/ClientsContext";
 import { router } from "expo-router";
-import { CustomerApiRepository } from "@/repositories/customer.repository";
+import { CustomerApiRepository } from "@/core/repositories/customer.repository";
 type ClientSectionProps = {
   customerId: number;
   orderId: number;

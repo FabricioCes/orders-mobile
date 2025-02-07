@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { getBaseUrl } from '@/services/config'
+import { getBaseUrl } from '@/core/services/config'
 import { ApiResponse, Order, OrderDetail } from '@/types/types'
 import { Client } from '@/types/clientTypes'
 import { ActiveTable } from '@/types/tableTypes'
