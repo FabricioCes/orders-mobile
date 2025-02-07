@@ -6,14 +6,13 @@ import { useOrderManagement } from '@/hooks/useOrderManagement'
 import { ActiveTable } from '@/types/tableTypes'
 import { orderService } from '@/services/order.service'
 
-export const useTableNavigation = (userId: string, token:string, place: string) => {
-  const { hasUser, checkTokenExpiration, settings } = useSettings()
-  const { activeTables } = useOrderManagement(0, userId, token, place)
+export const useTableNavigation = (place: string) => {
+  const { hasUser, checkTokenExpiration, settings, userName, token } = useSettings()
+  const { activeTables } = useOrderManagement(0,userName, token,  place)
 
   const loadActiveTables = () => {
     try {
-      orderService.loadActiveOrders$().subscribe();
-      console.log('loadActiveTables',activeTables)
+      orderService.loadActiveOrders$();
     } catch {
       throw new Error("Error cargando mesas activas");
     }
@@ -22,7 +21,6 @@ export const useTableNavigation = (userId: string, token:string, place: string) 
   useEffect(() => {
     if (hasUser) {
       loadActiveTables()
-      console.log('effectg',activeTables)
     }
   }, [place, hasUser])
 

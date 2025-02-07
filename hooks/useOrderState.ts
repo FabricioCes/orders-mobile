@@ -6,9 +6,9 @@ import { ActiveTable } from '@/types/tableTypes'
 
 export const useOrderState = (
   orderId: number,
-  userId: string,
+  userName: string,
   token: string,
-  zona: string
+  place: string
 ) => {
   const [state, setState] = useState<{
     order: Order | null
@@ -54,36 +54,27 @@ export const useOrderState = (
       orderService.getOrderDetails$(orderId).subscribe()
     }
 
-    subscriptions.push(
-      orderService.activeTables$.subscribe(activeTables => {
-        console.log('mesas activas en subcriptor', activeTables)
-        setState(prev => ({
-          ...prev,
-          activeTables
-        }))
-      })
-    )
-    orderService.loadActiveOrders$().subscribe()
     return () => subscriptions.forEach(sub => sub.unsubscribe())
-  }, [orderId, userId, token, zona])
+  }, [orderId])
 
   useEffect(() => {
     const subscriptions: Subscription[] = []
-    if (userId || token || zona) {
+    console.log('Actualizando mesas')
+    if (userName || token || place) {
       const subscriptions: Subscription[] = []
-      console.log('urray!!')
       subscriptions.push(
         orderService.activeTables$.subscribe(activeTables => {
-          console.log('mesas activas en subcriptor', activeTables)
           setState(prev => ({
             ...prev,
             activeTables
           }))
         })
       )
+
+    orderService.loadActiveOrders$().subscribe()
     }
     return () => subscriptions.forEach(sub => sub.unsubscribe())
-  }, [userId, token, zona])
+  }, [userName, token, place])
 
   return state
 }

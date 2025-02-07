@@ -21,7 +21,6 @@ class OrderService {
     return from(OrderApiRepository.getActiveTables()).pipe(
       tap({
         next: activeTables => {
-          console.log('Datos recibidos:', activeTables)
           this.activeTableSubject.next(activeTables)
           //OrderCacheRepository.cacheOrders(activeTables); // Si se implementa
         },

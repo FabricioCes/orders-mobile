@@ -118,13 +118,14 @@ const LoadingState = () => (
 
 export default function Tables({ place, qty: propQty }: TablesProps) {
   const { width } = useWindowDimensions();
-  const { zonas, loadingZonas, token, userName } = useSettings();
+  const { zonas, loadingZonas, token } = useSettings();
 
   const isTablet = width >= 768;
   const columns = isTablet ? 9 : 3;
   const qty = propQty || zonas[place] || 0;
   const tables = Array.from({ length: qty }, (_, i) => i + 1);
-  const { handleTablePress, isTableActive } = useTableNavigation(userName, token, place);
+
+  const { handleTablePress, isTableActive } = useTableNavigation(place);
 
   if (loadingZonas) return <LoadingState />;
 

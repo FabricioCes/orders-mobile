@@ -3,7 +3,6 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useColorScheme } from "react-native";
 import { useMemo, memo } from "react";
 import { useTableNavigation } from "@/hooks/useTableNavigation";
-import { useSettings } from "@/context/SettingsContext";
 
 const staticTabs = [
   { name: "comedor", title: "Comedor", iconName: "home" },
@@ -37,14 +36,12 @@ const THEME = {
 };
 
 const TabLayout = memo(() => {
-  const {userName, token} = useSettings();
-  const { activeTables = [] } = useTableNavigation(userName, token, '');
+  const { activeTables = [] } = useTableNavigation('');
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === "dark";
-console.log(activeTables)
   const tablesByZone = useMemo(() => {
     return activeTables?.reduce((acc, table) => {
-      const zona = table.zona?.toLowerCase() || "sin-zona";
+      const zona = table.zona?.trim().toLowerCase() || "sin-zona";
       acc[zona] = (acc[zona] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
@@ -107,7 +104,7 @@ console.log(activeTables)
         name="settings"
         options={{
           title: "Conf",
-          tabBarIcon: ({ color }) => (
+          tabBarIcon: () => (
             <FontAwesome name="cog" size={24} color="#888" />
           ),
           tabBarLabelStyle: {

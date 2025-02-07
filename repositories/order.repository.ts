@@ -80,9 +80,7 @@ export class OrderApiRepository {
   }
 
   static async getActiveTables (): Promise<ActiveTable[]> {
-    const result = await this.handleRequest<ActiveTable[]>('Orden/activa')
-    console.log('Repository:', result[0].cronometroOrden)
-    return result
+    return this.handleRequest<ActiveTable[]>('Orden/activa')
   }
 
   static async getOrderDetails (orderId: number): Promise<OrderDetail[]> {
