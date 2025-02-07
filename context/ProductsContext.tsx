@@ -21,21 +21,21 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({
   const groupedProducts = useMemo(() => {
     const groupsMap = rawProducts.reduce(
       (acc: Record<string, ProductGroup>, product) => {
-        const { subCategory, subSubCategory } = product;
+        const { subCategoria, subSubCategoria } = product;
 
-        if (!acc[subCategory]) {
-          acc[subCategory] = {
-            category: subCategory,
+        if (!acc[subCategoria]) {
+          acc[subCategoria] = {
+            category: subCategoria,
             subCategories: [],
           };
         }
 
-        const subCatGroup = acc[subCategory].subCategories.find(
-          (s: { name: string; }) => s.name === subSubCategory
+        const subCatGroup = acc[subCategoria].subCategories.find(
+          (s: { name: string; }) => s.name === subSubCategoria
         );
         if (!subCatGroup) {
-          acc[subCategory].subCategories.push({
-            name: subSubCategory,
+          acc[subCategoria].subCategories.push({
+            name: subSubCategoria,
             products: [product],
           });
         } else {
@@ -98,14 +98,14 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({
 };
 
 const transformApiProduct = (apiProduct: any): Product => ({
-  id: Number(apiProduct.identificador),
-  name: apiProduct.nombre,
-  price: Number(apiProduct.precio),
-  subCategoryId: Number(apiProduct.idSubCategoria),
-  subCategory: apiProduct.subCategoria,
-  subSubCategoryId: Number(apiProduct.idSubSubCategoria),
-  subSubCategory: apiProduct.subSubCategoria,
-  discountPercentage: 0
+  identificador: Number(apiProduct.identificador),
+  nombre: apiProduct.nombre,
+  precio: Number(apiProduct.precio),
+  identificadorSubCategoria: Number(apiProduct.idSubCategoria),
+  subCategoria: apiProduct.subCategoria,
+  identificadorSubSubCategoria: Number(apiProduct.idSubSubCategoria),
+  subSubCategoria: apiProduct.subSubCategoria,
+  costo: apiProduct.costo
 });
 
 export const useProducts = () => {

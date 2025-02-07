@@ -1,32 +1,41 @@
 // src/services/order.service.ts
 import { BehaviorSubject, Observable, from } from 'rxjs'
-import { map, switchMap, tap } from 'rxjs/operators'
+import { catchError, map, switchMap, tap } from 'rxjs/operators'
 import {
   OrderApiRepository,
   OrderCacheRepository
 } from '@/repositories/order.repository'
 import { Order, OrderDetail } from '@/types/types'
+import { ActiveTable } from '@/types/tableTypes'
 
 class OrderService {
   private ordersSubject = new BehaviorSubject<Order[]>([])
+  private activeTableSubject = new BehaviorSubject<ActiveTable[]>([])
   private orderDetailsSubject = new BehaviorSubject<OrderDetail[]>([])
 
   orders$ = this.ordersSubject.asObservable()
+  activeTables$ = this.activeTableSubject.asObservable()
   orderDetails$ = this.orderDetailsSubject.asObservable()
 
-  async loadActiveOrders (): Promise<void> {
-    try {
-      const orders = await OrderApiRepository.getActiveTables()
-      this.ordersSubject.next(orders)
-      await OrderCacheRepository.cacheOrders(orders)
-    } catch (error) {
-      console.error('Error loading active orders:', error)
-      throw error
-    }
+  loadActiveOrders$ (): Observable<ActiveTable[]> {
+    return from(OrderApiRepository.getActiveTables()).pipe(
+      tap({
+        next: activeTables => {
+          console.log('Datos recibidos:', activeTables)
+          this.activeTableSubject.next(activeTables)
+          //OrderCacheRepository.cacheOrders(activeTables); // Si se implementa
+        },
+        error: err => console.error('Error en carga:', err)
+      })
+      // catchError(error => {
+      //   // Recuperación desde caché si hay error
+      //   return from(OrderCacheRepository.getCachedOrders());
+      // })
+    )
   }
 
   // getOrder$ (orderId: number): Observable<Order | null> {
-  //   return from(OrderCacheRepository.getCachedOrder(orderId)).pipe(
+  //   return from(OrderCacheRepositvoidory.getCachedOrder(orderId)).pipe(
   //     switchMap(cachedOrder => {
   //       if (cachedOrder) return from([cachedOrder])
   //       return from(OrderApiRepository.getOrder(orderId)).pipe(
@@ -40,13 +49,13 @@ class OrderService {
   getOrder$ (orderId: number): Observable<Order | null> {
     return from(OrderApiRepository.getOrder(orderId))
   }
-  getOrderDetails$(orderId: number): Observable<OrderDetail[]> {
+  getOrderDetails$ (orderId: number): Observable<OrderDetail[]> {
     return from(OrderApiRepository.getOrderDetails(orderId)).pipe(
       tap(details => {
-        this.orderDetailsSubject.next(details);
-        OrderCacheRepository.cacheDetails(orderId, details);
+        this.orderDetailsSubject.next(details)
+        OrderCacheRepository.cacheDetails(orderId, details)
       })
-    );
+    )
   }
   // getOrderDetails$ (orderId: number): Observable<OrderDetail[]> {
   //   return from(OrderCacheRepository.getCachedDetails(orderId)).pipe(
@@ -133,8 +142,7 @@ class OrderService {
     const productIndex = currentDetails.findIndex(
       d => d.identificadorProducto === productId
     )
-    console.log(currentDetails)
-    console.log(orderId, productId,productIndex, quantity)
+
     if (productIndex === -1) {
       throw new Error('Producto no encontrado en la orden')
     }
@@ -145,8 +153,27 @@ class OrderService {
       cantidad: quantity
     }
 
+    const newTotal = updatedDetails.reduce(
+      (sum, detail) => sum + detail.costoUnitario * detail.cantidad,
+      0
+    )
+
     this.orderDetailsSubject.next(updatedDetails)
     await OrderCacheRepository.cacheDetails(orderId, updatedDetails)
+
+    const currentOrders = this.ordersSubject.value
+    const orderIndex = currentOrders.findIndex(o => o.numeroOrden === orderId)
+
+    if (orderIndex !== -1) {
+      const updatedOrders = [...currentOrders]
+      updatedOrders[orderIndex] = {
+        ...updatedOrders[orderIndex],
+        totalSinDescuento: newTotal,
+        detalles: updatedDetails
+      }
+      this.ordersSubject.next(updatedOrders)
+      await OrderCacheRepository.cacheOrders(updatedOrders)
+    }
   }
 }
 

@@ -1,37 +1,51 @@
-// hooks/useTableNavigation.ts
 import { useEffect } from 'react'
 import { Alert } from 'react-native'
 import { router } from 'expo-router'
 import { useSettings } from '@/context/SettingsContext'
-import { useTable } from '@/context/TablesContext'
+import { useOrderManagement } from '@/hooks/useOrderManagement'
+import { ActiveTable } from '@/types/tableTypes'
+import { orderService } from '@/services/order.service'
 
-export const useTableNavigation = (place: string) => {
+export const useTableNavigation = (userId: string, token:string, place: string) => {
   const { hasUser, checkTokenExpiration, settings } = useSettings()
-  const { activeTables, getActiveTables } = useTable()
+  const { activeTables } = useOrderManagement(0, userId, token, place)
+
+  const loadActiveTables = () => {
+    try {
+      orderService.loadActiveOrders$().subscribe();
+      console.log('loadActiveTables',activeTables)
+    } catch {
+      throw new Error("Error cargando mesas activas");
+    }
+  };
 
   useEffect(() => {
-    getActiveTables()
-  }, [place])
+    if (hasUser) {
+      loadActiveTables()
+      console.log('effectg',activeTables)
+    }
+  }, [place, hasUser])
 
   const handleTablePress = (tableId: number) => {
-    const isActive = activeTables.some(
-      table =>
-        table.numeroMesa === tableId &&
-        table.zona.trim().toUpperCase() === place.trim().toUpperCase()
-    )
+    const isActive: boolean =
+      activeTables?.some(
+        (order: ActiveTable) =>
+          Number(order.numeroMesa) === tableId &&
+          order.zona.trim().toUpperCase() === place.trim().toUpperCase()
+      ) || false
 
-    const activeTable = activeTables.find(
-      table =>
-        table.numeroMesa === tableId &&
-        table.zona.trim().toUpperCase() === place.trim().toUpperCase()
+    const activeOrder = activeTables?.find(
+      (order: ActiveTable) =>
+        Number(order.numeroMesa) === tableId &&
+        order.zona.trim().toUpperCase() === place.trim().toUpperCase()
     )
 
     const navigationParams = {
       tableId,
       place,
       isActive: isActive.toString(),
-      orderId: activeTable?.identificador || 0,
-      totalOrder: activeTable?.totalConDescuento || 0
+      orderId: activeOrder?.identificador || 0,
+      totalOrder: activeOrder?.totalConDescuento || 0
     }
 
     handleNavigation(navigationParams)
@@ -66,19 +80,24 @@ export const useTableNavigation = (place: string) => {
     Alert.alert(
       'Oops! 🥺🏼',
       'Debes Iniciar Sesión 🧑',
-      [{ text: 'Aceptar', onPress: () => router.navigate('/components/login') }],
+      [
+        { text: 'Aceptar', onPress: () => router.navigate('/components/login') }
+      ],
       { cancelable: false }
     )
 
   return {
     handleTablePress,
+    activeTables,
+    loadActiveTables,
     isTableActive: (tableId: number) => {
-      const active = activeTables.some(
-        table =>
-          table.numeroMesa === tableId &&
-          table.zona.trim().toUpperCase() === place.trim().toUpperCase()
-      );
-      return active;
+      return (
+        activeTables?.some(
+          (order: ActiveTable) =>
+            Number(order.numeroMesa) === tableId &&
+            order.zona.trim().toUpperCase() === place.trim().toUpperCase()
+        ) || false
+      )
     }
   }
 }

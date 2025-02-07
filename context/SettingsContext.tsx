@@ -121,7 +121,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  // Verificar expiración del token
   const checkTokenExpiration = async () => {
     if (!token) return;
 

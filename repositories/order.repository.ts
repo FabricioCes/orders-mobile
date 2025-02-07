@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { getBaseUrl } from '@/services/config'
 import { ApiResponse, Order, OrderDetail } from '@/types/types'
 import { Client } from '@/types/clientTypes'
+import { ActiveTable } from '@/types/tableTypes'
 
 const getToken = async (): Promise<string | null> => {
   try {
@@ -32,7 +33,7 @@ export class OrderApiRepository {
     }
 
     try {
-      const response = await fetch(`${await getBaseUrl()}/${endpoint}`, {
+       const response = await fetch(`${await getBaseUrl()}/${endpoint}`, {
         ...init,
         headers
       })
@@ -40,15 +41,19 @@ export class OrderApiRepository {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
+      
 
-      const data: ApiResponse<T> = await response.json();
+      const data: ApiResponse<T> = await response.json()
       if (data.error) {
         throw new Error(data.mensaje || 'Error en la respuesta de la API')
       }
 
-      return data.resultado
+
+
+      return data.resultado;
+
     } catch (error) {
-      console.error('Error in handleRequest:', error) // Depuración: Capturar errores
+      console.log('Error in handleRequest:', error)
       throw new Error(
         'Error al procesar la solicitud: ' + (error as Error).message
       )
@@ -74,12 +79,16 @@ export class OrderApiRepository {
     return this.handleRequest<Client>(`Orden/${orderId}/cliente`)
   }
 
-  static async getActiveTables (): Promise<Order[]> {
-    return this.handleRequest<Order[]>('activa')
+  static async getActiveTables (): Promise<ActiveTable[]> {
+    const result = await this.handleRequest<ActiveTable[]>('Orden/activa')
+    console.log('Repository:', result[0].cronometroOrden)
+    return result
   }
 
   static async getOrderDetails (orderId: number): Promise<OrderDetail[]> {
-    const result = await this.handleRequest<OrderDetail[]>(`Orden/${orderId}/detalle`)
+    const result = await this.handleRequest<OrderDetail[]>(
+      `Orden/${orderId}/detalle`
+    )
     return result
   }
 

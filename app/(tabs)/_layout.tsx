@@ -1,8 +1,9 @@
 import { Tabs } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useColorScheme } from "react-native";
-import { useTable } from "@/context/TablesContext";
 import { useMemo, memo } from "react";
+import { useTableNavigation } from "@/hooks/useTableNavigation";
+import { useSettings } from "@/context/SettingsContext";
 
 const staticTabs = [
   { name: "comedor", title: "Comedor", iconName: "home" },
@@ -36,12 +37,13 @@ const THEME = {
 };
 
 const TabLayout = memo(() => {
-  const { activeTables } = useTable();
+  const {userName, token} = useSettings();
+  const { activeTables = [] } = useTableNavigation(userName, token, '');
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === "dark";
-
+console.log(activeTables)
   const tablesByZone = useMemo(() => {
-    return activeTables.reduce((acc, table) => {
+    return activeTables?.reduce((acc, table) => {
       const zona = table.zona?.toLowerCase() || "sin-zona";
       acc[zona] = (acc[zona] || 0) + 1;
       return acc;
@@ -52,7 +54,7 @@ const TabLayout = memo(() => {
     () =>
       staticTabs.map((tab) => {
         const zoneKey = tab.title.toLowerCase();
-        const activeCount = tablesByZone[zoneKey] || 0;
+        const activeCount = (tablesByZone?.[zoneKey] || 0);
 
         return (
           <Tabs.Screen

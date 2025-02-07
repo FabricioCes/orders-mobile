@@ -3,7 +3,8 @@ import { router } from "expo-router";
 import { createContext, useCallback, useContext, useState } from "react";
 import { Alert } from "react-native";
 import { useSettings } from "./SettingsContext";
-import { useTable } from "./TablesContext";
+import { useTableNavigation } from "@/hooks/useTableNavigation";
+
 
 interface OrderContextType {
   currentOrder: Order | null;
@@ -29,8 +30,8 @@ type APIOrderDetail = {
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
 export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
-  const { settings, token } = useSettings();
-  const { getActiveTables } = useTable();
+  const { settings, token, userName} = useSettings();
+  const { loadActiveTables } = useTableNavigation(userName, token, '');
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
 
 
@@ -58,7 +59,7 @@ export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
           const savedOrder = await res.json();
           setCurrentOrder(savedOrder);
           await getOrderDetails(savedOrder.numeroOrden);
-          getActiveTables();
+          loadActiveTables();
           showOrder(true);
           break;
 

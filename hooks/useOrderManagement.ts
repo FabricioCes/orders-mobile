@@ -2,16 +2,17 @@ import { useOrderState } from './useOrderState'
 import { useOrderOperations } from './useOrderOperations'
 import { useProductManagement } from './useProductManagement'
 import { useProducts } from '@/context/ProductsContext'
-import { useEffect, useState } from 'react'
-import { orderService } from '@/services/order.service'
+import { useState } from 'react'
 
-export const useOrderManagement = (orderId: number) => {
+
+export const useOrderManagement = (orderId: number, userId: string, token: string, zona: string) => {
   const {
     order,
+    activeTables,
     details: orderDetails,
     loading,
     error
-  } = useOrderState(orderId)
+  } = useOrderState(orderId, userId, token, zona)
   const {
     groupedProducts,
     loading: productsLoading,
@@ -31,13 +32,15 @@ export const useOrderManagement = (orderId: number) => {
     order!
   )
 
-  useEffect(() => {
-    const subscription = orderService.getOrderDetails$(orderId).subscribe();
-    return () => subscription.unsubscribe();
-  }, [orderId]);
+
+  // useEffect(() => {
+  //   const subscription = orderService.getOrderDetails$(orderId).subscribe();
+  //   return () => subscription.unsubscribe();
+  // }, [orderId]);
 
   return {
     order,
+    activeTables,
     orderDetails,
     loading,
     error,
