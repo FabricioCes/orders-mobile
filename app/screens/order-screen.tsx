@@ -97,16 +97,12 @@ export default function OrderScreen() {
     [removeProduct, orderDetails]
   );
   const hasOrderBeenModified = () => {
-    // Si no tenemos datos iniciales, consideramos que no hay cambios
     if (!initialOrderRef.current || !order) return false;
 
-    // Ejemplo: Si el cliente ha cambiado (suponiendo que order tiene un idCliente)
     if (initialOrderRef.current.idCliente !== order.idCliente) return true;
 
-    // Si la cantidad de productos es distinta
     if (initialDetailsRef.current.length !== orderDetails.length) return true;
 
-    // Revisa si alguna cantidad en los detalles ha cambiado
     for (let currentDetail of orderDetails) {
       const initialDetail = initialDetailsRef.current.find(
         (d) => d.identificadorOrdenDetalle === currentDetail.identificadorOrdenDetalle
@@ -129,10 +125,8 @@ export default function OrderScreen() {
   useEffect(() => {
     const unsubscribe = navigation.addListener("beforeRemove", (e) => {
       if (!hasOrderBeenModified()) {
-        // Si no hay cambios, permite la salida normalmente
         return;
       }
-      // Si hay cambios, evita la acción de salida
       e.preventDefault();
 
       Alert.alert(
@@ -143,14 +137,12 @@ export default function OrderScreen() {
             text: "Cancelar",
             style: "cancel",
             onPress: () => {
-              // No hacemos nada, se queda en la pantalla
             },
           },
           {
             text: "Salir",
             style: "destructive",
             onPress: () => {
-              // Permite la acción original de navegación
               navigation.dispatch(e.data.action);
             },
           },
@@ -160,11 +152,6 @@ export default function OrderScreen() {
 
     return unsubscribe;
   }, [navigation, order, orderDetails]);
-  // useEffect(() => {
-  //   return () => {
-  //     clearCurrentOrder();
-  //   };
-  // }, []);
 
   useEffect(
     () => console.log("Dese orderScreen", orderDetails),

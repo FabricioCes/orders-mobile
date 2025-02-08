@@ -55,7 +55,6 @@ export const useOrderState = (
 
     return () => {
       subscriptions.forEach(sub => sub.unsubscribe());
-      // orderService.clearCurrentOrder(); // Limpieza al desmontar
     };
   }, [orderId])
 

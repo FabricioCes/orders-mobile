@@ -13,7 +13,6 @@ const initConnection = async (): Promise<void> => {
     .withAutomaticReconnect()
     .build();
 
-  // Configura los listeners después de crear la conexión
   connection.on('CambioEstadoOrden', (ordenId: number) => {
     notificationService.sendNotification(
       'Orden Actualizada',

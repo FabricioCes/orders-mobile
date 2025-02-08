@@ -1,6 +1,5 @@
-// src/screens/ProductsScreen.tsx
 import React, { useCallback } from "react";
-import { View, FlatList, Alert } from "react-native";
+import { View, FlatList } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useProducts } from "@/context/ProductsContext";
 import { useOrderManagement } from "@/hooks/useOrderManagement";
@@ -14,8 +13,6 @@ import Toast from "react-native-toast-message";
 const ProductsScreen: React.FC = () => {
   const { orderId, token, userName } = useLocalSearchParams();
   const numericOrderId = Number(orderId);
-console.log('Orden Id', orderId, numericOrderId)
-  // Estados y métodos del hook de gestión de órdenes
   const {
     searchQuery,
     setSearchQuery,
@@ -44,7 +41,7 @@ console.log('Orden Id', orderId, numericOrderId)
       Toast.show({
         type: "success",
         text1: "¡Producto agregado!",
-        text2: "Se ha añadido correctamente al carrito. 🛒",
+        text2: "Se ha añadido correctamente. 🛒",
         autoHide: true,
         position: "bottom",
         swipeable: true,

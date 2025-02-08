@@ -71,12 +71,10 @@ class OrderService {
     const currentDetails = this.orderDetailsSubject.value
     try {
       const updatedDetails = this.mergeProductDetails(currentDetails, product)
-      console.log('Merged', updatedDetails)
       this.orderDetailsSubject.next(updatedDetails)
       await OrderCacheRepository.cacheDetails(orderId, updatedDetails)
       return updatedDetails;
     } catch (error) {
-      // Rollback on error
       this.orderDetailsSubject.next(currentDetails)
       throw error
     }
