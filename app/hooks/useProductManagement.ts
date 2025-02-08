@@ -40,12 +40,18 @@ export const useProductManagement = (
         precio: product.precio,
         costoUnitario: product.costo,
         identificadorOrden: orderId,
-        identificadorOrdenDetalle: 0,
+        identificadorOrdenDetalle: Date.now(),
         identificadorProducto: product.identificador,
         impuestoProducto: product.impuesto ?? 0
       }
 
-      await orderService.addProduct(orderId, orderDetail)
+      try {
+        const result = await orderService.addProduct(orderId, orderDetail)
+        return result
+      } catch (error) {
+        console.error('Error adding product:', error)
+        throw error
+      }
     },
     [orderId]
   )

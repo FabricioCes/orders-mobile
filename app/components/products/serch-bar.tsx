@@ -1,35 +1,73 @@
 // src/components/orders/SearchBar.tsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { TextInput, View, StyleSheet } from 'react-native';
+import { Product } from '@/types/productTypes';
 import ErrorState from '../ErrorState';
+
 
 interface SearchBarProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  onAddProduct?: (product: Product) => void;
   placeholder?: string;
   hasResults?: boolean;
+  persistSearch?: boolean;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
   searchQuery,
   onSearchChange,
   placeholder = 'Buscar producto...',
-  hasResults = true
+  hasResults = true,
+  persistSearch = false,
+  onAddProduct
 }) => {
+  const [localQuery, setLocalQuery] = useState(searchQuery);
+
+  // Sincronizar con el estado externo
+  useEffect(() => {
+    if (!persistSearch) {
+      setLocalQuery(searchQuery);
+    }
+  }, [searchQuery]);
+
+  const handleChange = (text: string) => {
+    setLocalQuery(text);
+    onSearchChange(text);
+  };
+
+  const handleSubmit = () => {
+    if (onAddProduct) {
+      const dummyProduct: Product = {
+        identificador: 0,
+        nombre: localQuery,
+        precio: 0,
+        costo: 0,
+        identificadorSubCategoria: 0,
+        subCategoria: '',
+        identificadorSubSubCategoria: 0,
+        subSubCategoria: ''
+      };
+      onAddProduct(dummyProduct);
+      if (!persistSearch) setLocalQuery('');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <TextInput
         style={styles.searchInput}
         placeholder={placeholder}
         placeholderTextColor="#94a3b8"
-        value={searchQuery}
-        onChangeText={onSearchChange}
+        value={persistSearch ? searchQuery : localQuery}
+        onChangeText={handleChange}
+        onSubmitEditing={handleSubmit}
         autoCorrect={false}
         autoCapitalize="none"
         clearButtonMode="while-editing"
+        returnKeyType={onAddProduct ? 'done' : 'search'}
       />
 
-      {/* Mostrar mensaje de error si no hay resultados */}
       {!hasResults && searchQuery && (
         <View style={styles.errorContainer}>
           <ErrorState message="No se encontraron productos" />

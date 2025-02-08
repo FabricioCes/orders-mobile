@@ -67,20 +67,14 @@ class OrderService {
     )
   }
 
-  async addProduct (orderId: number, product: OrderDetail): Promise<void> {
+  async addProduct (orderId: number, product: OrderDetail): Promise<OrderDetail[]> {
     const currentDetails = this.orderDetailsSubject.value
     try {
       const updatedDetails = this.mergeProductDetails(currentDetails, product)
-
-      // Optimistic update
+      console.log('Merged', updatedDetails)
       this.orderDetailsSubject.next(updatedDetails)
       await OrderCacheRepository.cacheDetails(orderId, updatedDetails)
-
-      // Persist to API
-      await OrderApiRepository.updateOrder({
-        numeroOrden: orderId,
-        detalles: updatedDetails
-      } as Order)
+      return updatedDetails;
     } catch (error) {
       // Rollback on error
       this.orderDetailsSubject.next(currentDetails)
@@ -129,7 +123,10 @@ class OrderService {
     } else {
       await OrderApiRepository.updateOrder(order)
     }
-    await OrderCacheRepository.cacheOrder(order.numeroOrden, order)
+    await OrderApiRepository.updateOrder({
+      ...order,
+      detalles: this.orderDetailsSubject.value
+    });
   }
 
   async updateProductQuantity (

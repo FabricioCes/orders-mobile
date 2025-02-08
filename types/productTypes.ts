@@ -23,6 +23,14 @@ export type Product = {
   subSubCategoria: string;
   unidad?: number;
 };
+export type Category = {
+  identificadorCategoria: number
+  nombreCategoria: string
+  identificadorSubcategoria: number
+  nombreSubcategoria: string
+  identificadorSubSubcategoria: number
+  nombreSubSubCategoria: string
+}
 
 export type ProductGroup = {
   category: string

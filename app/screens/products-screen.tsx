@@ -1,60 +1,81 @@
 // src/screens/ProductsScreen.tsx
-import React from 'react';
-import { View, FlatList } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
-import { useProducts } from '@/context/ProductsContext';
-import { useOrderManagement } from '@/hooks/useOrderManagement';
-import LoadingState from '@/components/LoadingState';
-import ErrorState from '@/components/ErrorState';
-import CategoryAccordion from '@/components/CategoryAccordion';
-import { Product } from '@/types/productTypes';
-import SearchBar from '../components/orders/serch-bar';
+import React, { useCallback } from "react";
+import { View, FlatList, Alert } from "react-native";
+import { useLocalSearchParams } from "expo-router";
+import { useProducts } from "@/context/ProductsContext";
+import { useOrderManagement } from "@/hooks/useOrderManagement";
+import LoadingState from "@/components/LoadingState";
+import ErrorState from "@/components/ErrorState";
+import CategoryAccordion from "@/components/CategoryAccordion";
+import { Product } from "@/types/productTypes";
+import SearchBar from "../components/products/serch-bar";
+import Toast from "react-native-toast-message";
 
 const ProductsScreen: React.FC = () => {
-  const { orderId, token, userName  } = useLocalSearchParams();
+  const { orderId, token, userName } = useLocalSearchParams();
   const numericOrderId = Number(orderId);
-
+console.log('Orden Id', orderId, numericOrderId)
   // Estados y métodos del hook de gestión de órdenes
   const {
     searchQuery,
     setSearchQuery,
     filteredMenu,
     addToOrder,
-    loading: orderLoading,
-    error: orderError
-  } = useOrderManagement(numericOrderId, String(userName), String(token), '');
+    error: orderError,
+  } = useOrderManagement(numericOrderId, String(userName), String(token), "");
 
-  // Estados del contexto de productos
-  const {
-    loading: productsLoading,
-    error: productsError
-  } = useProducts();
+  const { loading: productsLoading, error: productsError } = useProducts();
 
-  // Manejo de estados de carga y errores
-  if (productsLoading || !orderLoading) {
+  if (productsLoading) {
     return <LoadingState message="Cargando productos..." />;
   }
 
   if (productsError || orderError) {
-    return <ErrorState message={productsError || orderError || 'Error desconocido'} />;
+    return (
+      <ErrorState
+        message={productsError || orderError || "Error desconocido"}
+      />
+    );
   }
 
   const handleAddProduct = (product: Product, quantity: number = 1) => {
     addToOrder(product, quantity)
-      .then(() => {
-      // Aquí podrías mostrar una notificación de éxito si lo deseas
-      })
-      .catch((error: Error) => {
-      console.error('Error al agregar producto:', error);
-      // Aquí podrías mostrar una notificación de error
+    .then(() => {
+      Toast.show({
+        type: "success",
+        text1: "¡Producto agregado!",
+        text2: "Se ha añadido correctamente al carrito. 🛒",
+        autoHide: true,
+        position: "bottom",
+        swipeable: true,
+        visibilityTime: 1000
       });
+    })
+    .catch((error: Error) => {
+      Toast.show({
+        type: "error",
+        text1: "¡Ups, algo salió mal!",
+        text2: "No se pudo agregar el producto. 😞",
+        autoHide: true,
+        position: "bottom",
+        swipeable: true,
+        visibilityTime: 1000
+      });
+    });
   };
+
+  const handleSearchChange = useCallback((text: string) => {
+    setSearchQuery(text);
+  }, []);
 
   return (
     <View className="flex-1 bg-white p-4">
       <SearchBar
         searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
+        onSearchChange={handleSearchChange}
+        onAddProduct={addToOrder}
+        persistSearch={true}
+        hasResults={filteredMenu.length > 0}
         placeholder="Buscar productos..."
       />
 
@@ -72,6 +93,7 @@ const ProductsScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       />
+      <Toast />
     </View>
   );
 };

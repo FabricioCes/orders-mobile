@@ -90,11 +90,11 @@ export class OrderApiRepository {
     })
   }
 
-  static async updateOrder (request: Order): Promise<void> {
-    await this.handleRequest<void>('', {
+  static async updateOrder (orden: Order): Promise<void> {
+    await this.handleRequest<void>('Orden', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(request)
+      body: JSON.stringify(orden)
     })
   }
 

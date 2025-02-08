@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   View,
   Alert,
@@ -7,11 +7,11 @@ import {
   TouchableOpacity,
   TextInput,
 } from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import ClientSection from "../components/client-section";
 import ProductSection from "../components/product-section";
 import OrderSummaryItem from "../components/orders/order-summary-item";
-import ProductDetail from "../components/orders/product-detail";
+import ProductDetail from "../components/products/product-detail";
 import { OrderDetail } from "@/types/types";
 import { useOrderManagement } from "@/hooks/useOrderManagement";
 
@@ -23,11 +23,15 @@ export default function OrderScreen() {
     isActive = "false",
     orderId = "0",
     userName = "",
-    token = ""
+    token = "",
   } = params;
 
-  const { order, orderDetails, removeProduct, saveOrder, updateQuantity, clearCurrentOrder } =
+  const navigation = useNavigation();
+
+  const { order, orderDetails, removeProduct, saveOrder, updateQuantity } =
     useOrderManagement(Number(orderId), String(userName), String(token), "");
+  const initialOrderRef = useRef(order);
+  const initialDetailsRef = useRef<OrderDetail[]>(orderDetails);
 
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<{
@@ -42,18 +46,21 @@ export default function OrderScreen() {
       if (!isNaN(quantity) && quantity > 0) {
         updateProductQuantity(selectedProduct.id, quantity);
       } else {
-        Alert.alert('Cantidad inválida', 'Ingrese un número válido mayor a 0');
+        Alert.alert("Cantidad inválida", "Ingrese un número válido mayor a 0");
       }
     }
     setShowQuantityModal(false);
   };
-  const updateProductQuantity = useCallback((id: number, quantity: number) => {
-    if (isNaN(quantity)) return;
-   updateQuantity(id, quantity)
-  }, [orderId]);
+  const updateProductQuantity = useCallback(
+    (id: number, quantity: number) => {
+      if (isNaN(quantity)) return;
+      updateQuantity(id, quantity);
+    },
+    [orderId]
+  );
 
   const handleNavigateToProducts = useCallback(() => {
-    router.navigate("/screens/products-screen");
+    router.navigate({ pathname: "/screens/products-screen", params });
   }, []);
 
   const handleProductPress = useCallback(
@@ -89,12 +96,80 @@ export default function OrderScreen() {
     },
     [removeProduct, orderDetails]
   );
+  const hasOrderBeenModified = () => {
+    // Si no tenemos datos iniciales, consideramos que no hay cambios
+    if (!initialOrderRef.current || !order) return false;
+
+    // Ejemplo: Si el cliente ha cambiado (suponiendo que order tiene un idCliente)
+    if (initialOrderRef.current.idCliente !== order.idCliente) return true;
+
+    // Si la cantidad de productos es distinta
+    if (initialDetailsRef.current.length !== orderDetails.length) return true;
+
+    // Revisa si alguna cantidad en los detalles ha cambiado
+    for (let currentDetail of orderDetails) {
+      const initialDetail = initialDetailsRef.current.find(
+        (d) => d.identificadorOrdenDetalle === currentDetail.identificadorOrdenDetalle
+      );
+      if (!initialDetail || initialDetail.cantidad !== currentDetail.cantidad) {
+        return true;
+      }
+    }
+    return false;
+  };
+  useEffect(() => {
+    if (order && !initialOrderRef.current) {
+      initialOrderRef.current = order;
+    }
+    if (orderDetails.length && initialDetailsRef.current.length === 0) {
+      initialDetailsRef.current = orderDetails;
+    }
+  }, [order, orderDetails]);
 
   useEffect(() => {
-    return () => {
-      clearCurrentOrder();
-    };
-  }, []);
+    const unsubscribe = navigation.addListener("beforeRemove", (e) => {
+      if (!hasOrderBeenModified()) {
+        // Si no hay cambios, permite la salida normalmente
+        return;
+      }
+      // Si hay cambios, evita la acción de salida
+      e.preventDefault();
+
+      Alert.alert(
+        "Orden modificada",
+        "La orden ha sido modificada. ¿Desea salir sin guardar los cambios?",
+        [
+          {
+            text: "Cancelar",
+            style: "cancel",
+            onPress: () => {
+              // No hacemos nada, se queda en la pantalla
+            },
+          },
+          {
+            text: "Salir",
+            style: "destructive",
+            onPress: () => {
+              // Permite la acción original de navegación
+              navigation.dispatch(e.data.action);
+            },
+          },
+        ]
+      );
+    });
+
+    return unsubscribe;
+  }, [navigation, order, orderDetails]);
+  // useEffect(() => {
+  //   return () => {
+  //     clearCurrentOrder();
+  //   };
+  // }, []);
+
+  useEffect(
+    () => console.log("Dese orderScreen", orderDetails),
+    [orderDetails]
+  );
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -105,7 +180,10 @@ export default function OrderScreen() {
       </View>
 
       <View className="flex-1">
-        <ClientSection customerId={Number(order?.idCliente ?? 0)} orderId={Number(orderId)} />
+        <ClientSection
+          customerId={Number(order?.idCliente ?? 0)}
+          orderId={Number(orderId)}
+        />
 
         <View className="flex-1 border-t border-gray-200">
           <ProductSection onAddProduct={handleNavigateToProducts} />

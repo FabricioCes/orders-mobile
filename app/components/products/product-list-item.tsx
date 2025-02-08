@@ -26,8 +26,8 @@ const ProductListItem: React.FC<{
       >
         <View className="flex-row justify-between items-center">
           <View className="flex-1">
-            <Text className="text-base font-medium">{product.name}</Text>
-            <Text className="text-gray-600">₡{product.price.toFixed(2)}</Text>
+            <Text className="text-base font-medium">{product.nombre}</Text>
+            <Text className="text-gray-600">₡{product.precio.toFixed(2)}</Text>
           </View>
 
         </View>
@@ -42,7 +42,7 @@ const ProductListItem: React.FC<{
         <View className="flex-1 justify-center items-center bg-black/50">
           <View className="bg-white w-80 p-6 rounded-lg">
             <Text className="text-lg font-bold mb-4">
-              Seleccionar cantidad para {product.name}
+              Seleccionar cantidad para {product.nombre}
             </Text>
 
             <View className="flex-row items-center justify-center mb-6">

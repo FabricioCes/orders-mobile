@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import type { ProductGroup, Product } from "@/types/productTypes";
-import ProductListItem from "./orders/product-list-item";
+import ProductListItem from "./products/product-list-item";
 
 interface CategoryAccordionProps {
   category: ProductGroup;
@@ -10,7 +10,7 @@ interface CategoryAccordionProps {
   searchQuery: string;
 }
 
-const CategoryAccordion: React.FC<CategoryAccordionProps> = ({
+const CategoryAccordion: React.FC<CategoryAccordionProps> = React.memo(({
   category,
   onAddProduct,
   searchQuery,
@@ -51,7 +51,7 @@ const CategoryAccordion: React.FC<CategoryAccordionProps> = ({
         ))}
     </View>
   );
-};
+});
 
 interface SubCategorySectionProps {
   subCategory: { name: string; products: Product[] };
@@ -59,7 +59,7 @@ interface SubCategorySectionProps {
   searchQuery: string;
 }
 
-const SubCategorySection: React.FC<SubCategorySectionProps> = ({
+const SubCategorySection: React.FC<SubCategorySectionProps> = React.memo(({
   subCategory,
   onAddProduct,
   searchQuery,
@@ -77,7 +77,7 @@ const SubCategorySection: React.FC<SubCategorySectionProps> = ({
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return subCategory.products;
     return subCategory.products.filter((product) =>
-      product.name.toLowerCase().includes(searchQuery.toLowerCase())
+      product.nombre.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [subCategory.products, searchQuery]);
 
@@ -106,7 +106,7 @@ const SubCategorySection: React.FC<SubCategorySectionProps> = ({
         <View className="ml-2">
           {filteredProducts.map((product) => (
             <ProductListItem
-              key={product.id}
+              key={product.identificador}
               product={product}
               onAddProduct={onAddProduct}
             />
@@ -115,6 +115,6 @@ const SubCategorySection: React.FC<SubCategorySectionProps> = ({
       )}
     </View>
   );
-};
+});
 
 export default CategoryAccordion;

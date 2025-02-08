@@ -57,6 +57,7 @@ export const useOrderOperations = (orderId: number, order: Order) => {
 
   const saveOrder = useCallback(async () => {
     const netState = await NetInfo.fetch();
+
     if (!netState.isConnected) {
       await offlineService.saveOfflineOrder(orderId, order);
       Alert.alert(
@@ -71,7 +72,12 @@ export const useOrderOperations = (orderId: number, order: Order) => {
       {
         text: 'Guardar',
         onPress: () => handleModifyOrder(
-          () => orderService.saveOrder(order),
+          () => {
+            const result = orderService.saveOrder(order)
+            Alert.alert('Éxito', 'Orden guardada correctamente');
+            return result;
+
+          },
           'Error al guardar la orden'
         )
       }

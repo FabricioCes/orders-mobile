@@ -16,6 +16,7 @@ export const notificationService = {
   },
 
   async sendNotification(title: string, body: string) {
+    this.registerForPushNotifications();
     await Notifications.scheduleNotificationAsync({
       content: { title, body, sound: "default" },
       trigger: null,
