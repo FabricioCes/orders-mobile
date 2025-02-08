@@ -1,12 +1,9 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+// src/context/ProductsContext.tsx
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { useSettings } from "./SettingsContext";
-import { Product, ProductGroup, ProductsContextType } from "@/types/productTypes";
+import { Product, Category, ProductsContextType } from "@/types/productTypes";
+import { Subscription } from "rxjs";
+import { productService } from "@/core/services/product.services";
 
 const ProductsContext = createContext<ProductsContextType | null>(null);
 
@@ -14,99 +11,117 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { token, settings } = useSettings();
+  const [categories, setCategories] = useState<Category[]>([]);
   const [rawProducts, setRawProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-
-  const groupedProducts = useMemo(() => {
-    const groupsMap = rawProducts.reduce(
-      (acc: Record<string, ProductGroup>, product) => {
-        const { subCategoria, subSubCategoria } = product;
-
-        if (!acc[subCategoria]) {
-          acc[subCategoria] = {
-            category: subCategoria,
-            subCategories: [],
-          };
-        }
-
-        const subCatGroup = acc[subCategoria].subCategories.find(
-          (s: { name: string; }) => s.name === subSubCategoria
-        );
-        if (!subCatGroup) {
-          acc[subCategoria].subCategories.push({
-            name: subSubCategoria,
-            products: [product],
-          });
-        } else {
-          subCatGroup.products.push(product);
-        }
-
-        return acc;
-      },
-      {}
-    );
-
-    return Object.values(groupsMap);
-  }, [rawProducts]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
 
   useEffect(() => {
-    const abortController = new AbortController();
+    if (!settings?.idComputadora || !token) return;
 
-    const fetchProducts = async () => {
-      try {
-        if (!settings?.idComputadora || !token) {
-          throw new Error("Configuración incompleta");
-        }
-
-        const response = await fetch(
-          `http://${settings.idComputadora}:5001/producto?pagina=1&tamanoPagina=1000`,
-          {
-            signal: abortController.signal,
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (!response.ok) throw new Error("Error en la respuesta");
-
-        const data = await response.json();
-        const products = data.resultado?.map(transformApiProduct) || [];
-        setRawProducts(products);
+    const categoriesSubscription = productService.loadCategories$().subscribe({
+      next: (cats) => {
+        setCategories(cats);
         setError(null);
-      } catch (err) {
-        if (!abortController.signal.aborted) {
-          setError(err instanceof Error ? err.message : "Error desconocido");
-          setRawProducts([]);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+      },
+      error: (err) => {
+        setError(err.message);
+      },
+    });
 
-    fetchProducts();
-    return () => abortController.abort();
-  }, [token, settings]);
+    const productsSubscription = productService.products$.subscribe((products) => {
+      setRawProducts(products);
+    });
+
+    return () => {
+      categoriesSubscription.unsubscribe();
+      productsSubscription.unsubscribe();
+    };
+  }, [settings, token]);
+
+  const loadProductsForSubSubCategory = async (subSubCategory: string) => {
+    if (!settings?.idComputadora || !token) {
+      setError("Configuración incompleta");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const products$ = productService.buscarProductosPorSubSubCategoria$(subSubCategory);
+      const subscription = products$.subscribe({
+        next: (products) => {
+          setRawProducts((prev) => {
+            const filtered = prev.filter((p) => p.subSubCategoria !== subSubCategory);
+            return [...filtered, ...products];
+          });
+          setError(null);
+          setLoading(false);
+        },
+        error: (err) => {
+          setError(err.message);
+          setLoading(false);
+        },
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+      setLoading(false);
+    }
+  };
+
+  const searchProducts = async (query: string) => {
+    if (!settings?.idComputadora || !token) {
+      setError("Configuración incompleta");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const products$ = productService.searchProducts$(query);
+      const subscription = products$.subscribe({
+        next: (products) => {
+          setSearchResults(products);
+          setError(null);
+          setLoading(false);
+        },
+        error: (err) => {
+          setError(err.message);
+          setLoading(false);
+        },
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setSearchResults([]);
+      return;
+    }
+    searchProducts(searchQuery);
+  }, [searchQuery]);
 
   return (
-    <ProductsContext.Provider value={{ groupedProducts, loading, error }}>
+    <ProductsContext.Provider
+      value={{
+        categories,
+        flatProducts: searchQuery.trim() !== "" ? searchResults : rawProducts,
+        loading,
+        error,
+        setSearchQuery,
+        loadProductsForSubSubCategory,
+        refreshProducts: () => {
+          /* Implementar refresco global si es necesario */
+        },
+      }}
+    >
       {children}
     </ProductsContext.Provider>
   );
 };
-
-const transformApiProduct = (apiProduct: any): Product => ({
-  identificador: Number(apiProduct.identificador),
-  nombre: apiProduct.nombre,
-  precio: Number(apiProduct.precio),
-  identificadorSubCategoria: Number(apiProduct.idSubCategoria),
-  subCategoria: apiProduct.subCategoria,
-  identificadorSubSubCategoria: Number(apiProduct.idSubSubCategoria),
-  subSubCategoria: apiProduct.subSubCategoria,
-  costo: apiProduct.costo
-});
 
 export const useProducts = () => {
   const context = useContext(ProductsContext);

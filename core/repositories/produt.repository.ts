@@ -1,8 +1,7 @@
 import { getBaseUrl } from '@/core/services/config'
-import { Categoria, Product } from '@/types/productTypes'
+import { Category, Product } from '@/types/productTypes'
 import { ApiResponse } from '@/types/types'
 import { getToken } from '@/utils/tableUtils'
-
 
 export class ProductApiRepository {
   private static async handleRequest<T>(
@@ -38,7 +37,6 @@ export class ProductApiRepository {
       if (data.error) {
         throw new Error(data.mensaje || 'Error en la respuesta de la API')
       }
-      console.log(data)
       return data.resultado
     } catch (error) {
       console.log('Error in handleRequest:', error)
@@ -48,11 +46,9 @@ export class ProductApiRepository {
     }
   }
 
-  static async getCategories(): Promise<Categoria[]> {
+  static async getCategories(): Promise<Category[]> {
     try {
-      console.log('Obteniendo categorías...')
-      const result = await this.handleRequest<Categoria[]>('Producto/categorias')
-      console.log(result)
+      const result = await this.handleRequest<Category[]>('Producto/categorias')
       return result
     } catch (error) {
       throw new Error(
@@ -63,7 +59,7 @@ export class ProductApiRepository {
 
   static async getProductsByCategory(categoriaId: number): Promise<Product[]> {
     try {
-      const resultado = await  this.handleRequest<Product[]>(`Producto/categoria/${categoriaId}`)
+      const resultado = await this.handleRequest<Product[]>(`Producto/categoria/${categoriaId}`)
       return resultado
     } catch (error) {
       console.error('Error al cargar productos por categoría:', error)
@@ -73,10 +69,22 @@ export class ProductApiRepository {
 
   static async searchProducts(query: string): Promise<Product[]> {
     try {
-      const resultado = await  this.handleRequest<Product[]>(`Producto/buscar/${query}`)
+      console.log("Search")
+      const resultado = await this.handleRequest<Product[]>(`Producto/buscar/${query}`)
       return resultado
     } catch (error) {
       console.error('Error al buscar productos:', error)
+      throw error
+    }
+  }
+
+  static async getProductsBySubSubCategory(subSubCategory: string): Promise<Product[]> {
+    try {
+      const endpoint = `producto/categoria/${encodeURIComponent(subSubCategory)}`
+      const resultado = await this.handleRequest<Product[]>(endpoint)
+      return resultado
+    } catch (error) {
+      console.error('Error al cargar productos por subsubcategoría:', error)
       throw error
     }
   }

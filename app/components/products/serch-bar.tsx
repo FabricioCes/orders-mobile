@@ -1,14 +1,11 @@
-// src/components/orders/SearchBar.tsx
-import React, { useEffect, useState } from 'react';
-import { TextInput, View, StyleSheet } from 'react-native';
-import { Product } from '@/types/productTypes';
-import ErrorState from '../ErrorState';
-
+// SearchBar.tsx
+import React, { useEffect, useState } from "react";
+import { TextInput, View, StyleSheet } from "react-native";
+import ErrorState from "../ErrorState";
 
 interface SearchBarProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  onAddProduct?: (product: Product) => void;
   placeholder?: string;
   hasResults?: boolean;
   persistSearch?: boolean;
@@ -17,40 +14,21 @@ interface SearchBarProps {
 const SearchBar: React.FC<SearchBarProps> = ({
   searchQuery,
   onSearchChange,
-  placeholder = 'Buscar producto...',
+  placeholder = "Buscar producto...",
   hasResults = true,
   persistSearch = false,
-  onAddProduct
 }) => {
   const [localQuery, setLocalQuery] = useState(searchQuery);
 
-  // Sincronizar con el estado externo
   useEffect(() => {
     if (!persistSearch) {
       setLocalQuery(searchQuery);
     }
-  }, [searchQuery]);
+  }, [searchQuery, persistSearch]);
 
   const handleChange = (text: string) => {
     setLocalQuery(text);
     onSearchChange(text);
-  };
-
-  const handleSubmit = () => {
-    if (onAddProduct) {
-      const dummyProduct: Product = {
-        identificador: 0,
-        nombre: localQuery,
-        precio: 0,
-        costo: 0,
-        identificadorSubCategoria: 0,
-        subCategoria: '',
-        identificadorSubSubCategoria: 0,
-        subSubCategoria: ''
-      };
-      onAddProduct(dummyProduct);
-      if (!persistSearch) setLocalQuery('');
-    }
   };
 
   return (
@@ -61,18 +39,16 @@ const SearchBar: React.FC<SearchBarProps> = ({
         placeholderTextColor="#94a3b8"
         value={persistSearch ? searchQuery : localQuery}
         onChangeText={handleChange}
-        onSubmitEditing={handleSubmit}
         autoCorrect={false}
         autoCapitalize="none"
         clearButtonMode="while-editing"
-        returnKeyType={onAddProduct ? 'done' : 'search'}
+        returnKeyType="search"
       />
-
-      {!hasResults && searchQuery && (
+      {!hasResults && searchQuery ? (
         <View style={styles.errorContainer}>
           <ErrorState message="No se encontraron productos" />
         </View>
-      )}
+      ) : null}
     </View>
   );
 };
@@ -84,13 +60,13 @@ const styles = StyleSheet.create({
   searchInput: {
     height: 48,
     borderWidth: 1,
-    borderColor: '#c7d2fe',
+    borderColor: "#c7d2fe",
     borderRadius: 12,
     paddingHorizontal: 16,
-    backgroundColor: '#fff',
-    color: '#1e293b',
+    backgroundColor: "#fff",
+    color: "#1e293b",
     fontSize: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -101,4 +77,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default React.memo(SearchBar);
+export default SearchBar;

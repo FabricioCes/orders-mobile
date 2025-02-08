@@ -153,11 +153,6 @@ export default function OrderScreen() {
     return unsubscribe;
   }, [navigation, order, orderDetails]);
 
-  useEffect(
-    () => console.log("Dese orderScreen", orderDetails),
-    [orderDetails]
-  );
-
   return (
     <View className="flex-1 bg-gray-50">
       <View className="p-4 bg-white shadow-sm">

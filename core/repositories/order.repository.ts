@@ -51,7 +51,6 @@ export class OrderApiRepository {
   static async getOrder (orderId: number): Promise<Order> {
     try {
       const result = this.handleRequest<Order>(`Orden/${orderId}`)
-      console.log('orderid', result)
       return result
     } catch (error) {
       throw new Error(

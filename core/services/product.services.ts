@@ -1,7 +1,8 @@
+// En ProductService (por ejemplo, src/core/services/product.services.ts)
 import { BehaviorSubject, Observable, from } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { ProductApiRepository } from '../repositories/produt.repository';
 import { Category, Product } from '@/types/productTypes';
+import { ProductApiRepository } from '../repositories/produt.repository';
 
 class ProductService {
   private productsSubject = new BehaviorSubject<Product[]>([]);
@@ -31,10 +32,20 @@ class ProductService {
   }
 
   searchProducts$(query: string): Observable<Product[]> {
+    console.log(query)
     return from(ProductApiRepository.searchProducts(query)).pipe(
       tap({
         next: results => this.searchResultsSubject.next(results),
         error: err => console.error('Error en la búsqueda de productos:', err)
+      })
+    );
+  }
+
+  buscarProductosPorSubSubCategoria$(subSubCategory: string): Observable<Product[]> {
+    return from(ProductApiRepository.getProductsBySubSubCategory(subSubCategory)).pipe(
+      tap({
+        next: products => console.log(`Productos cargados para subsubcategoría "${subSubCategory}":`, products),
+        error: err => console.error('Error al cargar productos por subsubcategoría:', err)
       })
     );
   }

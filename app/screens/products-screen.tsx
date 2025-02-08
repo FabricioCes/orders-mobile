@@ -1,98 +1,137 @@
-import React, { useCallback } from "react";
-import { View, FlatList } from "react-native";
+// src/screens/ProductScreen.tsx
+import React, { useState, useCallback } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useProducts } from "@/context/ProductsContext";
 import { useOrderManagement } from "@/hooks/useOrderManagement";
-import LoadingState from "@/components/LoadingState";
-import ErrorState from "@/components/ErrorState";
-import CategoryAccordion from "@/components/CategoryAccordion";
-import { Product } from "@/types/productTypes";
-import SearchBar from "../components/products/serch-bar";
+import SearchBar from "@/components/products/serch-bar";
+import ProductListItem from "@/components/products/product-list-item";
 import Toast from "react-native-toast-message";
+import { Subscription } from "rxjs";
+import { productService } from "@/core/services/product.services";
+import {  Category, Product } from "@/types/productTypes";
+import CategoriesList from "../components/products/categories-list";
 
-const ProductsScreen: React.FC = () => {
+
+export interface CategoryProps {
+
+  id: number;
+
+  nombre: string;
+
+  category: Category;
+
+
+}
+
+const ProductScreen: React.FC = () => {
   const { orderId, token, userName } = useLocalSearchParams();
   const numericOrderId = Number(orderId);
+
   const {
     searchQuery,
     setSearchQuery,
-    filteredMenu,
     addToOrder,
     error: orderError,
   } = useOrderManagement(numericOrderId, String(userName), String(token), "");
 
-  const { loading: productsLoading, error: productsError } = useProducts();
+  const {
+    categories,
+    flatProducts,
+    loading: productsLoading,
+    error: productsError,
+  } = useProducts();
+
+  const handleAddProduct = (product: Product, quantity: number = 1) => {
+    addToOrder(product, quantity)
+      .then(() => {
+        Toast.show({
+          type: "success",
+          text1: "¡Producto agregado!",
+          text2: "Se ha añadido correctamente. 🛒",
+          autoHide: true,
+          position: "bottom",
+          swipeable: true,
+          visibilityTime: 1000,
+        });
+      })
+      .catch((error: Error) => {
+        Toast.show({
+          type: "error",
+          text1: "¡Ups, algo salió mal!",
+          text2: "No se pudo agregar el producto. 😞",
+          autoHide: true,
+          position: "bottom",
+          swipeable: true,
+          visibilityTime: 1000,
+        });
+      });
+  };
+
+  const handleSearchChange = useCallback(
+    (text: string) => {
+      setSearchQuery(text);
+    },
+    [setSearchQuery]
+  );
 
   if (productsLoading) {
-    return <LoadingState message="Cargando productos..." />;
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#000" />
+      </View>
+    );
   }
 
   if (productsError || orderError) {
     return (
-      <ErrorState
-        message={productsError || orderError || "Error desconocido"}
-      />
+      <View style={{ flex: 1, padding: 16 }}>
+        <Text style={{ color: "red" }}>
+          {productsError || orderError || "Error desconocido"}
+        </Text>
+      </View>
     );
   }
 
-  const handleAddProduct = (product: Product, quantity: number = 1) => {
-    addToOrder(product, quantity)
-    .then(() => {
-      Toast.show({
-        type: "success",
-        text1: "¡Producto agregado!",
-        text2: "Se ha añadido correctamente. 🛒",
-        autoHide: true,
-        position: "bottom",
-        swipeable: true,
-        visibilityTime: 1000
-      });
-    })
-    .catch((error: Error) => {
-      Toast.show({
-        type: "error",
-        text1: "¡Ups, algo salió mal!",
-        text2: "No se pudo agregar el producto. 😞",
-        autoHide: true,
-        position: "bottom",
-        swipeable: true,
-        visibilityTime: 1000
-      });
-    });
-  };
-
-  const handleSearchChange = useCallback((text: string) => {
-    setSearchQuery(text);
-  }, []);
-
   return (
-    <View className="flex-1 bg-white p-4">
+    <View style={{ flex: 1, backgroundColor: "white", padding: 16 }}>
       <SearchBar
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
-        onAddProduct={addToOrder}
         persistSearch={true}
-        hasResults={filteredMenu.length > 0}
+        hasResults={
+          searchQuery.trim() === ""
+            ? Boolean(categories?.length)
+            : Boolean(flatProducts?.length)
+        }
         placeholder="Buscar productos..."
       />
 
-      <FlatList
-        data={filteredMenu}
-        keyExtractor={(item) => item.category}
-        renderItem={({ item }) => (
-          <CategoryAccordion
-            category={item}
-            onAddProduct={handleAddProduct}
-            searchQuery={searchQuery}
-          />
-        )}
-        contentContainerStyle={{ paddingBottom: 20 }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      />
+      {searchQuery.trim() === "" ? (
+       <CategoriesList data={categories} onAddProduct={function (product: Product, quantity: number): void {
+          throw new Error("Function not implemented.");
+        } } searchQuery={searchQuery} />
+      ) : (
+        <FlatList
+          data={flatProducts}
+          keyExtractor={(item, index) => `${item.identificador}-${index}`}
+          renderItem={({ item }) => (
+            <ProductListItem product={item} onAddProduct={handleAddProduct} />
+          )}
+          contentContainerStyle={{ paddingBottom: 20 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        />
+      )}
       <Toast />
     </View>
   );
 };
 
-export default React.memo(ProductsScreen);
+export default React.memo(ProductScreen);

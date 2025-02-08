@@ -16,15 +16,13 @@ export const useOrderManagement = (orderId: number, userName: string, token: str
     error
   } = useOrderState(orderId, userName, token, zona)
   const {
-    groupedProducts,
     loading: productsLoading,
     error: productsError
   } = useProducts()
 
   const [searchQuery, setSearchQuery] = useState('')
 
-  const { filteredMenu, addToOrder } = useProductManagement(
-    groupedProducts,
+  const { addToOrder } = useProductManagement(
     searchQuery,
     orderId
   )
@@ -48,7 +46,6 @@ export const useOrderManagement = (orderId: number, userName: string, token: str
     error,
     searchQuery,
     setSearchQuery,
-    filteredMenu,
     productsLoading,
     productsError,
     removeProduct,

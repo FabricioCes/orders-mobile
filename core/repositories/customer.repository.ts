@@ -21,7 +21,7 @@ export class CustomerApiRepository {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`
     }
-   console.log(`${await getBaseUrl()}/${endpoint}`)
+
     try {
       const response = await fetch(`${await getBaseUrl()}/${endpoint}`, {
         ...init,
@@ -36,7 +36,6 @@ export class CustomerApiRepository {
       if (data.error) {
         throw new Error(data.mensaje || 'Error en la respuesta de la API')
       }
-      console.log(data)
       return data.resultado
     } catch (error) {
       console.log('Error in handleRequest:', error)
@@ -48,9 +47,7 @@ export class CustomerApiRepository {
 
   static async getCustomer (customerId: number): Promise<Client> {
     try {
-        console.log("repositorio", customerId)
       const result = await this.handleRequest<Client>(`Cliente/${customerId}`)
-      console.log(result)
       return result
     } catch (error) {
       throw new Error(

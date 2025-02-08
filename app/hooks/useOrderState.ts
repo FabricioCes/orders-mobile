@@ -60,7 +60,6 @@ export const useOrderState = (
 
   useEffect(() => {
     const subscriptions: Subscription[] = []
-    console.log('Actualizando mesas')
     if (userName || token || place) {
       const subscriptions: Subscription[] = []
       subscriptions.push(
