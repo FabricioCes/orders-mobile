@@ -2,8 +2,8 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useSettings } from "./SettingsContext";
 import { Product, Category, ProductsContextType } from "@/types/productTypes";
-import { Subscription } from "rxjs";
 import { productService } from "@/core/services/product.services";
+import { Observable } from "rxjs";
 
 const ProductsContext = createContext<ProductsContextType | null>(null);
 
@@ -17,6 +17,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
+console.log(token, settings)
 
   useEffect(() => {
     if (!settings?.idComputadora || !token) return;
@@ -32,6 +33,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({
     });
 
     const productsSubscription = productService.products$.subscribe((products) => {
+      console.log(products , "rawproducts")
       setRawProducts(products);
     });
 
@@ -41,68 +43,49 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, [settings, token]);
 
-  const loadProductsForSubSubCategory = async (subSubCategory: string) => {
+  const loadProductsForSubSubCategory = (subSubCategory: string): Observable<Product[]> => {
     if (!settings?.idComputadora || !token) {
       setError("Configuración incompleta");
-      return;
+      throw Error("Configuración incompleta");
     }
 
-    setLoading(true);
     try {
       const products$ = productService.buscarProductosPorSubSubCategoria$(subSubCategory);
-      const subscription = products$.subscribe({
-        next: (products) => {
-          setRawProducts((prev) => {
-            const filtered = prev.filter((p) => p.subSubCategoria !== subSubCategory);
-            return [...filtered, ...products];
-          });
-          setError(null);
-          setLoading(false);
-        },
-        error: (err) => {
-          setError(err.message);
-          setLoading(false);
-        },
-      });
+      return products$;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error desconocido");
-      setLoading(false);
+      return new Observable<Product[]>();
     }
   };
 
-  const searchProducts = async (query: string) => {
-    if (!settings?.idComputadora || !token) {
-      setError("Configuración incompleta");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const products$ = productService.searchProducts$(query);
-      const subscription = products$.subscribe({
-        next: (products) => {
-          setSearchResults(products);
-          setError(null);
-          setLoading(false);
-        },
-        error: (err) => {
-          setError(err.message);
-          setLoading(false);
-        },
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error desconocido");
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
+    console.log("query:", searchQuery);
     if (searchQuery.trim() === "") {
       setSearchResults([]);
       return;
     }
-    searchProducts(searchQuery);
-  }, [searchQuery]);
+    console.log("Buscando productos para:", searchQuery);
+    setLoading(true);
+
+    const subscription = productService.searchProducts$(searchQuery).subscribe({
+      next: (products) => {
+        console.log("Resultados de búsqueda:", products);
+        setSearchResults(products);
+        setError(null);
+        setLoading(false);
+      },
+      error: (err) => {
+        console.error("Error en la búsqueda:", err);
+        setError(err.message);
+        setLoading(false);
+      },
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [searchQuery, settings, token]);
 
   return (
     <ProductsContext.Provider
@@ -111,6 +94,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({
         flatProducts: searchQuery.trim() !== "" ? searchResults : rawProducts,
         loading,
         error,
+        searchQuery,
         setSearchQuery,
         loadProductsForSubSubCategory,
         refreshProducts: () => {

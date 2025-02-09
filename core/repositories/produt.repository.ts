@@ -69,8 +69,8 @@ export class ProductApiRepository {
 
   static async searchProducts(query: string): Promise<Product[]> {
     try {
-      console.log("Search")
       const resultado = await this.handleRequest<Product[]>(`Producto/buscar/${query}`)
+      console.log("Search", query, resultado)
       return resultado
     } catch (error) {
       console.error('Error al buscar productos:', error)

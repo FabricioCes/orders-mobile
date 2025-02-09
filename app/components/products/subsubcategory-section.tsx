@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { Product } from "@/types/productTypes";
@@ -13,38 +13,23 @@ interface SubSubCategorySectionProps {
 
 const SubSubCategorySection: React.FC<SubSubCategorySectionProps> = React.memo(
   ({ subSubCategory, onAddProduct, searchQuery }) => {
-    const { loadProductsForSubSubCategory, flatProducts, loading } = useProducts();
+    const { loadProductsForSubSubCategory } = useProducts();
     const [expanded, setExpanded] = useState<boolean>(!!searchQuery.trim());
-
-    // Filtrar productos en el contexto que pertenecen a esta subsubcategoría
-    const products = useMemo(() => {
-      return flatProducts.filter(
-        (product) => product.subSubCategoria === subSubCategory.nombreSubSubCategoria
-      );
-    }, [flatProducts, subSubCategory]);
+    const [localProducts, setLocalProducts] = useState<Product[]>([]);
+    const [loading, setloading] = useState(false);
 
     useEffect(() => {
-      if (searchQuery.trim()) {
-        setExpanded(true);
+      if (expanded && localProducts.length === 0) {
+        setloading(true);
+        const subscription = loadProductsForSubSubCategory(subSubCategory.nombreSubSubCategoria)
+          .subscribe({
+            next: (products) => setLocalProducts(products),
+            error: (err) => console.error(err),
+            complete:()=> setloading(false)
+          });
+        return () => subscription.unsubscribe();
       }
-    }, [searchQuery]);
-
-    useEffect(() => {
-      if (expanded && products.length === 0) {
-        loadProductsForSubSubCategory(subSubCategory.nombreSubSubCategoria);
-      }
-    }, [expanded, products.length]);
-
-    const filteredProducts = useMemo(() => {
-      if (!searchQuery.trim()) return products;
-      return products.filter((product) =>
-        product.nombre.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }, [products, searchQuery]);
-
-    if (searchQuery.trim() && filteredProducts.length === 0) {
-      return null;
-    }
+    }, [expanded, localProducts.length, loadProductsForSubSubCategory, subSubCategory]);
 
     return (
       <View style={{ marginLeft: 24 }}>
@@ -71,7 +56,7 @@ const SubSubCategorySection: React.FC<SubSubCategorySectionProps> = React.memo(
             {loading ? (
               <ActivityIndicator size="small" color="#4f46e5" />
             ) : (
-              filteredProducts.map((product) => (
+              localProducts.map((product) => (
                 <ProductListItem
                   key={product.identificador.toString()}
                   product={product}

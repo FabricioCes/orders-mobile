@@ -1,51 +1,33 @@
 // src/screens/ProductScreen.tsx
-import React, { useState, useCallback } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
+import React, { useCallback } from "react";
+import { View, Text, FlatList, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useProducts } from "@/context/ProductsContext";
 import { useOrderManagement } from "@/hooks/useOrderManagement";
-import SearchBar from "@/components/products/serch-bar";
 import ProductListItem from "@/components/products/product-list-item";
 import Toast from "react-native-toast-message";
-import { Subscription } from "rxjs";
-import { productService } from "@/core/services/product.services";
-import {  Category, Product } from "@/types/productTypes";
 import CategoriesList from "../components/products/categories-list";
-
-
-export interface CategoryProps {
-
-  id: number;
-
-  nombre: string;
-
-  category: Category;
-
-
-}
+import { Product } from "@/types/productTypes";
+import SearchBar from "../components/products/search-bar-products";
 
 const ProductScreen: React.FC = () => {
   const { orderId, token, userName } = useLocalSearchParams();
   const numericOrderId = Number(orderId);
 
-  const {
-    searchQuery,
-    setSearchQuery,
-    addToOrder,
-    error: orderError,
-  } = useOrderManagement(numericOrderId, String(userName), String(token), "");
+  const { addToOrder, error: orderError } = useOrderManagement(
+    numericOrderId,
+    String(userName),
+    String(token),
+    ""
+  );
 
   const {
     categories,
     flatProducts,
     loading: productsLoading,
     error: productsError,
+    searchQuery,
+    setSearchQuery,
   } = useProducts();
 
   const handleAddProduct = (product: Product, quantity: number = 1) => {
@@ -81,14 +63,6 @@ const ProductScreen: React.FC = () => {
     [setSearchQuery]
   );
 
-  if (productsLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#000" />
-      </View>
-    );
-  }
-
   if (productsError || orderError) {
     return (
       <View style={{ flex: 1, padding: 16 }}>
@@ -114,9 +88,11 @@ const ProductScreen: React.FC = () => {
       />
 
       {searchQuery.trim() === "" ? (
-       <CategoriesList data={categories} onAddProduct={function (product: Product, quantity: number): void {
-          throw new Error("Function not implemented.");
-        } } searchQuery={searchQuery} />
+        <CategoriesList
+          data={categories}
+          onAddProduct={handleAddProduct}
+          searchQuery={searchQuery}
+        />
       ) : (
         <FlatList
           data={flatProducts}

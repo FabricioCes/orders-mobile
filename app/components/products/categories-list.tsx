@@ -3,7 +3,7 @@ import React, { useMemo } from "react";
 import { FlatList, View, Text } from "react-native";
 
 import { groupCategories } from "@/utils/groupCategories";
-import { ProductGroup, Product, GroupedCategory } from "@/types/productTypes";
+import { Product, GroupedCategory } from "@/types/productTypes";
 import CategoryAccordion from "./category-accordion";
 
 interface CategoryListProps {
@@ -13,7 +13,7 @@ interface CategoryListProps {
 }
 
 const CategoryList: React.FC<CategoryListProps> = ({ data, onAddProduct, searchQuery }) => {
-  // Agrupar categorías antes de renderizar
+
   const groupedData: GroupedCategory[] = useMemo(() => groupCategories(data), [data]);
 
   if (groupedData.length === 0) {
@@ -27,7 +27,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ data, onAddProduct, searchQ
   return (
     <FlatList
       data={groupedData}
-      keyExtractor={(item) => (item.nombreSubcategoria ?? "unknown").toString()}
+      keyExtractor={(item) => (item.nombreCategoria ?? "unknown").toString()}
       renderItem={({ item }) => (
         <CategoryAccordion
           category={item}

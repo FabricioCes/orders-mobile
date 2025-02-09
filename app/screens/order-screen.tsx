@@ -1,3 +1,4 @@
+// OrderScreen.tsx
 import { useState, useCallback, useEffect, useRef } from "react";
 import {
   View,
@@ -5,7 +6,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  TextInput,
 } from "react-native";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import ClientSection from "../components/client-section";
@@ -14,6 +14,10 @@ import OrderSummaryItem from "../components/orders/order-summary-item";
 import ProductDetail from "../components/products/product-detail";
 import { OrderDetail } from "@/types/types";
 import { useOrderManagement } from "@/hooks/useOrderManagement";
+import ProductOptionsModal from "../components/products/product-option-modal";
+import QuantityModal from "../components/products/quantity-modal";
+
+
 
 export default function OrderScreen() {
   const params = useLocalSearchParams();
@@ -33,24 +37,13 @@ export default function OrderScreen() {
   const initialOrderRef = useRef(order);
   const initialDetailsRef = useRef<OrderDetail[]>(orderDetails);
 
+  // Estados para el manejo de modales
   const [showQuantityModal, setShowQuantityModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<{
-    id: number;
-    currentQty: number;
-  } | null>(null);
-  const [inputValue, setInputValue] = useState("");
+  const [showOptionsModal, setShowOptionsModal] = useState(false);
+  const [selectedOrderDetail, setSelectedOrderDetail] =
+    useState<OrderDetail | null>(null);
 
-  const handleQuantityChange = () => {
-    if (selectedProduct && inputValue) {
-      const quantity = parseInt(inputValue, 10);
-      if (!isNaN(quantity) && quantity > 0) {
-        updateProductQuantity(selectedProduct.id, quantity);
-      } else {
-        Alert.alert("Cantidad inválida", "Ingrese un número válido mayor a 0");
-      }
-    }
-    setShowQuantityModal(false);
-  };
+  // Actualiza la cantidad del producto (se utiliza el identificador de producto)
   const updateProductQuantity = useCallback(
     (id: number, quantity: number) => {
       if (isNaN(quantity)) return;
@@ -63,39 +56,12 @@ export default function OrderScreen() {
     router.navigate({ pathname: "/screens/products-screen", params });
   }, []);
 
-  const handleProductPress = useCallback(
-    (productId: number, detailId: number) => {
-      Alert.alert(
-        "Modificar producto",
-        "¿Qué deseas hacer con este producto?",
-        [
-          { text: "Cancelar", style: "cancel" },
-          {
-            text: "Eliminar",
-            style: "destructive",
-            onPress: () => removeProduct(detailId),
-          },
-          {
-            text: "Modificar cantidad",
-            onPress: () => {
-              const product = orderDetails.find((d: OrderDetail) => {
-                return d.identificadorProducto === productId;
-              });
-              if (product) {
-                setSelectedProduct({
-                  id: productId,
-                  currentQty: product.cantidad,
-                });
-                setInputValue(product.cantidad.toString());
-                setShowQuantityModal(true);
-              }
-            },
-          },
-        ]
-      );
-    },
-    [removeProduct, orderDetails]
-  );
+  // Al presionar sobre un producto se almacena el detalle seleccionado y se muestra el modal de opciones
+  const handleProductPress = useCallback((product: OrderDetail) => {
+    setSelectedOrderDetail(product);
+    setShowOptionsModal(true);
+  }, []);
+
   const hasOrderBeenModified = () => {
     if (!initialOrderRef.current || !order) return false;
 
@@ -105,7 +71,8 @@ export default function OrderScreen() {
 
     for (let currentDetail of orderDetails) {
       const initialDetail = initialDetailsRef.current.find(
-        (d) => d.identificadorOrdenDetalle === currentDetail.identificadorOrdenDetalle
+        (d) =>
+          d.identificadorOrdenDetalle === currentDetail.identificadorOrdenDetalle
       );
       if (!initialDetail || initialDetail.cantidad !== currentDetail.cantidad) {
         return true;
@@ -113,6 +80,7 @@ export default function OrderScreen() {
     }
     return false;
   };
+
   useEffect(() => {
     if (order && !initialOrderRef.current) {
       initialOrderRef.current = order;
@@ -136,8 +104,7 @@ export default function OrderScreen() {
           {
             text: "Cancelar",
             style: "cancel",
-            onPress: () => {
-            },
+            onPress: () => {},
           },
           {
             text: "Salir",
@@ -176,12 +143,7 @@ export default function OrderScreen() {
                 orderDetails.map((product: OrderDetail) => (
                   <TouchableOpacity
                     key={product.identificadorOrdenDetalle}
-                    onPress={() =>
-                      handleProductPress(
-                        product.identificadorProducto,
-                        product.identificadorOrdenDetalle
-                      )
-                    }
+                    onPress={() => handleProductPress(product)}
                     className="mb-3"
                   >
                     <ProductDetail
@@ -212,33 +174,44 @@ export default function OrderScreen() {
           isSaving={false}
         />
       </View>
-      {showQuantityModal && (
-        <View className="absolute inset-0 bg-black/50 justify-center p-4">
-          <View className="bg-white rounded-lg p-6">
-            <Text className="text-lg font-bold mb-4">Nueva cantidad</Text>
-            <TextInput
-              className="border border-gray-300 rounded p-3 mb-4"
-              keyboardType="numeric"
-              value={inputValue}
-              onChangeText={setInputValue}
-              autoFocus
-            />
-            <View className="flex-row justify-end gap-3">
-              <TouchableOpacity
-                className="px-4 py-2"
-                onPress={() => setShowQuantityModal(false)}
-              >
-                <Text className="text-gray-600">Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                className="px-4 py-2 bg-blue-500 rounded"
-                onPress={handleQuantityChange}
-              >
-                <Text className="text-white">Actualizar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
+
+      {showOptionsModal && selectedOrderDetail && (
+        <ProductOptionsModal
+          visible={showOptionsModal}
+          product={selectedOrderDetail}
+          onCancel={() => {
+            setShowOptionsModal(false);
+            setSelectedOrderDetail(null);
+          }}
+          onDelete={() => {
+            removeProduct(selectedOrderDetail.identificadorOrdenDetalle);
+            setShowOptionsModal(false);
+            setSelectedOrderDetail(null);
+          }}
+          onModify={() => {
+            setShowOptionsModal(false);
+            setShowQuantityModal(true);
+          }}
+        />
+      )}
+
+      {showQuantityModal && selectedOrderDetail && (
+        <QuantityModal
+          visible={showQuantityModal}
+          product={selectedOrderDetail}
+          onCancel={() => {
+            setShowQuantityModal(false);
+            setSelectedOrderDetail(null);
+          }}
+          onConfirm={(newQuantity: number) => {
+            updateProductQuantity(
+              selectedOrderDetail.identificadorProducto,
+              newQuantity
+            );
+            setShowQuantityModal(false);
+            setSelectedOrderDetail(null);
+          }}
+        />
       )}
     </View>
   );

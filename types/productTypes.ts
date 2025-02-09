@@ -1,3 +1,5 @@
+import { Observable } from 'rxjs'
+
 export type Product = {
   identificador: number
   nombre: string
@@ -66,9 +68,13 @@ export interface ProductsContextType {
 
   error: string | null
 
+  searchQuery: string
+
   setSearchQuery: (query: string) => void
 
-  loadProductsForSubSubCategory: (subSubCategory: string) => Promise<void>
+  loadProductsForSubSubCategory: (
+    subSubCategory: string
+  ) => Observable<Product[]>
 
   refreshProducts: () => void
 }

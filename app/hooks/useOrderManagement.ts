@@ -2,12 +2,15 @@ import { useOrderState } from './useOrderState'
 import { useOrderOperations } from './useOrderOperations'
 import { useProductManagement } from './useProductManagement'
 import { useProducts } from '@/context/ProductsContext'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { orderService } from '@/core/services/order.service'
 
-
-
-export const useOrderManagement = (orderId: number, userName: string, token: string, zona: string) => {
+export const useOrderManagement = (
+  orderId: number,
+  userName: string,
+  token: string,
+  zona: string
+) => {
   const {
     order,
     activeTables,
@@ -15,28 +18,23 @@ export const useOrderManagement = (orderId: number, userName: string, token: str
     loading,
     error
   } = useOrderState(orderId, userName, token, zona)
+  const { loading: productsLoading, error: productsError } = useProducts()
+
+  const { addToOrder } = useProductManagement(orderId)
+
   const {
-    loading: productsLoading,
-    error: productsError
-  } = useProducts()
-
-  const [searchQuery, setSearchQuery] = useState('')
-
-  const { addToOrder } = useProductManagement(
-    searchQuery,
-    orderId
-  )
-
-  const { removeProduct, updateOrder, saveOrder, updateQuantity, clearCurrentOrder} = useOrderOperations(
-    orderId,
-    order!
-  )
+    removeProduct,
+    updateOrder,
+    saveOrder,
+    updateQuantity,
+    clearCurrentOrder
+  } = useOrderOperations(orderId, order!)
 
   useEffect(() => {
     if (orderId && !order) {
-      orderService.getOrder$(orderId).subscribe();
+      orderService.getOrder$(orderId).subscribe()
     }
-  }, [orderId, order]);
+  }, [orderId, order])
 
   return {
     order,
@@ -44,8 +42,6 @@ export const useOrderManagement = (orderId: number, userName: string, token: str
     orderDetails,
     loading,
     error,
-    searchQuery,
-    setSearchQuery,
     productsLoading,
     productsError,
     removeProduct,

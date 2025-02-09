@@ -4,7 +4,6 @@ import { orderService } from '@/core/services/order.service'
 import { Product } from '@/types/productTypes'
 
 export const useProductManagement = (
-  searchQuery: string,
   orderId: number
 ) => {
 
