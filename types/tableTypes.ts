@@ -25,4 +25,6 @@ export interface ActiveTable {
   totalPrecioCompra?: number;
   totalServicio?: number;
   totalSinDescuento?: number;
+  ubicacion?: string;
+
 }

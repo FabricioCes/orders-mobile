@@ -9,7 +9,7 @@ const ClientList: React.FC<{
 }> = ({ clients, onSelect, searchQuery }) => (
   <FlatList
     data={clients}
-    keyExtractor={(item) => item.id.toString()}
+    keyExtractor={(item) => item.identificacion.toString()}
     renderItem={({ item }) => (
       <ClientListItem client={item} onPress={onSelect} />
     )}

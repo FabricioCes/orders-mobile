@@ -26,11 +26,13 @@ export const useOrderState = (
 
   useEffect(() => {
     const subscriptions: Subscription[] = []
-
-    if (orderId) {
-      orderService.clearCurrentOrder();
+    if (orderId !== undefined && orderId !== null) {
+    if (orderId > 0) {
+      console.log("aqui")
+      orderService.clearCurrentOrder()
       subscriptions.push(
         orderService.order$.subscribe(order => {
+          console.log(order)
           setState(prev => ({
             ...prev,
             order: order,
@@ -54,9 +56,9 @@ export const useOrderState = (
     }
 
     return () => {
-      subscriptions.forEach(sub => sub.unsubscribe());
-    };
-  }, [orderId])
+      subscriptions.forEach(sub => sub.unsubscribe())
+    }
+  }}, [orderId])
 
   useEffect(() => {
     const subscriptions: Subscription[] = []
@@ -71,7 +73,7 @@ export const useOrderState = (
         })
       )
 
-    orderService.loadActiveOrders$().subscribe()
+      orderService.loadActiveOrders$().subscribe()
     }
     return () => subscriptions.forEach(sub => sub.unsubscribe())
   }, [userName, token, place])

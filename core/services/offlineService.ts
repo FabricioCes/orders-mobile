@@ -31,4 +31,13 @@ export const offlineService = {
       }
     }
   },
+  async removeOfflineOrder(orderId: number) {
+    try {
+      // Eliminar la orden específica de AsyncStorage
+      await AsyncStorage.removeItem(`offline_order_${orderId}`);
+      console.log(`Orden #${orderId} eliminada correctamente.`);
+    } catch (error) {
+      console.error(`Error eliminando orden #${orderId}:`, error);
+    }
+  },
 };

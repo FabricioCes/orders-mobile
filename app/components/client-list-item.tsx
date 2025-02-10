@@ -9,14 +9,14 @@ type Props = {
 
 const ClientListItem: React.FC<Props> = ({ client, onPress }) => (
   <TouchableOpacity
-    style={[styles.itemContainer, client.id % 2 === 0 && styles.evenBackground]}
+    style={[styles.itemContainer, client.identificacion % 2 === 0 && styles.evenBackground]}
     onPress={() => onPress(client)}
     accessibilityRole="button"
   >
     <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
-      {client.name}
+      {client.nombre}
     </Text>
-    <Text style={styles.cedText}>{client.ced}</Text>
+    <Text style={styles.cedText}>{client.cedula}</Text>
   </TouchableOpacity>
 );
 

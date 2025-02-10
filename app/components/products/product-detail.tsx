@@ -2,30 +2,31 @@
 import React from "react";
 import { View, Text } from "react-native";
 import type { OrderDetail } from "@/types/types";
+import { Product } from "@/types/productTypes";
 
-type ProductDetailProps = {
-  product: OrderDetail;
-  showDetails?: boolean;
-  quantity: number;
-  addToOrder: () => void;
-  onQuantityChange: (newQty: number) => void;
-};
+interface ProductDetailProps {
+  product: OrderDetail | Product;
+  quantity?: number;
+  showActions?: boolean;
+  addToOrder?: () => void;
+  onQuantityChange?: (quantity: number) => void;
+}
 
-const ProductDetail: React.FC<ProductDetailProps> = ({
+export default function ProductDetail({
   product,
-  quantity,
-  showDetails,
-  onQuantityChange,
+  quantity = 1,
+  showActions = true,
   addToOrder,
-}) => (
+  onQuantityChange,
+}: ProductDetailProps) { return (
   <View style={{ padding: 12, backgroundColor: "#f9fafb", borderRadius: 8, marginBottom: 8 }}>
     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
       <View style={{ flex: 1, marginRight: 16 }}>
         <Text style={{ fontSize: 16, fontWeight: "500", color: "#1f2937" }}>
-          {product.nombreProducto}
+          {"nombre" in product ? product.nombre : product.nombreProducto}
         </Text>
         <Text style={{ color: "#6b7280", marginTop: 4 }}>
-          ₡{product.costoUnitario.toFixed(2)}
+          {"costoUnitario" in product ? `₡${product.costoUnitario.toFixed(2)}` : `₡${product.costo.toFixed(2)}`}
         </Text>
       </View>
       <View>
@@ -35,6 +36,4 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
       </View>
     </View>
   </View>
-);
-
-export default ProductDetail;
+)};

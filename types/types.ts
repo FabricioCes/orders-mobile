@@ -46,6 +46,7 @@ export type Order = {
   ubicacion?: string;
   vendedor?: string;
   versionSistema?: string;
+  esTemporal?: boolean;
 };
 
 export type OrderDetail = {

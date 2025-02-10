@@ -1,13 +1,12 @@
 // OrderScreen.tsx
 import { useState, useCallback, useEffect, useRef } from "react";
+import { View, Alert, Text, ScrollView, TouchableOpacity } from "react-native";
 import {
-  View,
-  Alert,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-} from "react-native";
-import { router, useLocalSearchParams, useNavigation } from "expo-router";
+  router,
+  useFocusEffect,
+  useLocalSearchParams,
+  useNavigation,
+} from "expo-router";
 import ClientSection from "../components/client-section";
 import ProductSection from "../components/product-section";
 import OrderSummaryItem from "../components/orders/order-summary-item";
@@ -16,8 +15,8 @@ import { OrderDetail } from "@/types/types";
 import { useOrderManagement } from "@/hooks/useOrderManagement";
 import ProductOptionsModal from "../components/products/product-option-modal";
 import QuantityModal from "../components/products/quantity-modal";
-
-
+import OrderDetailsList from "../components/orders/order-details-list";
+import { orderService } from "@/core/services/order.service";
 
 export default function OrderScreen() {
   const params = useLocalSearchParams();
@@ -33,17 +32,22 @@ export default function OrderScreen() {
   const navigation = useNavigation();
 
   const { order, orderDetails, removeProduct, saveOrder, updateQuantity } =
-    useOrderManagement(Number(orderId), String(userName), String(token), "");
+    useOrderManagement(
+      Number(orderId),
+      String(userName),
+      String(token),
+      isActive == "true",
+      String(tableId),
+      String(place)
+    );
   const initialOrderRef = useRef(order);
   const initialDetailsRef = useRef<OrderDetail[]>(orderDetails);
 
-  // Estados para el manejo de modales
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [selectedOrderDetail, setSelectedOrderDetail] =
     useState<OrderDetail | null>(null);
 
-  // Actualiza la cantidad del producto (se utiliza el identificador de producto)
   const updateProductQuantity = useCallback(
     (id: number, quantity: number) => {
       if (isNaN(quantity)) return;
@@ -53,10 +57,16 @@ export default function OrderScreen() {
   );
 
   const handleNavigateToProducts = useCallback(() => {
-    router.navigate({ pathname: "/screens/products-screen", params });
-  }, []);
+    router.navigate({
+      pathname: "/screens/products-screen",
+      params: {
+        ...params,
+        orderId: order?.numeroOrden?.toString() ?? "0",
+        isActive: isActive.toString(),
+      },
+    });
+  }, [order, params]);
 
-  // Al presionar sobre un producto se almacena el detalle seleccionado y se muestra el modal de opciones
   const handleProductPress = useCallback((product: OrderDetail) => {
     setSelectedOrderDetail(product);
     setShowOptionsModal(true);
@@ -72,7 +82,8 @@ export default function OrderScreen() {
     for (let currentDetail of orderDetails) {
       const initialDetail = initialDetailsRef.current.find(
         (d) =>
-          d.identificadorOrdenDetalle === currentDetail.identificadorOrdenDetalle
+          d.identificadorOrdenDetalle ===
+          currentDetail.identificadorOrdenDetalle
       );
       if (!initialDetail || initialDetail.cantidad !== currentDetail.cantidad) {
         return true;
@@ -91,34 +102,50 @@ export default function OrderScreen() {
   }, [order, orderDetails]);
 
   useEffect(() => {
+    const cleanupTemporaryOrder = () => {
+      if (order?.esTemporal && hasOrderBeenModified()) {
+        if (order.numeroOrden !== undefined) {
+          orderService.removeTemporaryOrder(order.numeroOrden);
+        }
+      }
+    };
+
     const unsubscribe = navigation.addListener("beforeRemove", (e) => {
       if (!hasOrderBeenModified()) {
+        cleanupTemporaryOrder();
         return;
       }
-      e.preventDefault();
 
-      Alert.alert(
-        "Orden modificada",
-        "La orden ha sido modificada. ¿Desea salir sin guardar los cambios?",
-        [
-          {
-            text: "Cancelar",
-            style: "cancel",
-            onPress: () => {},
+      e.preventDefault();
+      Alert.alert("Orden modificada", "¿Desea salir sin guardar los cambios?", [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Salir",
+          onPress: () => {
+            cleanupTemporaryOrder();
+            navigation.dispatch(e.data.action);
           },
-          {
-            text: "Salir",
-            style: "destructive",
-            onPress: () => {
-              navigation.dispatch(e.data.action);
-            },
-          },
-        ]
-      );
+        },
+      ]);
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      cleanupTemporaryOrder();
+    };
   }, [navigation, order, orderDetails]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (Number(orderId) > 0 && isActive) {
+        orderService.getOrder$(Number(orderId)).subscribe();
+        orderService.getOrderDetails$(Number(orderId)).subscribe();
+        console.log(order);
+        console.log(orderDetails);
+      }
+      return () => {};
+    }, [orderId, isActive])
+  );
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -137,33 +164,10 @@ export default function OrderScreen() {
         <View className="flex-1 border-t border-gray-200">
           <ProductSection onAddProduct={handleNavigateToProducts} />
 
-          <ScrollView className="flex-1">
-            <View className="p-4">
-              {orderDetails.length > 0 ? (
-                orderDetails.map((product: OrderDetail) => (
-                  <TouchableOpacity
-                    key={product.identificadorOrdenDetalle}
-                    onPress={() => handleProductPress(product)}
-                    className="mb-3"
-                  >
-                    <ProductDetail
-                      key={product.identificadorOrdenDetalle}
-                      product={product}
-                      quantity={product.cantidad}
-                      addToOrder={() => {}}
-                      onQuantityChange={() => {}}
-                    />
-                  </TouchableOpacity>
-                ))
-              ) : (
-                <View className="bg-gray-50 p-3 rounded-lg">
-                  <Text className="text-gray-500 text-center">
-                    No hay productos seleccionados
-                  </Text>
-                </View>
-              )}
-            </View>
-          </ScrollView>
+          <OrderDetailsList
+            orderDetails={orderDetails}
+            onProductPress={handleProductPress}
+          />
         </View>
 
         <OrderSummaryItem

@@ -8,7 +8,7 @@ import { orderService } from '@/core/services/order.service'
 
 export const useTableNavigation = (place: string) => {
   const { hasUser, checkTokenExpiration, settings, userName, token } = useSettings()
-  const { activeTables } = useOrderManagement(0,userName, token,  place)
+  const { activeTables } = useOrderManagement(0,userName, token, false, '0', place)
 
   const loadActiveTables = () => {
     try {
@@ -45,7 +45,7 @@ export const useTableNavigation = (place: string) => {
       orderId: activeOrder?.identificador || 0,
       totalOrder: activeOrder?.totalConDescuento || 0
     }
-
+console.log(navigationParams)
     handleNavigation(navigationParams)
   }
 

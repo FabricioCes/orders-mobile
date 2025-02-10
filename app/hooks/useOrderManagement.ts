@@ -4,11 +4,15 @@ import { useProductManagement } from './useProductManagement'
 import { useProducts } from '@/context/ProductsContext'
 import { useEffect } from 'react'
 import { orderService } from '@/core/services/order.service'
+import { Subject, takeUntil } from 'rxjs'
+import { router } from 'expo-router'
 
 export const useOrderManagement = (
   orderId: number,
   userName: string,
   token: string,
+  isActive: boolean,
+  numeroMesa: string,
   zona: string
 ) => {
   const {
@@ -21,7 +25,7 @@ export const useOrderManagement = (
   const { loading: productsLoading, error: productsError } = useProducts()
 
   const { addToOrder } = useProductManagement(orderId)
-
+  const unmount$ = new Subject<void>();
   const {
     removeProduct,
     updateOrder,
@@ -31,10 +35,31 @@ export const useOrderManagement = (
   } = useOrderOperations(orderId, order!)
 
   useEffect(() => {
-    if (orderId && !order) {
-      orderService.getOrder$(orderId).subscribe()
+    const sub = orderService.activeTables$.subscribe()
+    return () => {
+      sub.unsubscribe()
+      unmount$.next();   // Emitir un valor para notificar el desmontaje
+      unmount$.complete(); // Completar el Subject
     }
-  }, [orderId, order])
+  }, [])
+
+  const createNewOrder = () => {
+    if (orderId === 0 && !order) {
+      orderService
+        .createTemporaryOrder(numeroMesa, zona)
+        .pipe(takeUntil(unmount$))
+        .subscribe({
+          next: newOrder => {
+            router.setParams({ orderId: String(newOrder.numeroOrden) })
+          },
+          error: err => console.error(err)
+        })
+    }
+  }
+
+  useEffect(() => {
+    createNewOrder()
+  }, [numeroMesa, zona])
 
   return {
     order,

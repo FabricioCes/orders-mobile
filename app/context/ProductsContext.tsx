@@ -17,7 +17,6 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
-console.log(token, settings)
 
   useEffect(() => {
     if (!settings?.idComputadora || !token) return;
@@ -33,7 +32,6 @@ console.log(token, settings)
     });
 
     const productsSubscription = productService.products$.subscribe((products) => {
-      console.log(products , "rawproducts")
       setRawProducts(products);
     });
 
@@ -60,17 +58,14 @@ console.log(token, settings)
 
 
   useEffect(() => {
-    console.log("query:", searchQuery);
     if (searchQuery.trim() === "") {
       setSearchResults([]);
       return;
     }
-    console.log("Buscando productos para:", searchQuery);
     setLoading(true);
 
     const subscription = productService.searchProducts$(searchQuery).subscribe({
       next: (products) => {
-        console.log("Resultados de búsqueda:", products);
         setSearchResults(products);
         setError(null);
         setLoading(false);

@@ -2,6 +2,7 @@
 import React, { useCallback } from "react";
 import { View, Text, FlatList, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native"; // <-- Importa useFocusEffect
 import { useProducts } from "@/context/ProductsContext";
 import { useOrderManagement } from "@/hooks/useOrderManagement";
 import ProductListItem from "@/components/products/product-list-item";
@@ -18,6 +19,8 @@ const ProductScreen: React.FC = () => {
     numericOrderId,
     String(userName),
     String(token),
+    false,
+    "0",
     ""
   );
 
@@ -29,6 +32,14 @@ const ProductScreen: React.FC = () => {
     searchQuery,
     setSearchQuery,
   } = useProducts();
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        setSearchQuery("");
+      };
+    }, [setSearchQuery])
+  );
 
   const handleAddProduct = (product: Product, quantity: number = 1) => {
     addToOrder(product, quantity)
@@ -87,13 +98,16 @@ const ProductScreen: React.FC = () => {
         placeholder="Buscar productos..."
       />
 
-      {searchQuery.trim() === "" ? (
+     {searchQuery.trim() === "" ? (
         <CategoriesList
           data={categories}
           onAddProduct={handleAddProduct}
           searchQuery={searchQuery}
         />
       ) : (
+        productsLoading ? (
+          <ActivityIndicator size="small" color="#4f46e5" />
+        ) :(
         <FlatList
           data={flatProducts}
           keyExtractor={(item, index) => `${item.identificador}-${index}`}
@@ -104,7 +118,7 @@ const ProductScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         />
-      )}
+      ))}
       <Toast />
     </View>
   );
