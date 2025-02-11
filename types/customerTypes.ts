@@ -1,4 +1,4 @@
-export type Client = {
+export type Customer = {
   identificacion: number
   nombre: string
   cedula: string
@@ -10,10 +10,10 @@ export type Client = {
   direccion?: string
 }
 
-export type ClientsContextType = {
-  clients: Client[]
-  addClient: (client: Client) => void
-  selectedClient?: Client
-  clearClient: () => void
+export type CustomerContextType = {
+  customers: Customer[]
+  addCustomer: (Customer: Customer) => void
+  selectedCustomer?: Customer
+  clearCustomer: () => void
   status: 'loading' | 'error' | 'success'
 }

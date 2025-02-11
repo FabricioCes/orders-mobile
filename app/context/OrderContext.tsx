@@ -1,221 +1,115 @@
+// OrderContext.tsx
+import React, {
+  createContext,
+  useReducer,
+  useContext,
+  ReactNode
+} from "react";
 import { Order, OrderDetail } from "@/types/types";
-import { router } from "expo-router";
-import { createContext, useCallback, useContext, useState } from "react";
-import { Alert } from "react-native";
-import { useSettings } from "./SettingsContext";
-import { useTableNavigation } from "@/hooks/useTableNavigation";
+import { OrderApiRepository } from "@/core/repositories/order.repository";
 
 
-interface OrderContextType {
-  currentOrder: Order | null;
-  saveOrder: (order: Order, method: string) => void;
-  getOrderDetails: (orderId: number) => void;
-  apiOrderDetails: OrderDetail[];
-  deleteOrderDetail: (idDetail: number) => Promise<boolean>;
-  updateOrder: (order: Order) => void;
-  resetOrder: () => void;
+interface OrderState {
+  order: Order | null;
+  orderDetails: OrderDetail[];
 }
 
-type APIOrderDetail = {
-  identificadorOrdenDetalle: number;
-  identificadorProducto: number;
-  nombreProducto: string;
-  cantidad: number;
-  costoUnitario: number;
-  porcentajeDescuento: number;
-  ingrediente: boolean;
-  impuestoProducto: number;
+// Definimos las acciones posibles para modificar el estado
+type OrderAction =
+  | { type: "SET_ORDER"; payload: Order }
+  | { type: "RESET_ORDER" }
+  | { type: "ADD_ORDER_DETAIL"; payload: OrderDetail }
+  | { type: "UPDATE_ORDER_DETAIL"; payload: OrderDetail }
+  | { type: "REMOVE_ORDER_DETAIL"; payload: number } // payload es el id del detalle
+  | { type: "SET_ORDER_DETAILS"; payload: OrderDetail[] };
+
+const initialState: OrderState = {
+  order: null,
+  orderDetails: [],
 };
 
-const OrderContext = createContext<OrderContextType | undefined>(undefined);
+const OrderContext = createContext<{
+  state: OrderState;
+  dispatch: React.Dispatch<OrderAction>;
+  fetchOrder: (orderId: string) => Promise<void>;
+  orderId: string;
+}>({
+  state: initialState,
+  dispatch: () => undefined,
+  fetchOrder: async () => new Promise<void>((resolve) => resolve()),
+  orderId: "",
+});
 
-export const OrderProvider = ({ children }: { children: React.ReactNode }) => {
-  const { settings, token} = useSettings();
-  const { loadActiveTables } = useTableNavigation('');
-  const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
-
-
-  async function saveOrder(order: Order, method: string) {
-    const url = `http://${settings?.idComputadora}:5001/orden`;
-
-    const showAlert = (title: string, message: string) => {
-      Alert.alert(title, message, [{ text: "Aceptar", onPress: () => {} }], {
-        cancelable: false,
-      });
-    };
-
-    try {
-      const res = await fetch(url, {
-        method: method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(order),
-      });
-
-      switch (res.status) {
-        case 200:
-          const savedOrder = await res.json();
-          setCurrentOrder(savedOrder);
-          await getOrderDetails(savedOrder.numeroOrden);
-          loadActiveTables();
-          showOrder(true);
-          break;
-
-        case 409:
-        case 400:
-          const result = await res.json();
-          const errorMessage =
-            result.mensaje || result.message || "Error desconocido";
-          showAlert("Error 🚨", errorMessage);
-          break;
-
-        default:
-          showOrder(true);
-          break;
-      }
-    } catch (error) {
-      console.error("Error al guardar la orden:", error);
-      showAlert(
-        "Error 🚨",
-        "Ocurrió un error inesperado. Por favor, inténtalo de nuevo."
-      );
-    }
+const orderReducer = (state: OrderState, action: OrderAction): OrderState => {
+  switch (action.type) {
+    case "SET_ORDER":
+      return { ...state, order: action.payload };
+    case "SET_ORDER_DETAILS":
+      return { ...state, orderDetails: action.payload };
+    case "RESET_ORDER":
+      return initialState;
+    case "ADD_ORDER_DETAIL":
+      return {
+        ...state,
+        orderDetails: [...state.orderDetails, action.payload],
+      };
+    case "UPDATE_ORDER_DETAIL":
+      return {
+        ...state,
+        orderDetails: state.orderDetails.map((detail) =>
+          detail.identificadorOrdenDetalle ===
+          action.payload.identificadorOrdenDetalle
+            ? action.payload
+            : detail
+        ),
+      };
+    case "REMOVE_ORDER_DETAIL":
+      return {
+        ...state,
+        orderDetails: state.orderDetails.filter(
+          (detail) => detail.identificadorOrdenDetalle !== action.payload
+        ),
+      };
+    default:
+      return state;
   }
+};
 
-  const showOrder = (pass: boolean) => {
-    if (pass) {
-      Alert.alert(
-        "Éxito 🎉",
-        "Orden Guardada Correctamente! 🚀",
-        [
-          {
-            text: "Aceptar",
-            onPress: () => {
-              router.replace("/(tabs)/comedor");
-            },
-          },
-        ],
-        { cancelable: false }
-      );
-    } else {
-      Alert.alert(
-        "Error 🚫",
-        "No se logró guardar la orden 😔",
-        [
-          {
-            text: "Aceptar",
-            onPress: () => {
-              // Reemplazar ruta después de aceptar
-              return;
-            },
-          },
-        ],
-        { cancelable: false }
-      );
-    }
-  };
+export const OrderProvider = ({
+  children,
+  orderId,
+}: {
+  children: ReactNode;
+  orderId: string;
+}) => {
+  const [state, dispatch] = useReducer(orderReducer, initialState);
 
-  const [apiOrderDetails, setApiOrderDetails] = useState<OrderDetail[]>([]);
-
-  const getOrderDetails = useCallback(
-    async (orderId: number) => {
-      if (!settings?.idComputadora || !token) return;
-
-      const url = `http://${settings.idComputadora}:5001/orden/${orderId}/detalle`;
-
-      try {
-        const res = await fetch(url, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!res.ok) throw new Error("Error obteniendo detalles");
-
-        const data = await res.json();
-
-        if (data.resultado?.length) {
-          const details = data.resultado.map((item: APIOrderDetail) => ({
-            identificadorOrdenDetalle: item.identificadorOrdenDetalle,
-            idProducto: item.identificadorProducto,
-            nombreProducto: item.nombreProducto,
-            cantidad: item.cantidad,
-            precio: item.costoUnitario + item.impuestoProducto,
-            porcentajeDescProducto: item.porcentajeDescuento,
-            ingrediente: item.ingrediente,
-            quitarIngrediente: false,
-          }));
-
-          // Actualizar estado global primero
-          setApiOrderDetails(details);
-          return details; // Devolver los detalles para sincronización inmediata
-        }
-        return [];
-      } catch (error) {
-        console.log("Error:", error);
-        return [];
-      }
-    },
-    [settings?.idComputadora, token]
-  );
-
-  const deleteOrderDetail = async (idDetail: number): Promise<boolean> => {
-    const url = `http://${settings?.idComputadora}:5001/orden/detalle/${idDetail}`;
-
+  const fetchOrder = async (orderId: string) => {
     try {
-      const res = await fetch(url, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const id = parseInt(orderId, 10);
+      const order = await OrderApiRepository.getOrder(id);
+      dispatch({ type: "SET_ORDER", payload: order });
 
-      if (!res.ok) {
-        console.error(`Error deleting order detail: ${res.statusText}`);
-        return false;
-      }
-
-      return true;
-    } catch (e) {
-      console.error("Error deleting order detail:", e);
-      return false;
+      const details = await OrderApiRepository.getOrderDetails(id);
+      dispatch({ type: "SET_ORDER_DETAILS", payload: details });
+    } catch (error) {
+      console.error("Error al obtener la orden:", error);
+      dispatch({ type: "RESET_ORDER" });
     }
-  };
-  const updateOrder = (order: Order) => {
-    setCurrentOrder(order);
-  };
-
-  // Resetear la orden
-  const resetOrder = () => {
-    setCurrentOrder(null);
   };
 
   return (
-    <OrderContext.Provider
-      value={{
-        currentOrder,
-        updateOrder,
-        resetOrder,
-        saveOrder,
-        getOrderDetails,
-        apiOrderDetails,
-        deleteOrderDetail,
-      }}
-    >
+    <OrderContext.Provider value={{ state, dispatch, fetchOrder, orderId }}>
       {children}
     </OrderContext.Provider>
   );
 };
 
-export const useOrder = (): OrderContextType => {
+// Hook para usar el contexto
+export const useOrder = () => {
   const context = useContext(OrderContext);
   if (!context) {
-    throw new Error("useOrder debe usarse dentro de un SettingsProvider");
+    throw new Error("useOrder debe usarse dentro de un OrderProvider");
   }
   return context;
 };

@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { getBaseUrl } from '@/core/services/config'
 import { ApiResponse, Order, OrderDetail } from '@/types/types'
-import { Client } from '@/types/clientTypes'
+import { Customer } from '@/types/customerTypes'
 import { ActiveTable } from '@/types/tableTypes'
 import { getToken } from '@/utils/tableUtils'
 
@@ -63,8 +63,8 @@ export class OrderApiRepository {
     return this.handleRequest<number>(`Orden/${zona.toUpperCase()}/${mesa}`)
   }
 
-  static async getClientByOrderId (orderId: number): Promise<Client> {
-    return this.handleRequest<Client>(`Orden/${orderId}/cliente`)
+  static async getCustomerByOrderId (orderId: number): Promise<Customer> {
+    return this.handleRequest<Customer>(`Orden/${orderId}/cliente`)
   }
 
   static async getActiveTables (): Promise<ActiveTable[]> {

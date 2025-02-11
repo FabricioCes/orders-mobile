@@ -1,5 +1,6 @@
+// src/core/repositories/CustomerApiRepository.ts
 import { getBaseUrl } from '@/core/services/config'
-import { Client } from '@/types/clientTypes'
+import { Customer } from '@/types/customerTypes'
 import { ApiResponse } from '@/types/types'
 import { getToken } from '@/utils/tableUtils'
 
@@ -9,7 +10,6 @@ export class CustomerApiRepository {
     init?: RequestInit
   ): Promise<T> {
     const token = await getToken()
-
     if (!token) {
       throw new Error(
         'No se encontró un token válido. Inicie sesión nuevamente.'
@@ -45,9 +45,26 @@ export class CustomerApiRepository {
     }
   }
 
-  static async getCustomer (customerId: number): Promise<Client> {
+  // Obtiene un cliente por su ID
+  static async getCustomer (customerId: number): Promise<Customer> {
     try {
-      const result = await this.handleRequest<Client>(`Cliente/${customerId}`)
+      const result = await this.handleRequest<Customer>(`Cliente/${customerId}`)
+      return result
+    } catch (error) {
+      throw new Error(
+        'No se pudo obtener el cliente: ' + (error as Error).message
+      )
+    }
+  }
+
+  static async getCustomers (
+    page: number = 1,
+    pageSize: number = 100,
+    signal?: AbortSignal
+  ): Promise<Customer[]> {
+    try {
+      const endpoint = `cliente?pagina=${page}&tamanoPagina=${pageSize}`
+      const result = await this.handleRequest<Customer[]>(endpoint, { signal })
       return result
     } catch (error) {
       throw new Error(

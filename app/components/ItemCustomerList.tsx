@@ -1,22 +1,22 @@
 import { FlatList, Text, StyleSheet } from "react-native";
-import { Client } from "@/types/clientTypes";
-import ClientListItem from "./client-list-item";
+import { Customer } from "@/types/customerTypes";
+import CustomerListItem from "./customer-list-item";
 
-const ClientList: React.FC<{
-  clients: Client[];
-  onSelect: (client: Client) => void;
+const CustomerList: React.FC<{
+  customers: Customer[];
+  onSelect: (customer: Customer) => void;
   searchQuery: string;
-}> = ({ clients, onSelect, searchQuery }) => (
+}> = ({ customers, onSelect, searchQuery }) => (
   <FlatList
-    data={clients}
+    data={customers}
     keyExtractor={(item) => item.identificacion.toString()}
     renderItem={({ item }) => (
-      <ClientListItem client={item} onPress={onSelect} />
+      <CustomerListItem customer={item} onPress={onSelect} />
     )}
     contentContainerStyle={styles.listContent}
     ListEmptyComponent={
       <Text style={styles.emptyText}>
-        {searchQuery ? "No hay resultados" : "No se encontraron clientes"}
+        {searchQuery ? "No hay resultados" : "No se encontraron customeres"}
       </Text>
     }
     keyboardDismissMode="on-drag"
@@ -36,4 +36,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default ClientList
+export default CustomerList

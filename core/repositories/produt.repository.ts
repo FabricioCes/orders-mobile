@@ -22,7 +22,6 @@ export class ProductApiRepository {
       Authorization: `Bearer ${token}`
     }
 
-    console.log(`${await getBaseUrl()}/${endpoint}`)
     try {
       const response = await fetch(`${await getBaseUrl()}/${endpoint}`, {
         ...init,

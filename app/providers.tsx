@@ -2,16 +2,16 @@ import React from "react";
 import { SettingsProvider } from "@/context/SettingsContext";
 import { OrderProvider } from "@/context/OrderContext";
 import { ProductsProvider } from "@/context/ProductsContext";
-import { ClientsProvider } from "@/context/ClientsContext";
+import { CustomerProvider } from "@/app/context/CustomerContext";
 
-export default function Providers({ children }: { children: React.ReactNode }) {
+export default function Providers({ children, orderId,}: { children: React.ReactNode, orderId?: string}) {
   return (
     <SettingsProvider>
-      <ProductsProvider>
-          <OrderProvider>
-            <ClientsProvider>{children}</ClientsProvider>
-          </OrderProvider>
-      </ProductsProvider>
+      <OrderProvider orderId={String(orderId)}>
+        <ProductsProvider>
+          <CustomerProvider>{children}</CustomerProvider>
+        </ProductsProvider>
+      </OrderProvider>
     </SettingsProvider>
   );
 }

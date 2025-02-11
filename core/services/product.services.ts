@@ -31,7 +31,6 @@ class ProductService {
   }
 
   searchProducts$(query: string): Observable<Product[]> {
-    console.log(query)
     return from(ProductApiRepository.searchProducts(query)).pipe(
       tap({
         next: results => this.searchResultsSubject.next(results),

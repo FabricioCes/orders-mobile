@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Stack, useLocalSearchParams } from "expo-router";
 import { View, StyleSheet } from "react-native";
 import "../global.css";
 import Providers from "./providers";
@@ -31,7 +31,7 @@ const SCREENS_CONFIG: ScreenConfig[] = [
     },
   },
   {
-    name: "screens/clients-screen",
+    name: "screens/customers-screen",
     options: {
       type: "modal",
       title: "Gestión de Clientes",
@@ -95,6 +95,7 @@ interface ScreenConfig {
 }
 
 export default function RootLayout() {
+  const { orderId } = useLocalSearchParams();
   const [isAppReady, setIsAppReady] = useState(false);
 
   useEffect(() => {
@@ -106,7 +107,7 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <Providers>
+    <Providers orderId={String(orderId)}>
       <View style={styles.container}>
         <Stack
           screenOptions={{

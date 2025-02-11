@@ -1,22 +1,22 @@
 import React from "react";
 import { Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Client } from "@/types/clientTypes";
+import { Customer } from "@/types/customerTypes";
 
 type Props = {
-  client: Client;
-  onPress: (client: Client) => void;
+  customer: Customer;
+  onPress: (customer: Customer) => void;
 };
 
-const ClientListItem: React.FC<Props> = ({ client, onPress }) => (
+const CustomerListItem: React.FC<Props> = ({ customer, onPress }) => (
   <TouchableOpacity
-    style={[styles.itemContainer, client.identificacion % 2 === 0 && styles.evenBackground]}
-    onPress={() => onPress(client)}
+    style={[styles.itemContainer, customer.identificacion % 2 === 0 && styles.evenBackground]}
+    onPress={() => onPress(customer)}
     accessibilityRole="button"
   >
     <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
-      {client.nombre}
+      {customer.nombre}
     </Text>
-    <Text style={styles.cedText}>{client.cedula}</Text>
+    <Text style={styles.cedText}>{customer.cedula}</Text>
   </TouchableOpacity>
 );
 
@@ -47,4 +47,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default React.memo(ClientListItem);
+export default React.memo(CustomerListItem);

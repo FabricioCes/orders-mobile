@@ -45,7 +45,7 @@ export const useTableNavigation = (place: string) => {
       orderId: activeOrder?.identificador || 0,
       totalOrder: activeOrder?.totalConDescuento || 0
     }
-console.log(navigationParams)
+
     handleNavigation(navigationParams)
   }
 

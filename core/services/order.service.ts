@@ -38,7 +38,7 @@ class OrderService {
         numeroMesa: order.numeroMesa,
         zona: order.ubicacion,
         totalConDescuento: order.totalSinDescuento,
-        esTemporal: true
+        esTemporal: order.esTemporal
       }))
     ])
   )
@@ -87,7 +87,7 @@ class OrderService {
 
   createTemporaryOrder (numeroMesa: string, zona: string): Observable<Order> {
     return defer(async () => {
-      const temporaryOrderId = Date.now() * 9999
+      const temporaryOrderId = 0
 
       const newOrder: Order = {
         numeroOrden: temporaryOrderId,
@@ -181,7 +181,6 @@ class OrderService {
     current: OrderDetail[],
     newDetail: OrderDetail
   ): OrderDetail[] {
-    console.log('merge')
     const existingIndex = current.findIndex(
       d => d.identificadorProducto === newDetail.identificadorProducto
     )

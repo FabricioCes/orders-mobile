@@ -27,38 +27,36 @@ export const useOrderState = (
   useEffect(() => {
     const subscriptions: Subscription[] = []
     if (orderId !== undefined && orderId !== null) {
-    if (orderId > 0) {
-      console.log("aqui")
-      orderService.clearCurrentOrder()
-      subscriptions.push(
-        orderService.order$.subscribe(order => {
-          console.log(order)
-          setState(prev => ({
-            ...prev,
-            order: order,
-            loading: false
-          }))
-        })
-      )
+      if (orderId > 0) {
+        orderService.clearCurrentOrder()
+        subscriptions.push(
+          orderService.order$.subscribe(order => {
+            setState(prev => ({
+              ...prev,
+              order: order,
+              loading: false
+            }))
+          })
+        )
 
-      subscriptions.push(
-        orderService.orderDetails$.subscribe(details => {
-          setState(prev => ({
-            ...prev,
-            details,
-            loading: false
-          }))
-        })
-      )
+        subscriptions.push(
+          orderService.orderDetails$.subscribe(details => {
+            setState(prev => ({
+              ...prev,
+              details,
+              loading: false
+            }))
+          })
+        )
+        orderService.getOrder$(orderId).subscribe()
+        orderService.getOrderDetails$(orderId).subscribe()
+      }
 
-      orderService.getOrder$(orderId).subscribe()
-      orderService.getOrderDetails$(orderId).subscribe()
+      return () => {
+        subscriptions.forEach(sub => sub.unsubscribe())
+      }
     }
-
-    return () => {
-      subscriptions.forEach(sub => sub.unsubscribe())
-    }
-  }}, [orderId])
+  }, [orderId])
 
   useEffect(() => {
     const subscriptions: Subscription[] = []

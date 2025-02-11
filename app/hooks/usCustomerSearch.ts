@@ -1,19 +1,19 @@
-import { Client } from "@/types/clientTypes";
+import { Customer } from "@/types/customerTypes";
 import { useMemo } from "react";
 
-const useClientSearch = (clients: Client[], query: string) => {
+const useCustomerSearch = (customers: Customer[], query: string) => {
   return useMemo(() => {
     const normalizedQuery = query
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "");
 
-    return clients.filter(
+    return customers.filter(
       (client) =>
         client.nombre.toLowerCase().includes(normalizedQuery) ||
         client.cedula.includes(normalizedQuery)
     );
-  }, [clients, query]);
+  }, [customers, query]);
 };
 
-export default useClientSearch;
+export default useCustomerSearch;
