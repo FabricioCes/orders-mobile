@@ -78,7 +78,6 @@ export class CustomerApiRepository {
   ): Promise<Customer[]> {
     try {
       const endpoint = `cliente/buscarletra/${letter}`
-      console.log(endpoint)
       const result = await this.handleRequest<Customer[]>(endpoint, { signal })
       return result
     } catch (error) {

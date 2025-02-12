@@ -28,7 +28,6 @@ const CustomerList: React.FC<CustomerListProps> = ({
     if (grouped) {
       subscription = CustomerService.fetchAvailableLetters().subscribe({
         next: (data) => {
-          console.log(data)
           setLetters(data);
           setLoading(false);
         },
