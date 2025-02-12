@@ -1,4 +1,3 @@
-// src/services/order.service.ts
 import { BehaviorSubject, Observable, combineLatest, defer, from, throwError } from 'rxjs'
 import { catchError, map, switchMap, tap } from 'rxjs/operators'
 import {
@@ -121,10 +120,12 @@ class OrderService {
   }
 
   removeTemporaryOrder (orderId: number): void {
+    console.log(this.temporaryOrder)
     this.temporaryOrdersSubject.next(
       this.temporaryOrdersSubject.value.filter(o => o.numeroOrden !== orderId)
     )
     offlineService.removeOfflineOrder(orderId)
+    console.log(this.temporaryOrder)
   }
 
   // Para cargar mesas activas con datos combinados

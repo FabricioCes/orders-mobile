@@ -7,8 +7,8 @@ import {
   useLocalSearchParams,
   useNavigation,
 } from "expo-router";
-import CustomerSection from "../components/customer-section";
-import ProductSection from "../components/product-section";
+import CustomerSection from "../components/customers/customer-section";
+import ProductSection from "../components/products/product-section";
 import OrderSummaryItem from "../components/orders/order-summary-item";
 import { OrderDetail } from "@/types/types";
 import ProductOptionsModal from "../components/products/product-option-modal";
@@ -49,18 +49,6 @@ export default function OrderScreen() {
 
 const { removeOfflineOrder } = offlineService;
 
-  useEffect(() => {
-    if (orderFromService) {
-      dispatch({ type: "SET_ORDER", payload: orderFromService });
-    }
-  }, [orderFromService, dispatch]);
-
-  useEffect(() => {
-    if (details && details.length > 0) {
-      dispatch({ type: "SET_ORDER_DETAILS", payload: details });
-    }
-  }, [details, dispatch]);
-
   const initialOrderRef = useRef(order);
   const initialDetailsRef = useRef<OrderDetail[]>(orderDetails);
 
@@ -86,6 +74,17 @@ const { removeOfflineOrder } = offlineService;
     dirtyRef.current = hasOrderBeenModified();
   }, [hasOrderBeenModified]);
 
+  useEffect(() => {
+    if (orderFromService) {
+      dispatch({ type: "SET_ORDER", payload: orderFromService });
+    }
+  }, [orderFromService, dispatch]);
+
+  useEffect(() => {
+    if (details && details.length > 0) {
+      dispatch({ type: "SET_ORDER_DETAILS", payload: details });
+    }
+  }, [details, dispatch]);
 
 
   const updateProductQuantity = useCallback(
@@ -137,7 +136,8 @@ const { removeOfflineOrder } = offlineService;
 
   useEffect(() => {
     const cleanupTemporaryOrder = () => {
-      if (order?.esTemporal) {
+      if (order?.esTemporal === true) {
+        console.log("cleanuptemporary")
         if (order.numeroOrden !== undefined) {
           orderService.removeTemporaryOrder(order.numeroOrden);
         }

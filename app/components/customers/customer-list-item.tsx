@@ -25,24 +25,24 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderRadius: 12,
-    backgroundColor: "#e0e7ff",
-    shadowColor: "#818cf8",
+    backgroundColor: "#e0f2f1", // Un tono muy claro de teal
+    shadowColor: "#80cbc4",     // Sombra en tono teal suave
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },
   evenBackground: {
-    backgroundColor: "#ede9fe",
+    backgroundColor: "#b2dfdb", // Un tono un poco más oscuro para fondos alternos
   },
   nameText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#4338ca",
+    color: "#00695c", // Un teal oscuro para el texto principal
   },
   cedText: {
     fontSize: 14,
-    color: "#4f46e5",
+    color: "#00796b", // Otro tono oscuro en la familia teal para el texto secundario
     marginTop: 4,
   },
 });

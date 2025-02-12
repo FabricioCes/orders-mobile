@@ -7,17 +7,12 @@ import { Product } from "@/types/productTypes";
 interface ProductDetailProps {
   product: OrderDetail | Product;
   quantity?: number;
-  showActions?: boolean;
-  addToOrder?: () => void;
-  onQuantityChange?: (quantity: number) => void;
 }
 
 export default function ProductDetail({
   product,
   quantity = 1,
-  showActions = true,
-  addToOrder,
-  onQuantityChange,
+
 }: ProductDetailProps) { return (
   <View style={{ padding: 12, backgroundColor: "#f9fafb", borderRadius: 8, marginBottom: 8 }}>
     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>

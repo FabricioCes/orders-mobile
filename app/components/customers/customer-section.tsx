@@ -15,25 +15,37 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({ customerId, orderId }
   const [loadingCustomer, setLoadingCustomer] = useState(true);
 
   const { selectedCustomer } = state;
+console.log(state)
+useEffect(() => {
+  dispatch({ type: "CLEAR_SELECTED_CUSTOMER" });
 
-  useEffect(() => {
-    dispatch({ type: "CLEAR_SELECTED_CUSTOMER" });
-  }, [orderId, dispatch]);
+  if (!customerId) return;
 
-  useEffect(() => {
-    console.log("customer id",customerId)
-    if (customerId) {
-      setLoadingCustomer(true);
-      CustomerApiRepository.getCustomer(customerId)
-        .then((client) => {
-          dispatch({ type: "SET_SELECTED_CUSTOMER", payload: client });
-        })
-        .catch(() => {
-          dispatch({ type: "CLEAR_SELECTED_CUSTOMER" });
-        })
-        .finally(() => setLoadingCustomer(false));
-    }
-  }, [customerId, dispatch]);
+  let cancelled = false; 
+  setLoadingCustomer(true);
+
+  CustomerApiRepository.getCustomer(customerId)
+    .then((client) => {
+      if (!cancelled) {
+        dispatch({ type: "SET_SELECTED_CUSTOMER", payload: client });
+      }
+    })
+    .catch(() => {
+      if (!cancelled) {
+        dispatch({ type: "CLEAR_SELECTED_CUSTOMER" });
+      }
+    })
+    .finally(() => {
+      if (!cancelled) {
+        setLoadingCustomer(false);
+      }
+    });
+
+  return () => {
+    cancelled = true;
+  };
+}, [orderId, customerId, dispatch]);
+
 
   if (loadingCustomer && customerId) {
     return <ActivityIndicator size="small" />;

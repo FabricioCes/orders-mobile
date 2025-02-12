@@ -1,14 +1,16 @@
+// CustomerContext.tsx
 import React, {
   createContext,
   useReducer,
   useContext,
   ReactNode,
-  useEffect
+  useCallback
 } from "react";
 import { useSettings } from "./SettingsContext";
 import { Customer } from "@/types/customerTypes";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CustomerService } from "@/core/services/customer.service";
+import { Observable } from "rxjs";
 
 interface CustomerState {
   customers: Customer[];
@@ -28,16 +30,22 @@ const initialState: CustomerState = {
   status: "loading",
 };
 
-const CustomerContext = createContext<{
+interface CustomerContextValue {
   state: CustomerState;
   dispatch: React.Dispatch<CustomerAction>;
   clearCustomer: () => void;
+  // Método que aún usa promesas para obtener todos los clientes (si aún lo necesitas)
   fetchCustomers: (signal?: AbortSignal) => void;
-}>({
+  // Nuevo método que retorna un Observable para cargar clientes por letra
+  loadCustomersForLetter: (letter: string) => Observable<Customer[]>;
+}
+
+const CustomerContext = createContext<CustomerContextValue>({
   state: initialState,
   dispatch: () => undefined,
-  clearCustomer: ()=> {},
-  fetchCustomers: ()=> {}
+  clearCustomer: () => {},
+  fetchCustomers: () => {},
+  loadCustomersForLetter: () => new Observable<Customer[]>(),
 });
 
 const customerReducer = (
@@ -52,6 +60,7 @@ const customerReducer = (
     case "SET_SELECTED_CUSTOMER":
       return { ...state, selectedCustomer: action.payload };
     case "CLEAR_SELECTED_CUSTOMER":
+      console.log("clear Selected Customer");
       return { ...state, selectedCustomer: undefined };
     default:
       return state;
@@ -62,37 +71,53 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(customerReducer, initialState);
   const { settings, token } = useSettings();
 
-
-  const fetchCustomers = async (signal?: AbortSignal) => {
-    try {
-      if (!settings || !token) {
+  const fetchCustomers = useCallback(
+    async (signal?: AbortSignal) => {
+      try {
+        if (!settings || !token) {
+          dispatch({ type: "SET_STATUS", payload: "error" });
+          return;
+        }
+        dispatch({ type: "SET_STATUS", payload: "loading" });
+        const fetchedCustomers = await CustomerService.fetchCustomers(signal);
+        dispatch({ type: "SET_CUSTOMERS", payload: fetchedCustomers });
+        dispatch({ type: "SET_STATUS", payload: "success" });
+      } catch (error) {
+        console.error(error);
         dispatch({ type: "SET_STATUS", payload: "error" });
-        return;
+        dispatch({ type: "SET_CUSTOMERS", payload: [] });
       }
-      dispatch({ type: "SET_STATUS", payload: "loading" });
-      const fetchedCustomers = await CustomerService.fetchCustomers(signal);
-      dispatch({ type: "SET_CUSTOMERS", payload: fetchedCustomers });
-      dispatch({ type: "SET_STATUS", payload: "success" });
-    } catch (error) {
-      console.error(error);
-      dispatch({ type: "SET_STATUS", payload: "error" });
-      dispatch({ type: "SET_CUSTOMERS", payload: [] });
-    }
-  };
+    },
+    [settings, token, dispatch]
+  );
+
+  // Nuevo método que utiliza el método de CustomerService que retorna un Observable
+  const loadCustomersForLetter = useCallback(
+    (letter: string) => {
+      return CustomerService.loadCustomersForLetter(letter);
+    },
+    []
+  );
 
   const clearCustomer = () => {
     dispatch({ type: "CLEAR_SELECTED_CUSTOMER" });
     AsyncStorage.removeItem("selectedCustomer").catch(() => {});
   };
 
-
   return (
-    <CustomerContext.Provider value={{ state, dispatch, clearCustomer, fetchCustomers }}>
+    <CustomerContext.Provider
+      value={{
+        state,
+        dispatch,
+        clearCustomer,
+        fetchCustomers,
+        loadCustomersForLetter
+      }}
+    >
       {children}
     </CustomerContext.Provider>
   );
 };
-
 
 export const useCustomer = () => {
   const context = useContext(CustomerContext);

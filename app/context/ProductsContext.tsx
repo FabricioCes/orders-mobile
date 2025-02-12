@@ -1,4 +1,3 @@
-// src/context/ProductsContext.tsx
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useSettings } from "./SettingsContext";
 import { Product, Category, ProductsContextType } from "@/types/productTypes";
@@ -48,7 +47,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     try {
-      const products$ = productService.buscarProductosPorSubSubCategoria$(subSubCategory);
+      const products$ = productService.searchProductByCategory$(subSubCategory);
       return products$;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error desconocido");

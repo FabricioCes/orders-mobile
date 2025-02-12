@@ -39,7 +39,7 @@ class ProductService {
     );
   }
 
-  buscarProductosPorSubSubCategoria$(subSubCategory: string): Observable<Product[]> {
+  searchProductByCategory$(subSubCategory: string): Observable<Product[]> {
     return from(ProductApiRepository.getProductsBySubSubCategory(subSubCategory)).pipe(
       tap({
         error: err => console.error('Error al cargar productos por subsubcategoría:', err)
