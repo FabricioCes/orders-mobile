@@ -15,8 +15,7 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({ customerId, orderId }
   const [loadingCustomer, setLoadingCustomer] = useState(true);
 
   const { selectedCustomer } = state;
-console.log(state)
-useEffect(() => {
+  useEffect(() => {
   dispatch({ type: "CLEAR_SELECTED_CUSTOMER" });
 
   if (!customerId) return;

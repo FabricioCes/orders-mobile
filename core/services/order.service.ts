@@ -120,12 +120,10 @@ class OrderService {
   }
 
   removeTemporaryOrder (orderId: number): void {
-    console.log(this.temporaryOrder)
     this.temporaryOrdersSubject.next(
       this.temporaryOrdersSubject.value.filter(o => o.numeroOrden !== orderId)
     )
     offlineService.removeOfflineOrder(orderId)
-    console.log(this.temporaryOrder)
   }
 
   // Para cargar mesas activas con datos combinados
@@ -167,7 +165,6 @@ class OrderService {
           }
           this.orderSubject.next(updatedOrder)
           await offlineService.saveOfflineOrder(0, updatedOrder)
-          console.log('Orden temporal actualizada offline:', updatedOrder)
         }
       }
 

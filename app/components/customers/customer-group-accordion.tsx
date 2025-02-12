@@ -23,7 +23,7 @@ const CustomerGroupAccordion: React.FC<CustomerGroupAccordionProps> =
 
     const { loadCustomersForLetter } = useCustomer();
 
-
+    console.log(letter)
     useEffect(() => {
       if (expanded && localCustomers.length === 0) {
         setLoading(true);

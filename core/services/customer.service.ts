@@ -1,6 +1,6 @@
-import { Customer } from '@/types/customerTypes';
+import { Customer, FirstCustomerLetter } from '@/types/customerTypes';
 import { CustomerApiRepository } from '../repositories/customer.repository';
-import { Observable } from 'rxjs';
+import { from, Observable } from 'rxjs';
 
 const createClientFromApi = (apiClient: any): Customer => ({
   identificacion: apiClient.identificador,
@@ -38,5 +38,9 @@ export class CustomerService {
           subscriber.error(error);
         });
     });
+  }
+
+  static fetchAvailableLetters(): Observable<FirstCustomerLetter[]> {
+    return from(CustomerApiRepository.getAvailableLetters());
   }
 }

@@ -1,9 +1,11 @@
 // CustomerList.tsx
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { FlatList, Text, StyleSheet, View } from "react-native";
-import { Customer } from "@/types/customerTypes";
+import { Customer, FirstCustomerLetter } from "@/types/customerTypes";
 import CustomerListItem from "./customer-list-item";
 import CustomerGroupAccordion from "./customer-group-accordion";
+import { CustomerService } from "@/core/services/customer.service";
+import { Subscription } from "rxjs";
 
 interface CustomerListProps {
   customers?: Customer[];
@@ -15,22 +17,48 @@ interface CustomerListProps {
 const CustomerList: React.FC<CustomerListProps> = ({
   customers,
   onSelect,
-  searchQuery="",
+  searchQuery = "",
   grouped = false,
 }) => {
+  const [letters, setLetters] = useState<FirstCustomerLetter[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  useEffect(() => {
+    let subscription: Subscription;
+
+    if (grouped) {
+      subscription = CustomerService.fetchAvailableLetters().subscribe({
+        next: (data) => {
+          console.log(data)
+          setLetters(data);
+          setLoading(false);
+        },
+        error: (err) => {
+          console.error("Error fetching letters", err);
+          setLoading(false);
+        }
+      });
+    }
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, [grouped]);
+
   if (grouped) {
 
-    const letters = useMemo(() => "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""), []);
-
+    if (loading) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Cargando...</Text>
+        </View>
+      );
+    }
     return (
       <FlatList
         data={letters}
-        keyExtractor={(item) => item}
+        keyExtractor={(item) => item.inicial}
         renderItem={({ item: letter }) => (
-          <CustomerGroupAccordion
-            letter={letter}
-            onSelect={onSelect}
-          />
+          <CustomerGroupAccordion letter={letter.inicial} onSelect={onSelect} />
         )}
         contentContainerStyle={styles.groupListContent}
         ListEmptyComponent={

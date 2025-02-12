@@ -137,7 +137,6 @@ const { removeOfflineOrder } = offlineService;
   useEffect(() => {
     const cleanupTemporaryOrder = () => {
       if (order?.esTemporal === true) {
-        console.log("cleanuptemporary")
         if (order.numeroOrden !== undefined) {
           orderService.removeTemporaryOrder(order.numeroOrden);
         }

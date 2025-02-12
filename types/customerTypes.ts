@@ -17,3 +17,7 @@ export type CustomerContextType = {
   clearCustomer: () => void
   status: 'loading' | 'error' | 'success'
 }
+
+export type FirstCustomerLetter = {
+  inicial: string
+}
