@@ -26,7 +26,7 @@ export const offlineService = {
           await orderService.saveOrder(order); // Enviar al servidor
           await AsyncStorage.removeItem(key); // Eliminar de la caché
         } catch (error) {
-          console.error(`Error sincronizando orden #${orderId}`, error);
+          console.log(`Error sincronizando orden #${orderId}`, error);
         }
       }
     }
@@ -36,7 +36,7 @@ export const offlineService = {
       await AsyncStorage.removeItem(`offline_order_${orderId}`);
       console.log(`Orden #${orderId} eliminada correctamente.`);
     } catch (error) {
-      console.error(`Error eliminando orden #${orderId}:`, error);
+      console.log(`Error eliminando orden #${orderId}:`, error);
     }
   },
 };

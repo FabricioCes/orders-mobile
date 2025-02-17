@@ -38,7 +38,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       await AsyncStorage.setItem("settings", JSON.stringify(updatedSettings));
       setSettings(updatedSettings);
     } catch (error) {
-      console.error("Error al guardar en AsyncStorage:", error);
+      console.log("Error al guardar en AsyncStorage:", error);
     }
   };
 
@@ -67,7 +67,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       checkTokenExpiration();
     } catch (error) {
-      console.error("Error al cargar datos de AsyncStorage:", error);
+      console.log("Error al cargar datos de AsyncStorage:", error);
     }
   };
 
@@ -102,7 +102,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return false; // Login fallido
       }
     } catch (error) {
-      console.error("Error de red o servidor", error);
+      console.log("Error de red o servidor", error);
       return false; // Error de red o servidor
     }
   };
@@ -117,7 +117,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setToken("");
       router.navigate("/components/login"); // Redirige al login
     } catch (error) {
-      console.error("Error al cerrar sesión:", error);
+      console.log("Error al cerrar sesión:", error);
     }
   };
 
@@ -131,14 +131,14 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         await logOut();
       }
     } catch (error) {
-      console.error("Error al decodificar el token:", error);
+      console.log("Error al decodificar el token:", error);
       await logOut();
     }
   };
 
   const fetchZonasMesas = async () => {
     if (!settings?.idComputadora || !token) {
-      console.error(`No se han configurado las credenciales {${settings?.idComputadora}, ${token}}`);
+      console.log(`No se han configurado las credenciales {${settings?.idComputadora}, ${token}}`);
       setLoadingZonas(false);
       return;
     }
@@ -163,7 +163,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const data = await response.json();
       setZonas(data.resultado || {});
     } catch (error) {
-      console.error("Error obteniendo zonas:", error);
+      console.log("Error obteniendo zonas:", error);
       Alert.alert("Error", "No se pudieron obtener las zonas y mesas");
       setZonas({});
     } finally {

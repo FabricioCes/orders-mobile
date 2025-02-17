@@ -26,7 +26,7 @@ export const useProductManagement = (
         const result = await orderService.addProduct(orderId, orderDetail)
         return result
       } catch (error) {
-        console.error('Error adding product:', error)
+        console.log('Error adding product:', error)
         throw error
       }
     },

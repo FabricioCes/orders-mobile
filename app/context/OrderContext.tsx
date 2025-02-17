@@ -93,7 +93,7 @@ export const OrderProvider = ({
       const details = await OrderApiRepository.getOrderDetails(id);
       dispatch({ type: "SET_ORDER_DETAILS", payload: details });
     } catch (error) {
-      console.error("Error al obtener la orden:", error);
+      console.log("Error al obtener la orden:", error);
       dispatch({ type: "RESET_ORDER" });
     }
   };

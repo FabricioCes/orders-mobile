@@ -30,7 +30,7 @@ export const signalRService = {
       await connection.start();
       console.log('SignalR Connected');
     } catch (err) {
-      console.error('Error al conectar con SignalR:', err);
+      console.log('Error al conectar con SignalR:', err);
     }
   },
   onOrderUpdated: (callback: (ordenId: number, nuevoEstado: Order | string) => void): void => {

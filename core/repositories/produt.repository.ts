@@ -61,7 +61,7 @@ export class ProductApiRepository {
       const resultado = await this.handleRequest<Product[]>(`Producto/categoria/${categoriaId}`)
       return resultado
     } catch (error) {
-      console.error('Error al cargar productos por categoría:', error)
+      console.log('Error al cargar productos por categoría:', error)
       throw error
     }
   }
@@ -71,7 +71,7 @@ export class ProductApiRepository {
       const resultado = await this.handleRequest<Product[]>(`Producto/buscar/${query}`)
       return resultado
     } catch (error) {
-      console.error('Error al buscar productos:', error)
+      console.log('Error al buscar productos:', error)
       throw error
     }
   }
@@ -82,7 +82,7 @@ export class ProductApiRepository {
       const resultado = await this.handleRequest<Product[]>(endpoint)
       return resultado
     } catch (error) {
-      console.error('Error al cargar productos por subsubcategoría:', error)
+      console.log('Error al cargar productos por subsubcategoría:', error)
       throw error
     }
   }

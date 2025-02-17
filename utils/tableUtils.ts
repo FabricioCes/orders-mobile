@@ -14,7 +14,7 @@ export const getToken = async (): Promise<string | null> => {
     const token = await AsyncStorage.getItem('token')
     return token
   } catch (error) {
-    console.error('Error al obtener el token:', error)
+    console.log('Error al obtener el token:', error)
     return null
   }
 }

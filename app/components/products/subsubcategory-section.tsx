@@ -24,7 +24,7 @@ const SubSubCategorySection: React.FC<SubSubCategorySectionProps> = React.memo(
         const subscription = loadProductsForSubSubCategory(subSubCategory.nombreSubSubCategoria)
           .subscribe({
             next: (products) => setLocalProducts(products),
-            error: (err) => console.error(err),
+            error: (err) => console.log(err),
             complete:()=> setloading(false)
           });
         return () => subscription.unsubscribe();
