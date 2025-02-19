@@ -1,3 +1,4 @@
+// OrderScreen.tsx
 import { useState, useCallback, useEffect, useRef } from "react";
 import { View, Alert, Text } from "react-native";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
@@ -9,10 +10,10 @@ import ProductOptionsModal from "../components/products/product-option-modal";
 import QuantityModal from "../components/products/quantity-modal";
 import OrderDetailsList from "../components/orders/order-details-list";
 import { orderService } from "@/core/services/order.service";
-import { useOrder } from "@/context/OrderContext";
-import { useOrderState } from "@/hooks/useOrderState";
-import { useOrderManagement } from "../hooks/useOrderManagement";
-import { useCustomer } from "../context/CustomerContext";
+import { useOrder } from "@/core/context/OrderContext";
+import { useOrderState } from "@/core/hooks/useOrderState";
+import { useOrderManagement } from "../../core/hooks/useOrderManagement";
+import { useCustomer } from "../../core/context/CustomerContext";
 
 export default function OrderScreen() {
   const {
@@ -22,15 +23,18 @@ export default function OrderScreen() {
     orderId = "0",
     userName = "",
     token = "",
+    isTemp = false,
   } = useLocalSearchParams();
-  const { createNewOrder, clearCurrentOrder } = useOrderManagement(
-    Number(orderId),
-    String(userName),
-    String(token),
-    isActive === "true",
-    String(tableId),
-    String(place)
-  );
+  const { createNewOrder, clearCurrentOrder, temporaryRemoveOrderDetail } =
+    useOrderManagement(
+      Number(orderId),
+      String(userName),
+      String(token),
+      isActive === "true",
+      String(tableId),
+      String(place),
+      Boolean(isTemp)
+    );
   const navigation = useNavigation();
 
   const { state, dispatch, fetchOrder } = useOrder();
@@ -39,7 +43,8 @@ export default function OrderScreen() {
     Number(orderId),
     String(userName),
     String(token),
-    String(place)
+    String(place),
+    Boolean(isTemp)
   );
 
   const { clearCustomer } = useCustomer();
@@ -48,6 +53,9 @@ export default function OrderScreen() {
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [selectedOrderDetail, setSelectedOrderDetail] =
     useState<OrderDetail | null>(null);
+
+  // Estado para controlar la visibilidad del resumen
+  const [showSummary, setShowSummary] = useState(true);
 
   const dirtyRef = useRef(false);
 
@@ -125,9 +133,11 @@ export default function OrderScreen() {
   return (
     <View className="flex-1 bg-gray-50">
       <View className="p-4 bg-white shadow-sm">
-        <Text className="text-xl font-semibold text-center">
-          Mesa {tableId} - {place}
-        </Text>
+        <View className="flex-row justify-center">
+          <Text className="text-xl font-semibold">
+            Mesa {tableId} - {place}
+          </Text>
+        </View>
       </View>
 
       <View className="flex-1">
@@ -142,12 +152,16 @@ export default function OrderScreen() {
             onProductPress={handleProductPress}
           />
         </View>
+
+        {/* Resumen de la Orden con toggle en el encabezado */}
         <OrderSummaryItem
           total={order?.totalSinDescuento || 0}
           itemsCount={orderDetails.length}
           onSave={handleSaveOrder}
           isActive={isActive === "true"}
           isSaving={false}
+          expanded={showSummary}
+          onToggle={() => setShowSummary(!showSummary)}
         />
       </View>
 
@@ -157,10 +171,9 @@ export default function OrderScreen() {
           product={selectedOrderDetail}
           onCancel={() => setShowOptionsModal(false)}
           onDelete={() => {
-            dispatch({
-              type: "REMOVE_ORDER_DETAIL",
-              payload: selectedOrderDetail.identificadorOrdenDetalle,
-            });
+            temporaryRemoveOrderDetail(
+              selectedOrderDetail.identificadorOrdenDetalle
+            );
             setShowOptionsModal(false);
           }}
           onModify={() => {

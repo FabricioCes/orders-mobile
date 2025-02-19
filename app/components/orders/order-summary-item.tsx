@@ -1,6 +1,11 @@
-import React, { useEffect, useRef } from "react";
-import { Animated, Easing, View, Text, TouchableOpacity } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Animated, Easing, View, Text, TouchableOpacity, LayoutAnimation, Platform, UIManager,StyleSheet } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
+
+// Habilitar LayoutAnimation para Android
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 type OrderSummaryItemProps = {
   total: number;
@@ -8,6 +13,8 @@ type OrderSummaryItemProps = {
   onSave: () => void;
   isActive: boolean;
   isSaving?: boolean;
+  expanded: boolean;
+  onToggle: () => void;
 };
 
 const OrderSummaryItem: React.FC<OrderSummaryItemProps> = ({
@@ -15,93 +22,127 @@ const OrderSummaryItem: React.FC<OrderSummaryItemProps> = ({
   itemsCount,
   onSave,
   isActive,
-  isSaving = false
+  isSaving = false,
+  expanded,
+  onToggle,
 }) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(100)).current;
+  const [showContent, setShowContent] = useState(expanded);
+  const arrowRotation = useRef(new Animated.Value(expanded ? 1 : 0)).current;
 
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 400,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 500,
-        easing: Easing.out(Easing.exp),
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    return () => {
-      // Reset animations on unmount
-      fadeAnim.setValue(0);
-      slideAnim.setValue(100);
-    };
-  }, []);
-
-  const animatedStyles = {
-    opacity: fadeAnim,
-    transform: [{ translateY: slideAnim }],
+  // Animación suave del layout
+  const toggleExpansion = () => {
+    LayoutAnimation.configureNext({
+      duration: 500, // Duración en ms
+      update: {
+        type: LayoutAnimation.Types.spring, // Tipo de animación
+        property: LayoutAnimation.Properties.opacity, // Propiedad a animar
+        springDamping: 0.7, // Elasticidad de la animación
+      },
+    });
+    onToggle();
   };
 
+  useEffect(() => {
+    Animated.timing(arrowRotation, {
+      toValue: expanded ? 1 : 0,
+      duration: 300,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: false,
+    }).start();
+  }, [expanded]);
+
+  const rotateInterpolate = arrowRotation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "180deg"],
+  });
+
   return (
-    <Animated.View
-      className="bg-white border-t border-gray-200 p-4 shadow-lg"
-      style={[
-        animatedStyles,
-        {
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-        },
-      ]}
+    <View
+      style={{
+        backgroundColor: "white",
+        padding: 16,
+        borderTopWidth: 1,
+        borderColor: "#ccc",
+        borderRadius: 8,
+        marginBottom: 8,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      }}
     >
-      <View className="mt-6 bg-white rounded-lg p-4 shadow-sm border-t border-gray-200">
-        <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-lg font-semibold">Resumen de la Orden</Text>
-          <Text className="text-gray-500">{itemsCount} items</Text>
-        </View>
-
-        <View className="border-t border-gray-200 pt-4">
-          <View className="flex-row justify-between mb-2">
-            <Text className="text-gray-600">Subtotal:</Text>
-            <Text className="font-medium">₡{total.toFixed(2)}</Text>
-          </View>
-
-          <View className="flex-row justify-between">
-            <Text className="text-gray-600">Total:</Text>
-            <Text className="text-xl font-bold text-blue-600">
-              ₡{total.toFixed(2)}
-            </Text>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          className={`mt-6 p-4 rounded-lg flex-row items-center justify-center ${
-            isSaving ? "bg-blue-400" : "bg-blue-500"
-          }`}
-          onPress={onSave}
-          disabled={isSaving}
-        >
-          <Text className="text-white font-bold text-lg mr-2">
-            {isSaving ? (
-              "Guardando..."
-            ) : isActive ? (
-              "Actualizar Orden"
-            ) : (
-              "Confirmar Orden"
-            )}
-          </Text>
-          {!isSaving && <AntDesign name="checkcircle" size={20} color="white" />}
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+        <Text style={{ fontSize: 18, fontWeight: "600" }}>Resumen de la Orden</Text>
+        <TouchableOpacity onPress={toggleExpansion}>
+          <Animated.View style={{ transform: [{ rotate: rotateInterpolate }] }}>
+            <AntDesign name="up" size={24} color="black" />
+          </Animated.View>
         </TouchableOpacity>
       </View>
-    </Animated.View>
+      <View style={styles.headerDetails}>
+          <Text style={styles.itemsCount}>
+            {itemsCount} artículo{itemsCount !== 1 ? 's' : ''}
+          </Text>
+          {!expanded && (
+            <Text style={styles.headerTotal}>₡{total.toFixed(2)}</Text>
+          )}
+        </View>
+
+      {/* Contenido que se expande/contrae */}
+      {expanded && (
+        <View style={{ marginTop: 16 }}>
+          <View style={{ borderTopWidth: 1, borderColor: "#ccc", paddingTop: 16 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
+              <Text style={{ color: "#666" }}>Subtotal:</Text>
+              <Text style={{ fontWeight: "500" }}>₡{total.toFixed(2)}</Text>
+            </View>
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <Text style={{ color: "#666" }}>Total:</Text>
+              <Text style={{ fontSize: 20, fontWeight: "bold", color: "#007bff" }}>
+                ₡{total.toFixed(2)}
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={{
+              marginTop: 16,
+              padding: 16,
+              borderRadius: 8,
+              backgroundColor: isSaving ? "#3b82f6" : "#2563eb",
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            onPress={onSave}
+            disabled={isSaving}
+          >
+            <Text style={{ color: "white", fontWeight: "bold", fontSize: 18, marginRight: 8 }}>
+              {isSaving ? "Guardando..." : isActive ? "Actualizar Orden" : "Confirmar Orden"}
+            </Text>
+            {!isSaving && <AntDesign name="checkcircle" size={20} color="white" />}
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
   );
 };
+const styles = StyleSheet.create({
 
+  headerDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  itemsCount: {
+    color: "#888",
+    fontSize: 14,
+  },
+  headerTotal: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#007bff',
+  },
+
+});
 export default OrderSummaryItem;
