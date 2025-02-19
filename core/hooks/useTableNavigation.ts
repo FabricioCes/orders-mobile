@@ -37,16 +37,16 @@ export const useTableNavigation = (place: string) => {
         Number(order.numeroMesa) === tableId &&
         order.zona.trim().toUpperCase() === place.trim().toUpperCase()
     )
-
+  console.log("orden activa",JSON.stringify(activeOrder))
     const navigationParams = {
       tableId,
       place,
       isActive: isActive.toString(),
       orderId: activeOrder?.identificador || 0,
       totalOrder: activeOrder?.totalConDescuento || 0,
-      isTemp: activeOrder?.esTemporal || false
+      isTemp: !isActive
     }
-
+    console.log("orden navigationParams",JSON.stringify(navigationParams))
     handleNavigation(navigationParams)
   }
 

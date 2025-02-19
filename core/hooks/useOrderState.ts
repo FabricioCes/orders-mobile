@@ -49,7 +49,8 @@ export const useOrderState = (
             }))
           })
         )
-        if(orderId > 0 ) {
+        console.log("Obtener o no la orden y el detalle",isTemp, orderId)
+        if(!isTemp) {
           orderService.getOrder$(orderId).subscribe()
           orderService.getOrderDetails$(orderId).subscribe()
         }

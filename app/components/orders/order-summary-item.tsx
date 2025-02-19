@@ -108,7 +108,7 @@ const OrderSummaryItem: React.FC<OrderSummaryItemProps> = ({
             {/* Impuesto */}
             {taxIncluded && (
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Impuesto ({13}%):</Text>
+                <Text style={styles.detailLabel}>Impuesto:</Text>
                 <Text style={styles.detailValue}>
                   ₡{(tax).toFixed(2)}
                 </Text>
@@ -118,7 +118,7 @@ const OrderSummaryItem: React.FC<OrderSummaryItemProps> = ({
             {/* Servicio */}
             {serviceIncluded && (
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Servicio ({10}%):</Text>
+                <Text style={styles.detailLabel}>Servicio:</Text>
                 <Text style={styles.detailValue}>
                   ₡{(service).toFixed(2)}
                 </Text>

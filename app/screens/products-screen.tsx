@@ -47,7 +47,7 @@ const ProductScreen: React.FC = () => {
         Toast.show({
           type: "success",
           text1: "¡Producto agregado!",
-          text2: "Se ha añadido correctamente. 🛒",
+          text2: "Se ha añadido correctamente.",
           autoHide: true,
           position: "bottom",
           swipeable: true,

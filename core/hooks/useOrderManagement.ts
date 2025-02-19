@@ -1,6 +1,5 @@
 import { useOrderState } from './useOrderState'
 import { useOrderOperations } from './useOrderOperations'
-import { useProductManagement } from './useProductManagement'
 import { useProducts } from '@/core/context/ProductsContext'
 import { useEffect } from 'react'
 import { orderService } from '@/core/services/order.service'
@@ -16,6 +15,8 @@ export const useOrderManagement = (
   zona: string,
   isTemp: boolean = false
 ) => {
+
+  console.log(isTemp, "Es Temporal")
   const {
     order,
     activeTables,
@@ -25,7 +26,6 @@ export const useOrderManagement = (
   } = useOrderState(orderId, userName, token, zona, isTemp)
   const { loading: productsLoading, error: productsError } = useProducts()
 
-  const { addToOrder } = useProductManagement(orderId)
   const unmount$ = new Subject<void>();
   const {
     removeProduct,
@@ -33,7 +33,8 @@ export const useOrderManagement = (
     saveOrder,
     updateQuantity,
     clearCurrentOrder,
-    temporaryRemoveOrderDetail
+    temporaryRemoveOrderDetail,
+    addToOrder
   } = useOrderOperations(orderId, order!)
 
   useEffect(() => {
@@ -46,6 +47,7 @@ export const useOrderManagement = (
   }, [])
 
   const createNewOrder = () => {
+    console.log(order)
     if (orderId === 0 && !order) {
       orderService
         .createTemporaryOrder(numeroMesa, zona)

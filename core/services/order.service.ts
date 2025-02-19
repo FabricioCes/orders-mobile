@@ -103,11 +103,11 @@ class OrderService {
         ...this.temporaryOrdersSubject.value,
         newOrder
       ])
-
+      console.log("nueva orden temporal", newOrder)
       // Emitir orden actual
       this.orderSubject.next(newOrder)
       this.orderDetailsSubject.next([])
-
+      this.order$.subscribe((a) => console.log("nueva orden recibida",a))
       return newOrder
     }).pipe(
       catchError(error => {
@@ -150,6 +150,7 @@ class OrderService {
         await OrderCacheRepository.cacheDetails(orderId, updatedDetails)
       } else {
         const currentOrder = this.orderSubject.value
+        console.log(JSON.stringify(currentOrder))
         if (currentOrder) {
           const newTotal = updatedDetails.reduce(
             (sum, detail) => sum + detail.costoUnitario * detail.cantidad,
@@ -223,6 +224,8 @@ class OrderService {
     productId: number,
     quantity: number
   ): Promise<void> {
+
+    console.log("Update quantity")
     const currentDetails = this.orderDetailsSubject.value
     const productIndex = currentDetails.findIndex(
       d => d.identificadorProducto === productId
@@ -254,6 +257,7 @@ class OrderService {
       detalles: updatedDetails
     }
     this.orderSubject.next(updatedOrder)
+
     await OrderCacheRepository.cacheOrder(orderId, updatedOrder)
   }
 

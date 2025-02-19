@@ -5,6 +5,7 @@ import NetInfo from '@react-native-community/netinfo';
 import { Order } from '@/types/types';
 import { orderService } from '@/core/services/order.service';
 import { useOrder } from '../context/OrderContext';
+import { Product } from '@/types/productTypes';
 
 export const useOrderOperations = (orderId: number, order: Order) => {
   const { dispatch } = useOrder();
@@ -19,6 +20,30 @@ export const useOrderOperations = (orderId: number, order: Order) => {
     },
     []
   );
+
+  const addToOrder = useCallback(
+    async (product: Product, quantity: number = 1) => {
+      const orderDetail = {
+        cantidad: quantity,
+        nombreProducto: product.nombre,
+        precio: product.precio,
+        costoUnitario: product.costo,
+        identificadorOrden: orderId,
+        identificadorOrdenDetalle: Date.now(),
+        identificadorProducto: product.identificador,
+        impuestoProducto: product.impuesto ?? 0
+      }
+
+      try {
+        const result = await orderService.addProduct(orderId, orderDetail)
+        return result
+      } catch (error) {
+        console.log('Error adding product:', error)
+        throw error
+      }
+    },
+    [orderId]
+  )
 
   const removeProduct = useCallback(
     (detailId: number) => {
@@ -93,5 +118,5 @@ export const useOrderOperations = (orderId: number, order: Order) => {
     dispatch({ type: "REMOVE_ORDER_DETAIL", payload: detailId });
   }, [dispatch]);
 
-  return { removeProduct, updateOrder, saveOrder, updateQuantity, clearCurrentOrder,temporaryRemoveOrderDetail };
+  return { removeProduct, updateOrder, saveOrder, updateQuantity, clearCurrentOrder,temporaryRemoveOrderDetail, addToOrder };
 };

@@ -25,6 +25,7 @@ export default function OrderScreen() {
     token = "",
     isTemp = false,
   } = useLocalSearchParams();
+
   const { createNewOrder, clearCurrentOrder, temporaryRemoveOrderDetail } =
     useOrderManagement(
       Number(orderId),
