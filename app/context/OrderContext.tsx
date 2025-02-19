@@ -108,7 +108,7 @@ export const OrderProvider = ({
 
 
     } catch (error) {
-      console.error("Error al obtener la orden:", error);
+      console.log("Error al obtener la orden:", error);
       dispatch({ type: "RESET_ORDER" });
     }
   };

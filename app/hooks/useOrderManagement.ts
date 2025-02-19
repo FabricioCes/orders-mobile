@@ -52,7 +52,7 @@ export const useOrderManagement = (
           next: newOrder => {
             router.setParams({ orderId: String(newOrder.numeroOrden) })
           },
-          error: err => console.error(err)
+          error: err => console.log(err)
         })
     }
   }

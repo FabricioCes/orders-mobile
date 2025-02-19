@@ -113,7 +113,7 @@ class OrderService {
       return newOrder
     }).pipe(
       catchError(error => {
-        console.error('Error creating temporary order:', error)
+        console.log('Error creating temporary order:', error)
         return throwError(() => new Error('No se pudo crear la orden temporal'))
       })
     )

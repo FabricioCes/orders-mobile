@@ -108,7 +108,7 @@ export class OrderCacheRepository {
       const cachedOrder = await AsyncStorage.getItem(`order_${orderId}`)
       return cachedOrder ? JSON.parse(cachedOrder) : null
     } catch (error) {
-      console.error('Error loading cached order:', error)
+      console.log('Error loading cached order:', error)
       return null
     }
   }
@@ -124,7 +124,7 @@ export class OrderCacheRepository {
       )
       return cachedDetails ? JSON.parse(cachedDetails) : []
     } catch (error) {
-      console.error('Error loading cached details:', error)
+      console.log('Error loading cached details:', error)
       return []
     }
   }
@@ -154,7 +154,7 @@ export class OrderCacheRepository {
 
       console.log('Órdenes almacenadas en caché correctamente.')
     } catch (error) {
-      console.error('Error al almacenar las órdenes en caché:', error)
+      console.log('Error al almacenar las órdenes en caché:', error)
       throw new Error('No se pudieron almacenar las órdenes en caché.')
     }
   }
@@ -171,7 +171,7 @@ export class OrderCacheRepository {
 
       return orders
     } catch (error) {
-      console.error('Error al cargar las órdenes almacenadas:', error)
+      console.log('Error al cargar las órdenes almacenadas:', error)
       return []
     }
   }
@@ -181,7 +181,7 @@ export class OrderCacheRepository {
 
       console.log('Todas las órdenes almacenadas han sido eliminadas.')
     } catch (error) {
-      console.error('Error al limpiar las órdenes almacenadas:', error)
+      console.log('Error al limpiar las órdenes almacenadas:', error)
       throw new Error('No se pudieron limpiar las órdenes almacenadas.')
     }
   }
