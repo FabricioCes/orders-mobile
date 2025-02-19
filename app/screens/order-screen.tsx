@@ -11,53 +11,101 @@ import OrderDetailsList from "../components/orders/order-details-list";
 import { orderService } from "@/core/services/order.service";
 import { useOrder } from "@/context/OrderContext";
 import { useOrderState } from "@/hooks/useOrderState";
+import { useOrderManagement } from "../hooks/useOrderManagement";
 import { useCustomer } from "../context/CustomerContext";
-import { offlineService } from "@/core/services/offlineService";
 
 export default function OrderScreen() {
-  const { tableId = "0", place = "", isActive = "false", orderId = "0", userName = "", token = "" } = useLocalSearchParams();
+  const {
+    tableId = "0",
+    place = "",
+    isActive = "false",
+    orderId = "0",
+    userName = "",
+    token = "",
+  } = useLocalSearchParams();
+  const { createNewOrder, clearCurrentOrder } = useOrderManagement(
+    Number(orderId),
+    String(userName),
+    String(token),
+    isActive === "true",
+    String(tableId),
+    String(place)
+  );
   const navigation = useNavigation();
-  
+
   const { state, dispatch, fetchOrder } = useOrder();
   const { order, orderDetails } = state;
+  const { order: orderFromService, details } = useOrderState(
+    Number(orderId),
+    String(userName),
+    String(token),
+    String(place)
+  );
+
   const { clearCustomer } = useCustomer();
-  const { order: orderFromService, details } = useOrderState(Number(orderId), userName, token, place);
-  const { removeOfflineOrder } = offlineService;
 
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
-  const [selectedOrderDetail, setSelectedOrderDetail] = useState<OrderDetail | null>(null);
+  const [selectedOrderDetail, setSelectedOrderDetail] =
+    useState<OrderDetail | null>(null);
 
   const dirtyRef = useRef(false);
 
   useEffect(() => {
-    if (orderFromService) dispatch({ type: "SET_ORDER", payload: orderFromService });
-    if (details?.length) dispatch({ type: "SET_ORDER_DETAILS", payload: details });
+    if (orderFromService)
+      dispatch({ type: "SET_ORDER", payload: orderFromService });
+    if (details?.length)
+      dispatch({ type: "SET_ORDER_DETAILS", payload: details });
   }, [orderFromService, details, dispatch]);
 
+  function hasOrderBeenModified() {
+    return dirtyRef.current;
+  }
+  const resetOrderState = () => {
+    dispatch({ type: "RESET_ORDER" });
+    clearCurrentOrder();
+    clearCustomer();
+  };
+
   useEffect(() => {
-    if (Number(orderId) > 0 && order?.esTemporal !== true) {
-      fetchOrder(orderId);
-    } else {
-      dispatch({ type: "RESET_ORDER" });
-      clearCustomer();
-      removeOfflineOrder(Number(orderId));
+    if (
+      Number(orderId) > 0 &&
+      order &&
+      !order.esTemporal &&
+      !hasOrderBeenModified()
+    ) {
+      console.log("Fetch");
+      fetchOrder(String(orderId));
+      dirtyRef.current = true;
+    } else if (Number(orderId) === 0 && !order) {
+      resetOrderState();
+      createNewOrder();
+      dirtyRef.current = true;
     }
-  }, [orderId]);
+  }, [orderId, tableId, order]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("beforeRemove", (e) => {
       e.preventDefault();
       Alert.alert("Salir", "¿Desea salir de la orden?", [
         { text: "Cancelar", style: "cancel" },
-        { text: "Salir", onPress: () => navigation.dispatch(e.data.action) },
+        {
+          text: "Salir",
+          onPress: () => {
+            resetOrderState();
+            navigation.dispatch(e.data.action);
+          },
+        },
       ]);
     });
     return unsubscribe;
   }, [navigation]);
 
   const handleNavigateToProducts = useCallback(() => {
-    router.navigate({ pathname: "/screens/products-screen", params: { orderId: order?.numeroOrden?.toString() ?? "0", isActive } });
+    router.navigate({
+      pathname: "/screens/products-screen",
+      params: { orderId: order?.numeroOrden?.toString() ?? "0", isActive },
+    });
   }, [order, isActive]);
 
   const handleProductPress = useCallback((product: OrderDetail) => {
@@ -67,7 +115,8 @@ export default function OrderScreen() {
 
   const handleSaveOrder = useCallback(() => {
     if (order) {
-      orderService.saveOrder({ ...order, detalles: orderDetails })
+      orderService
+        .saveOrder({ ...order, detalles: orderDetails })
         .then(() => Alert.alert("Éxito", "Orden guardada correctamente"))
         .catch(() => Alert.alert("Error", "Error al guardar la orden"));
     }
@@ -76,16 +125,30 @@ export default function OrderScreen() {
   return (
     <View className="flex-1 bg-gray-50">
       <View className="p-4 bg-white shadow-sm">
-        <Text className="text-xl font-semibold text-center">Mesa {tableId} - {place}</Text>
+        <Text className="text-xl font-semibold text-center">
+          Mesa {tableId} - {place}
+        </Text>
       </View>
 
       <View className="flex-1">
-        <CustomerSection customerId={Number(order?.idCliente ?? 0)} orderId={Number(orderId)} />
+        <CustomerSection
+          customerId={Number(order?.idCliente ?? 0)}
+          orderId={Number(orderId)}
+        />
         <View className="flex-1 border-t border-gray-200">
           <ProductSection onAddProduct={handleNavigateToProducts} />
-          <OrderDetailsList orderDetails={orderDetails} onProductPress={handleProductPress} />
+          <OrderDetailsList
+            orderDetails={orderDetails}
+            onProductPress={handleProductPress}
+          />
         </View>
-        <OrderSummaryItem total={order?.totalSinDescuento || 0} itemsCount={orderDetails.length} onSave={handleSaveOrder} isActive={isActive === "true"} isSaving={false} />
+        <OrderSummaryItem
+          total={order?.totalSinDescuento || 0}
+          itemsCount={orderDetails.length}
+          onSave={handleSaveOrder}
+          isActive={isActive === "true"}
+          isSaving={false}
+        />
       </View>
 
       {showOptionsModal && selectedOrderDetail && (
@@ -94,7 +157,10 @@ export default function OrderScreen() {
           product={selectedOrderDetail}
           onCancel={() => setShowOptionsModal(false)}
           onDelete={() => {
-            dispatch({ type: "REMOVE_ORDER_DETAIL", payload: selectedOrderDetail.identificadorOrdenDetalle });
+            dispatch({
+              type: "REMOVE_ORDER_DETAIL",
+              payload: selectedOrderDetail.identificadorOrdenDetalle,
+            });
             setShowOptionsModal(false);
           }}
           onModify={() => {
@@ -110,7 +176,10 @@ export default function OrderScreen() {
           product={selectedOrderDetail}
           onCancel={() => setShowQuantityModal(false)}
           onConfirm={(newQuantity) => {
-            dispatch({ type: "UPDATE_ORDER_DETAIL", payload: { ...selectedOrderDetail, cantidad: newQuantity } });
+            dispatch({
+              type: "UPDATE_ORDER_DETAIL",
+              payload: { ...selectedOrderDetail, cantidad: newQuantity },
+            });
             setShowQuantityModal(false);
           }}
         />

@@ -7,6 +7,7 @@ import {
 import { Order, OrderDetail } from '@/types/types'
 import { ActiveTable } from '@/types/tableTypes'
 import { offlineService } from './offlineService'
+import generateUUID, { uuidEntero } from '@/utils/uuidUtils'
 
 class OrderService {
   private orderSubject = new BehaviorSubject<Order | null>(null)
@@ -86,7 +87,7 @@ class OrderService {
 
   createTemporaryOrder (numeroMesa: string, zona: string): Observable<Order> {
     return defer(async () => {
-      const temporaryOrderId = 0
+      const temporaryOrderId = uuidEntero();
 
       const newOrder: Order = {
         numeroOrden: temporaryOrderId,

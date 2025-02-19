@@ -57,9 +57,6 @@ export const useOrderManagement = (
     }
   }
 
-  useEffect(() => {
-    createNewOrder()
-  }, [numeroMesa, zona])
 
   return {
     order,
@@ -74,6 +71,7 @@ export const useOrderManagement = (
     saveOrder,
     addToOrder,
     updateQuantity,
-    clearCurrentOrder
+    clearCurrentOrder,
+    createNewOrder
   }
 }
