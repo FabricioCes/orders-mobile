@@ -1,6 +1,6 @@
 // CustomersScreen.tsx
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
+import { View, StyleSheet} from "react-native";
 import { router } from "expo-router";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
@@ -8,7 +8,6 @@ import SearchBarCustomer from "../components/customers/search-bar-customer";
 import { useCustomer } from "@/app/context/CustomerContext";
 import { useSettings } from "../context/SettingsContext";
 import { Customer } from "@/types/customerTypes";
-import CustomerGroupAccordion from "../components/customers/customer-group-accordion";
 import CustomerList from "../components/customers/ItemCustomerList";
 import useCustomerSearch from "../hooks/usCustomerSearch";
 
@@ -19,14 +18,11 @@ const CustomersScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const filteredCustomers = useCustomerSearch(customers, searchQuery);
 
-  // Función para seleccionar cliente
   const handleSelect = (customer: Customer) => {
     dispatch({ type: "SET_SELECTED_CUSTOMER", payload: customer });
     router.back();
   };
 
-  // Si deseas cargar alguna información general o refrescar el estado de clientes,
-  // puedes hacerlo en este useEffect (por ejemplo, si necesitas precargar algo)
   useEffect(() => {
     const controller = new AbortController();
     if (token && settings) {

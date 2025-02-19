@@ -67,14 +67,7 @@ const CustomerList: React.FC<CustomerListProps> = ({
         }
       />
     );
-  } else {
-    if (!customers) {
-      return (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No se encontraron clientes</Text>
-        </View>
-      );
-    }
+  } 
     return (
       <FlatList
         data={customers}
