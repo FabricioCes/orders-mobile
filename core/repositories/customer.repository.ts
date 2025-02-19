@@ -1,6 +1,6 @@
-// src/core/repositories/CustomerApiRepository.ts
+// CustomerApiRepository.ts
 import { getBaseUrl } from '@/core/services/config'
-import { Customer } from '@/types/customerTypes'
+import { Customer, FirstCustomerLetter } from '@/types/customerTypes'
 import { ApiResponse } from '@/types/types'
 import { getToken } from '@/utils/tableUtils'
 
@@ -52,7 +52,6 @@ export class CustomerApiRepository {
     }
   }
 
-  // Obtiene un cliente por su ID
   static async getCustomer (customerId: number): Promise<Customer> {
     try {
       const result = await this.handleRequest<Customer>(`Cliente/${customerId}`)
@@ -76,6 +75,34 @@ export class CustomerApiRepository {
     } catch (error) {
       throw new Error(
         'No se pudo obtener los clientes: ' + (error as Error).message
+      )
+    }
+  }
+
+  static async getCustomersByLetter (
+    letter: string,
+    signal?: AbortSignal
+  ): Promise<Customer[]> {
+    try {
+      const endpoint = `cliente/buscarletra/${letter}`
+      const result = await this.handleRequest<Customer[]>(endpoint, { signal })
+      return result
+    } catch (error) {
+      throw new Error(
+        'No se pudo obtener los clientes por letra: ' + (error as Error).message
+      )
+    }
+  }
+
+  static async getAvailableLetters (): Promise<FirstCustomerLetter[]> {
+    try {
+      const result = await this.handleRequest<FirstCustomerLetter[]>(
+        'cliente/letras/disponibles'
+      )
+      return result
+    } catch (error) {
+      throw new Error(
+        'No se pudo obtener las letras disponibles: ' + (error as Error).message
       )
     }
   }

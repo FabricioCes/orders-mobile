@@ -1,4 +1,3 @@
-// src/services/order.service.ts
 import { BehaviorSubject, Observable, combineLatest, defer, from, throwError } from 'rxjs'
 import { catchError, map, switchMap, tap } from 'rxjs/operators'
 import {
@@ -166,7 +165,6 @@ class OrderService {
           }
           this.orderSubject.next(updatedOrder)
           await offlineService.saveOfflineOrder(0, updatedOrder)
-          console.log('Orden temporal actualizada offline:', updatedOrder)
         }
       }
 

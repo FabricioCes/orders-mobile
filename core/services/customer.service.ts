@@ -1,7 +1,6 @@
-// src/core/services/CustomerService.ts
-import { Customer } from '@/types/customerTypes'
-import { CustomerApiRepository } from '../repositories/customer.repository'
-
+import { Customer, FirstCustomerLetter } from '@/types/customerTypes';
+import { CustomerApiRepository } from '../repositories/customer.repository';
+import { from, Observable } from 'rxjs';
 
 const createClientFromApi = (apiClient: any): Customer => ({
   identificacion: apiClient.identificador,
@@ -13,21 +12,35 @@ const createClientFromApi = (apiClient: any): Customer => ({
   correo: apiClient.correo || undefined,
   correo2: apiClient.correo2 || undefined,
   direccion: apiClient.direccion?.trim() || undefined
-})
+});
 
 export class CustomerService {
-  static async fetchCustomers (signal?: AbortSignal): Promise<Customer[]> {
-    const rawCustomers = await CustomerApiRepository.getCustomers(
-      1,
-      100,
-      signal
-    )
-    const customers = rawCustomers.map(createClientFromApi)
-    return customers
+  static async fetchCustomers(signal?: AbortSignal): Promise<Customer[]> {
+    const rawCustomers = await CustomerApiRepository.getCustomers(1, 1000, signal);
+    const customers = rawCustomers.map(createClientFromApi);
+    return customers;
   }
 
-  static async fetchCustomer (customerId: number): Promise<Customer> {
-    const rawCustomer = await CustomerApiRepository.getCustomer(customerId)
-    return createClientFromApi(rawCustomer)
+  static async fetchCustomer(customerId: number): Promise<Customer> {
+    const rawCustomer = await CustomerApiRepository.getCustomer(customerId);
+    return createClientFromApi(rawCustomer);
+  }
+
+  static loadCustomersForLetter(letter: string): Observable<Customer[]> {
+    return new Observable<Customer[]>((subscriber) => {
+      CustomerApiRepository.getCustomersByLetter(letter)
+        .then((rawCustomers) => {
+          const customers = rawCustomers.map(createClientFromApi);
+          subscriber.next(customers);
+          subscriber.complete();
+        })
+        .catch((error) => {
+          subscriber.error(error);
+        });
+    });
+  }
+
+  static fetchAvailableLetters(): Observable<FirstCustomerLetter[]> {
+    return from(CustomerApiRepository.getAvailableLetters());
   }
 }

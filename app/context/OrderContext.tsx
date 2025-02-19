@@ -6,7 +6,7 @@ import React, {
   ReactNode
 } from "react";
 import { Order, OrderDetail } from "@/types/types";
-import { OrderApiRepository } from "@/core/repositories/order.repository";
+import { orderService } from "@/core/services/order.service";
 
 
 interface OrderState {
@@ -14,7 +14,6 @@ interface OrderState {
   orderDetails: OrderDetail[];
 }
 
-// Definimos las acciones posibles para modificar el estado
 type OrderAction =
   | { type: "SET_ORDER"; payload: Order }
   | { type: "RESET_ORDER" }
@@ -87,11 +86,27 @@ export const OrderProvider = ({
   const fetchOrder = async (orderId: string) => {
     try {
       const id = parseInt(orderId, 10);
-      const order = await OrderApiRepository.getOrder(id);
-      dispatch({ type: "SET_ORDER", payload: order });
 
-      const details = await OrderApiRepository.getOrderDetails(id);
-      dispatch({ type: "SET_ORDER_DETAILS", payload: details });
+      orderService.getOrder$(id).subscribe({
+        next: (order) => {
+          dispatch({ type: "SET_ORDER", payload: order as Order });
+        },
+        error: (err) => {
+          console.log(err)
+        },
+      });
+
+      orderService.getOrderDetails$(id).subscribe({
+        next: (details) => {
+
+          dispatch({ type: "SET_ORDER_DETAILS", payload: details as OrderDetail[] });
+        },
+        error: (err) => {
+          console.log(err)
+        },
+      });
+
+
     } catch (error) {
       console.log("Error al obtener la orden:", error);
       dispatch({ type: "RESET_ORDER" });
@@ -105,7 +120,6 @@ export const OrderProvider = ({
   );
 };
 
-// Hook para usar el contexto
 export const useOrder = () => {
   const context = useContext(OrderContext);
   if (!context) {
