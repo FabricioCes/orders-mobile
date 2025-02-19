@@ -1,7 +1,7 @@
 import { BehaviorSubject, Observable, from } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { Category, Product } from '@/types/productTypes';
-import { ProductApiRepository } from '../repositories/produt.repository';
+import { ProductApiRepository } from '../repositories/product.repository';
 
 class ProductService {
   private productsSubject = new BehaviorSubject<Product[]>([]);

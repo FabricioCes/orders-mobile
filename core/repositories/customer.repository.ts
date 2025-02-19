@@ -9,12 +9,19 @@ export class CustomerApiRepository {
     endpoint: string,
     init?: RequestInit
   ): Promise<T> {
-    const token = await getToken()
-    if (!token) {
-      throw new Error(
-        'No se encontró un token válido. Inicie sesión nuevamente.'
-      )
+    let token: string | null = "";
+
+    try{
+      token = await getToken()
+      if (!token) {
+        throw new Error(
+          'No se encontró un token válido. Inicie sesión nuevamente.'
+        )
+      }
+    } catch(err) {
+      console.log(err)
     }
+
 
     const headers = {
       ...init?.headers,

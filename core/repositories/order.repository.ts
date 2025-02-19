@@ -10,21 +10,26 @@ export class OrderApiRepository {
     endpoint: string,
     init?: RequestInit
   ): Promise<T> {
-    const token = await getToken()
+    let token: string | null = "";
 
-    if (!token) {
-      throw new Error(
-        'No se encontró un token válido. Inicie sesión nuevamente.'
-      )
+    try{
+      token = await getToken()
+      if (!token) {
+        throw new Error(
+          'No se encontró un token válido. Inicie sesión nuevamente.'
+        )
+      }
+    } catch(err) {
+      console.log(err)
     }
 
-    const headers = {
-      ...init?.headers,
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
-    }
 
     try {
+      const headers: HeadersInit = {
+        ...init?.headers,
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      }
       const response = await fetch(`${await getBaseUrl()}/${endpoint}`, {
         ...init,
         headers

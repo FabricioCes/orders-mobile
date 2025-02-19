@@ -17,12 +17,12 @@ export default function Login() {
   const { login } = useSettings();
 
   const handleLogin = async () => {
-    setError(""); // Limpiar error previo
-    const success = await login(user, pswd); // Ahora login retorna un booleano
+    setError("");
+    const success = await login(user, pswd);
     if (success) {
       router.replace("/(tabs)/comedor");
     } else {
-      setError("Usuario o contraseña incorrectos"); // Establecer mensaje de error
+      setError("Usuario o contraseña incorrectos");
     }
   };
 
