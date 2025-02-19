@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import { useSettings } from "../context/SettingsContext";
+import { useSettings } from "../../core/context/SettingsContext";
 import ComputerIdForm from "../components/settings/computer-id-form";
 import UserSection from "../components/settings/user-section";
 import LoginPrompt from "../components/settings/login-prompt";

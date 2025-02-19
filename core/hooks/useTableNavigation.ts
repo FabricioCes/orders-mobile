@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 import { Alert } from 'react-native'
 import { router } from 'expo-router'
-import { useSettings } from '@/context/SettingsContext'
-import { useOrderManagement } from '@/hooks/useOrderManagement'
+import { useSettings } from '@/core/context/SettingsContext'
+import { useOrderManagement } from '@/core/hooks/useOrderManagement'
 import { ActiveTable } from '@/types/tableTypes'
 import { orderService } from '@/core/services/order.service'
 
@@ -43,7 +43,8 @@ export const useTableNavigation = (place: string) => {
       place,
       isActive: isActive.toString(),
       orderId: activeOrder?.identificador || 0,
-      totalOrder: activeOrder?.totalConDescuento || 0
+      totalOrder: activeOrder?.totalConDescuento || 0,
+      isTemp: activeOrder?.esTemporal || false
     }
 
     handleNavigation(navigationParams)

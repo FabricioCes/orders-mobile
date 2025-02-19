@@ -4,9 +4,10 @@ import { Alert } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { Order } from '@/types/types';
 import { orderService } from '@/core/services/order.service';
-import { offlineService } from '@/core/services/offlineService';
+import { useOrder } from '../context/OrderContext';
 
 export const useOrderOperations = (orderId: number, order: Order) => {
+  const { dispatch } = useOrder();
   const handleModifyOrder = useCallback(
     async (action: () => Promise<void>, errorMessage: string) => {
       try {
@@ -59,7 +60,6 @@ export const useOrderOperations = (orderId: number, order: Order) => {
     const netState = await NetInfo.fetch();
 
     if (!netState.isConnected) {
-      await offlineService.saveOfflineOrder(orderId, order);
       Alert.alert(
         'Sin conexión',
         'La orden se guardará cuando se restablezca la conexión'
@@ -86,5 +86,12 @@ export const useOrderOperations = (orderId: number, order: Order) => {
 
   const clearCurrentOrder = () => orderService.clearCurrentOrder()
 
-  return { removeProduct, updateOrder, saveOrder, updateQuantity, clearCurrentOrder };
+  const temporaryRemoveOrderDetail = useCallback((detailId: number) => {
+
+    orderService.temporaryRemoveOrderDetail(detailId);
+
+    dispatch({ type: "REMOVE_ORDER_DETAIL", payload: detailId });
+  }, [dispatch]);
+
+  return { removeProduct, updateOrder, saveOrder, updateQuantity, clearCurrentOrder,temporaryRemoveOrderDetail };
 };

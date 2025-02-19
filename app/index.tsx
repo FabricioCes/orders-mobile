@@ -1,4 +1,4 @@
-import { useSettings } from "@/context/SettingsContext";
+import { useSettings } from "@/core/context/SettingsContext";
 import { Redirect, router } from "expo-router";
 import { useEffect } from "react";
 import { Alert } from "react-native";

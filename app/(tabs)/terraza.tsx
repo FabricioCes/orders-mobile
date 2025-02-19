@@ -1,5 +1,5 @@
 import Tables from '@/app/screens/tables-screen';
-import { useSettings } from '@/context/SettingsContext';
+import { useSettings } from '@/core/context/SettingsContext';
 
 export default function ZoneScreen() {
 

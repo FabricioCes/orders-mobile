@@ -1,8 +1,8 @@
 import React from "react";
-import { SettingsProvider } from "@/context/SettingsContext";
-import { OrderProvider } from "@/context/OrderContext";
-import { ProductsProvider } from "@/context/ProductsContext";
-import { CustomerProvider } from "@/app/context/CustomerContext";
+import { SettingsProvider } from "@/core/context/SettingsContext";
+import { OrderProvider } from "@/core/context/OrderContext";
+import { ProductsProvider } from "@/core/context/ProductsContext";
+import { CustomerProvider } from "@/core/context/CustomerContext";
 
 export default function Providers({ children, orderId,}: { children: React.ReactNode, orderId?: string}) {
   return (

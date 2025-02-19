@@ -1,4 +1,4 @@
-import { useSettings } from "@/app/context/SettingsContext";
+import { useSettings } from "@/core/context/SettingsContext";
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert, Modal, StyleSheet } from "react-native";
 import QRScanner from "./qr-scanner";

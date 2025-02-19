@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Customer } from "@/types/customerTypes";
 import { FontAwesome } from "@expo/vector-icons";
-import { useCustomer } from "@/app/context/CustomerContext";
+import { useCustomer } from "@/core/context/CustomerContext";
 import CustomerListItem from "./customer-list-item";
 
 interface CustomerGroupAccordionProps {

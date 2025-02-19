@@ -9,8 +9,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import TableGrid from "../components/tables/TableGrid";
-import { useTableNavigation } from "@/hooks/useTableNavigation";
-import { useSettings } from "@/context/SettingsContext";
+import { useTableNavigation } from "@/core/hooks/useTableNavigation";
+import { useSettings } from "@/core/context/SettingsContext";
 import { router } from "expo-router";
 
 type TablesProps = {

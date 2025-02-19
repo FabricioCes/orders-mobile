@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { router } from "expo-router";
-import { useSettings } from "@/app/context/SettingsContext";
+import { useSettings } from "@/core/context/SettingsContext";
 
 
 const UserSection = () => {

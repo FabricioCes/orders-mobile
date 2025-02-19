@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import { useCustomer } from "@/app/context/CustomerContext";
+import { useCustomer } from "@/core/context/CustomerContext";
 import { router } from "expo-router";
 import { CustomerApiRepository } from "@/core/repositories/customer.repository";
 

@@ -2,7 +2,7 @@ import { Tabs, useFocusEffect } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useColorScheme } from "react-native";
 import { useMemo, memo, useCallback } from "react";
-import { useTableNavigation } from "@/hooks/useTableNavigation";
+import { useTableNavigation } from "@/core/hooks/useTableNavigation";
 
 const staticTabs = [
   { name: "comedor", title: "Comedor", iconName: "home" },

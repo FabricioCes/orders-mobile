@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import React, { useState } from "react";
-import { useSettings } from "@/context/SettingsContext";
+import { useSettings } from "@/core/context/SettingsContext";
 import { router } from "expo-router";
 
 export default function Login() {

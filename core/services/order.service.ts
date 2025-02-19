@@ -6,8 +6,8 @@ import {
 } from '@/core/repositories/order.repository'
 import { Order, OrderDetail } from '@/types/types'
 import { ActiveTable } from '@/types/tableTypes'
-import { offlineService } from './offlineService'
-import generateUUID, { uuidEntero } from '@/utils/uuidUtils'
+
+import { uuidEntero } from '@/utils/uuidUtils'
 
 class OrderService {
   private orderSubject = new BehaviorSubject<Order | null>(null)
@@ -104,9 +104,6 @@ class OrderService {
         newOrder
       ])
 
-      // Persistencia offline
-      await offlineService.saveOfflineOrder(temporaryOrderId, newOrder)
-
       // Emitir orden actual
       this.orderSubject.next(newOrder)
       this.orderDetailsSubject.next([])
@@ -124,7 +121,6 @@ class OrderService {
     this.temporaryOrdersSubject.next(
       this.temporaryOrdersSubject.value.filter(o => o.numeroOrden !== orderId)
     )
-    offlineService.removeOfflineOrder(orderId)
   }
 
   // Para cargar mesas activas con datos combinados
@@ -165,7 +161,6 @@ class OrderService {
             detalles: updatedDetails
           }
           this.orderSubject.next(updatedOrder)
-          await offlineService.saveOfflineOrder(0, updatedOrder)
         }
       }
 
@@ -260,6 +255,30 @@ class OrderService {
     }
     this.orderSubject.next(updatedOrder)
     await OrderCacheRepository.cacheOrder(orderId, updatedOrder)
+  }
+
+  temporaryRemoveOrderDetail(detailId: number): void {
+    const currentDetails = this.orderDetailsSubject.value;
+    const updatedDetails = currentDetails.filter(
+      detail => detail.identificadorOrdenDetalle !== detailId
+    );
+    // Actualizamos el subject con los nuevos detalles
+    this.orderDetailsSubject.next(updatedDetails);
+
+    // Opcional: Actualizar el total de la orden si existe
+    const currentOrder = this.orderSubject.value;
+    if (currentOrder) {
+      const newTotal = updatedDetails.reduce(
+        (sum, detail) => sum + detail.costoUnitario * detail.cantidad,
+        0
+      );
+      const updatedOrder = {
+        ...currentOrder,
+        totalSinDescuento: newTotal,
+        detalles: updatedDetails,
+      };
+      this.orderSubject.next(updatedOrder);
+    }
   }
 }
 

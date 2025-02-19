@@ -5,11 +5,11 @@ import { router } from "expo-router";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
 import SearchBarCustomer from "../components/customers/search-bar-customer";
-import { useCustomer } from "@/app/context/CustomerContext";
-import { useSettings } from "../context/SettingsContext";
+import { useCustomer } from "@/core/context/CustomerContext";
+import { useSettings } from "../../core/context/SettingsContext";
 import { Customer } from "@/types/customerTypes";
 import CustomerList from "../components/customers/ItemCustomerList";
-import useCustomerSearch from "../hooks/usCustomerSearch";
+import useCustomerSearch from "../../core/hooks/usCustomerSearch";
 
 const CustomersScreen: React.FC = () => {
   const { settings, token } = useSettings();

@@ -3,8 +3,8 @@ import React, { useCallback } from "react";
 import { View, Text, FlatList, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native"; // <-- Importa useFocusEffect
-import { useProducts } from "@/context/ProductsContext";
-import { useOrderManagement } from "@/hooks/useOrderManagement";
+import { useProducts } from "@/core/context/ProductsContext";
+import { useOrderManagement } from "@/core/hooks/useOrderManagement";
 import ProductListItem from "@/components/products/product-list-item";
 import Toast from "react-native-toast-message";
 import CategoriesList from "../components/products/categories-list";

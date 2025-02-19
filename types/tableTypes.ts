@@ -26,5 +26,6 @@ export interface ActiveTable {
   totalServicio?: number;
   totalSinDescuento?: number;
   ubicacion?: string;
+  esTemporal?: boolean;
 
 }

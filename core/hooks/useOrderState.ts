@@ -8,7 +8,8 @@ export const useOrderState = (
   orderId: number,
   userName: string,
   token: string,
-  place: string
+  place: string,
+  isTemp: boolean
 ) => {
   const [state, setState] = useState<{
     order: Order | null
@@ -48,8 +49,10 @@ export const useOrderState = (
             }))
           })
         )
-        orderService.getOrder$(orderId).subscribe()
-        orderService.getOrderDetails$(orderId).subscribe()
+        if(orderId > 0 ) {
+          orderService.getOrder$(orderId).subscribe()
+          orderService.getOrderDetails$(orderId).subscribe()
+        }
       }
 
       return () => {

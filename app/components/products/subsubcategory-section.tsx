@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { Product } from "@/types/productTypes";
 import ProductListItem from "./product-list-item";
-import { useProducts } from "@/context/ProductsContext";
+import { useProducts } from "@/core/context/ProductsContext";
 
 interface SubSubCategorySectionProps {
   subSubCategory: { nombreSubSubCategoria: string };

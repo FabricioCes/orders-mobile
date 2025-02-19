@@ -1,7 +1,7 @@
 import { useOrderState } from './useOrderState'
 import { useOrderOperations } from './useOrderOperations'
 import { useProductManagement } from './useProductManagement'
-import { useProducts } from '@/context/ProductsContext'
+import { useProducts } from '@/core/context/ProductsContext'
 import { useEffect } from 'react'
 import { orderService } from '@/core/services/order.service'
 import { Subject, takeUntil } from 'rxjs'
@@ -13,7 +13,8 @@ export const useOrderManagement = (
   token: string,
   isActive: boolean,
   numeroMesa: string,
-  zona: string
+  zona: string,
+  isTemp: boolean = false
 ) => {
   const {
     order,
@@ -21,7 +22,7 @@ export const useOrderManagement = (
     details: orderDetails,
     loading,
     error
-  } = useOrderState(orderId, userName, token, zona)
+  } = useOrderState(orderId, userName, token, zona, isTemp)
   const { loading: productsLoading, error: productsError } = useProducts()
 
   const { addToOrder } = useProductManagement(orderId)
@@ -31,7 +32,8 @@ export const useOrderManagement = (
     updateOrder,
     saveOrder,
     updateQuantity,
-    clearCurrentOrder
+    clearCurrentOrder,
+    temporaryRemoveOrderDetail
   } = useOrderOperations(orderId, order!)
 
   useEffect(() => {
@@ -72,6 +74,7 @@ export const useOrderManagement = (
     addToOrder,
     updateQuantity,
     clearCurrentOrder,
-    createNewOrder
+    createNewOrder,
+    temporaryRemoveOrderDetail
   }
 }
