@@ -155,7 +155,12 @@ export default function OrderScreen() {
 
         {/* Resumen de la Orden con toggle en el encabezado */}
         <OrderSummaryItem
+          subtotal={0}
           total={order?.totalSinDescuento || 0}
+          tax={order?.totalIVA || 0}
+          service={order?.totalServicio || 0}
+          taxIncluded={true}
+          serviceIncluded={true}
           itemsCount={orderDetails.length}
           onSave={handleSaveOrder}
           isActive={isActive === "true"}

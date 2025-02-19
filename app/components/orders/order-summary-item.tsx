@@ -9,6 +9,11 @@ if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental
 
 type OrderSummaryItemProps = {
   total: number;
+  subtotal: number;
+  tax: number;
+  service: number;
+  taxIncluded: boolean;
+  serviceIncluded: boolean;
   itemsCount: number;
   onSave: () => void;
   isActive: boolean;
@@ -16,9 +21,13 @@ type OrderSummaryItemProps = {
   expanded: boolean;
   onToggle: () => void;
 };
-
 const OrderSummaryItem: React.FC<OrderSummaryItemProps> = ({
   total,
+  subtotal,
+  tax,
+  service,
+  taxIncluded,
+  serviceIncluded,
   itemsCount,
   onSave,
   isActive,
@@ -26,10 +35,8 @@ const OrderSummaryItem: React.FC<OrderSummaryItemProps> = ({
   expanded,
   onToggle,
 }) => {
-  const [showContent, setShowContent] = useState(expanded);
   const arrowRotation = useRef(new Animated.Value(expanded ? 1 : 0)).current;
 
-  // Animación suave del layout
   const toggleExpansion = () => {
     LayoutAnimation.configureNext({
       duration: 500, // Duración en ms
@@ -92,15 +99,36 @@ const OrderSummaryItem: React.FC<OrderSummaryItemProps> = ({
       {expanded && (
         <View style={{ marginTop: 16 }}>
           <View style={{ borderTopWidth: 1, borderColor: "#ccc", paddingTop: 16 }}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
-              <Text style={{ color: "#666" }}>Subtotal:</Text>
-              <Text style={{ fontWeight: "500" }}>₡{total.toFixed(2)}</Text>
+            {/* Subtotal */}
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Subtotal:</Text>
+              <Text style={styles.detailValue}>₡{subtotal.toFixed(2)}</Text>
             </View>
-            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-              <Text style={{ color: "#666" }}>Total:</Text>
-              <Text style={{ fontSize: 20, fontWeight: "bold", color: "#007bff" }}>
-                ₡{total.toFixed(2)}
-              </Text>
+
+            {/* Impuesto */}
+            {taxIncluded && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Impuesto ({13}%):</Text>
+                <Text style={styles.detailValue}>
+                  ₡{(tax).toFixed(2)}
+                </Text>
+              </View>
+            )}
+
+            {/* Servicio */}
+            {serviceIncluded && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Servicio ({10}%):</Text>
+                <Text style={styles.detailValue}>
+                  ₡{(service).toFixed(2)}
+                </Text>
+              </View>
+            )}
+
+            {/* Total */}
+            <View style={styles.detailRow}>
+              <Text style={styles.totalLabel}>Total:</Text>
+              <Text style={styles.totalValue}>₡{total.toFixed(2)}</Text>
             </View>
           </View>
           <TouchableOpacity
@@ -143,6 +171,29 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#007bff',
   },
+  detailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8
+  },
+  detailLabel: {
+    color: "#666",
+    fontSize: 14
+  },
+  detailValue: {
+    fontWeight: "500",
+    fontSize: 14
+  },
+  totalLabel: {
+    color: "#666",
+    fontSize: 16,
+    fontWeight: "600"
+  },
+  totalValue: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#007bff"
+  }
 
 });
 export default OrderSummaryItem;
