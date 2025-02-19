@@ -73,6 +73,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
+      console.log("login")
+      console.log(settings?.idComputadora)
       const response = await fetch(
         `http://${settings?.idComputadora}:5001/autenticacion/login`,
         {
@@ -81,8 +83,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           body: JSON.stringify({ nombre: username, clave: password }),
         }
       );
-
       const data = await response.json();
+      console.log(data)
 
       if (!response.ok) {
         Alert.alert(`No se pudo conectar con la base de datos: ${response.status}`);
@@ -107,7 +109,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  // Función para cerrar sesión
   const logOut = async () => {
     try {
       await AsyncStorage.removeItem("hasUser");

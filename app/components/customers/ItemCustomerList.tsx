@@ -85,7 +85,6 @@ const CustomerList: React.FC<CustomerListProps> = ({
       />
     );
   }
-};
 
 const styles = StyleSheet.create({
   listContent: {

@@ -2,7 +2,15 @@ import { Stack, useLocalSearchParams } from "expo-router";
 import { View, StyleSheet } from "react-native";
 import "../global.css";
 import Providers from "./providers";
-import { useEffect, useState } from "react";
+
+interface ScreenConfig {
+  name: string;
+  options: {
+    type?: "tabs" | "modal" | "default";
+    title: string;
+    animation?: "fade" | "slide_from_right" | "slide_from_bottom";
+  };
+}
 
 const SCREENS_CONFIG: ScreenConfig[] = [
   {
@@ -11,15 +19,14 @@ const SCREENS_CONFIG: ScreenConfig[] = [
       type: "tabs",
       title: "Inicio",
       animation: "fade",
-      headerShown: false,
     },
   },
   {
     name: "screens/order-screen",
     options: {
+      type: "default",
       title: "Detalle de Orden",
       animation: "slide_from_right",
-      type: "default",
     },
   },
   {
@@ -46,7 +53,7 @@ const SCREENS_CONFIG: ScreenConfig[] = [
       animation: "slide_from_bottom",
     },
   },
-] as const;
+];
 
 const THEME = {
   colors: {
@@ -84,27 +91,8 @@ const THEME = {
   },
 };
 
-interface ScreenConfig {
-  name: string;
-  options: {
-    type?: "tabs" | "modal" | "default";
-    title: string;
-    animation?: "fade" | "slide_from_right" | "slide_from_bottom";
-    headerShown?: boolean;
-  };
-}
-
 export default function RootLayout() {
   const { orderId } = useLocalSearchParams();
-  const [isAppReady, setIsAppReady] = useState(false);
-
-  useEffect(() => {
-    const initializeApp = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setIsAppReady(true);
-    };
-    initializeApp();
-  }, []);
 
   return (
     <Providers orderId={String(orderId)}>
@@ -116,34 +104,39 @@ export default function RootLayout() {
             fullScreenGestureEnabled: true,
           }}
         >
-          {SCREENS_CONFIG.map(({ name, options }) => (
-            <Stack.Screen
-              key={name}
-              name={name}
-              options={{
-                title: options.title,
-                headerShown: options.type === "tabs" ? false : true,
-                presentation: options.type === "modal" ? "modal" : "card",
-                headerStyle:
-                  options.type === "modal"
-                    ? THEME.headers.modal.headerStyle
-                    : THEME.headers.default.headerStyle,
-                headerTitleStyle:
-                  options.type === "modal"
-                    ? THEME.headers.modal.headerTitleStyle
-                    : THEME.headers.default.headerTitleStyle,
-                headerTintColor:
-                  options.type === "modal"
-                    ? THEME.headers.modal.headerTintColor
-                    : THEME.headers.default.headerTintColor,
-                animation: options.animation,
-                gestureDirection:
-                  options.animation === "slide_from_bottom"
-                    ? "vertical"
-                    : "horizontal",
-              }}
-            />
-          ))}
+          {SCREENS_CONFIG.map(({ name, options }) => {
+            const isModal = options.type === "modal";
+            const headerShown = options.type === "tabs" ? false : true;
+            const presentation = isModal ? "modal" : "card";
+            const headerStyle = isModal
+              ? THEME.headers.modal.headerStyle
+              : THEME.headers.default.headerStyle;
+            const headerTitleStyle = isModal
+              ? THEME.headers.modal.headerTitleStyle
+              : THEME.headers.default.headerTitleStyle;
+            const headerTintColor = isModal
+              ? THEME.headers.modal.headerTintColor
+              : THEME.headers.default.headerTintColor;
+            const gestureDirection =
+              options.animation === "slide_from_bottom" ? "vertical" : "horizontal";
+
+            return (
+              <Stack.Screen
+                key={name}
+                name={name}
+                options={{
+                  title: options.title,
+                  headerShown,
+                  presentation,
+                  headerStyle,
+                  headerTitleStyle,
+                  headerTintColor,
+                  animation: options.animation,
+                  gestureDirection,
+                }}
+              />
+            );
+          })}
         </Stack>
       </View>
     </Providers>
