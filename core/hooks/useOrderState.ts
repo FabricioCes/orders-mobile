@@ -8,8 +8,7 @@ export const useOrderState = (
   orderId: number,
   userName: string,
   token: string,
-  place: string,
-  isTemp: boolean
+  place: string
 ) => {
   const [state, setState] = useState<{
     order: Order | null
@@ -49,11 +48,7 @@ export const useOrderState = (
             }))
           })
         )
-        console.log("Obtener o no la orden y el detalle",isTemp, orderId)
-        if(!isTemp) {
-          orderService.getOrder$(orderId).subscribe()
-          orderService.getOrderDetails$(orderId).subscribe()
-        }
+
       }
 
       return () => {

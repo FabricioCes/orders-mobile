@@ -22,30 +22,28 @@ export default function OrderScreen() {
     isActive = "false",
     orderId = "0",
     userName = "",
-    token = "",
-    isTemp = false,
+    token = ""
   } = useLocalSearchParams();
-
+  const orderIdentify = Number(orderId);
   const { createNewOrder, clearCurrentOrder, temporaryRemoveOrderDetail } =
     useOrderManagement(
-      Number(orderId),
+      orderIdentify,
       String(userName),
       String(token),
       isActive === "true",
       String(tableId),
-      String(place),
-      Boolean(isTemp)
+      String(place)
     );
   const navigation = useNavigation();
 
   const { state, dispatch, fetchOrder } = useOrder();
   const { order, orderDetails } = state;
   const { order: orderFromService, details } = useOrderState(
-    Number(orderId),
+    orderIdentify,
     String(userName),
     String(token),
-    String(place),
-    Boolean(isTemp)
+    String(place
+    )
   );
 
   const { clearCustomer } = useCustomer();
@@ -78,7 +76,7 @@ export default function OrderScreen() {
 
   useEffect(() => {
     if (
-      Number(orderId) > 0 &&
+      orderIdentify > 0 &&
       order &&
       !order.esTemporal &&
       !hasOrderBeenModified()
@@ -86,7 +84,7 @@ export default function OrderScreen() {
       console.log("Fetch");
       fetchOrder(String(orderId));
       dirtyRef.current = true;
-    } else if (Number(orderId) === 0 && !order) {
+    } else if (orderIdentify === 0 && !order) {
       resetOrderState();
       createNewOrder();
       dirtyRef.current = true;
@@ -144,7 +142,7 @@ export default function OrderScreen() {
       <View className="flex-1">
         <CustomerSection
           customerId={Number(order?.idCliente ?? 0)}
-          orderId={Number(orderId)}
+          orderId={orderIdentify}
         />
         <View className="flex-1 border-t border-gray-200">
           <ProductSection onAddProduct={handleNavigateToProducts} />

@@ -6,6 +6,7 @@ import { Order } from '@/types/types';
 import { orderService } from '@/core/services/order.service';
 import { useOrder } from '../context/OrderContext';
 import { Product } from '@/types/productTypes';
+import { uuidEntero } from '@/utils/uuidUtils';
 
 export const useOrderOperations = (orderId: number, order: Order) => {
   const { dispatch } = useOrder();
@@ -29,7 +30,7 @@ export const useOrderOperations = (orderId: number, order: Order) => {
         precio: product.precio,
         costoUnitario: product.costo,
         identificadorOrden: orderId,
-        identificadorOrdenDetalle: Date.now(),
+        identificadorOrdenDetalle: uuidEntero(),
         identificadorProducto: product.identificador,
         impuestoProducto: product.impuesto ?? 0
       }

@@ -5,10 +5,12 @@ import { useSettings } from '@/core/context/SettingsContext'
 import { useOrderManagement } from '@/core/hooks/useOrderManagement'
 import { ActiveTable } from '@/types/tableTypes'
 import { orderService } from '@/core/services/order.service'
+import { useOrder } from '../context/OrderContext'
 
 export const useTableNavigation = (place: string) => {
   const { hasUser, checkTokenExpiration, settings, userName, token } = useSettings()
-  const { activeTables } = useOrderManagement(0,userName, token, false, '0', place)
+  const { activeTables} = useOrderManagement(0,userName, token, false, '0', place)
+  const {fetchOrder} = useOrder();
 
   const loadActiveTables = () => {
     try {
@@ -38,13 +40,15 @@ export const useTableNavigation = (place: string) => {
         order.zona.trim().toUpperCase() === place.trim().toUpperCase()
     )
   console.log("orden activa",JSON.stringify(activeOrder))
+    if(isActive && activeOrder?.identificador !== undefined) {
+      fetchOrder(activeOrder.identificador.toString());
+    }
     const navigationParams = {
       tableId,
       place,
       isActive: isActive.toString(),
       orderId: activeOrder?.identificador || 0,
-      totalOrder: activeOrder?.totalConDescuento || 0,
-      isTemp: !isActive
+      totalOrder: activeOrder?.totalConDescuento || 0
     }
     console.log("orden navigationParams",JSON.stringify(navigationParams))
     handleNavigation(navigationParams)

@@ -12,18 +12,16 @@ export const useOrderManagement = (
   token: string,
   isActive: boolean,
   numeroMesa: string,
-  zona: string,
-  isTemp: boolean = false
+  zona: string
 ) => {
 
-  console.log(isTemp, "Es Temporal")
   const {
     order,
     activeTables,
     details: orderDetails,
     loading,
     error
-  } = useOrderState(orderId, userName, token, zona, isTemp)
+  } = useOrderState(orderId, userName, token, zona)
   const { loading: productsLoading, error: productsError } = useProducts()
 
   const unmount$ = new Subject<void>();

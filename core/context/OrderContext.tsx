@@ -3,7 +3,9 @@ import React, {
   createContext,
   useReducer,
   useContext,
-  ReactNode
+  ReactNode,
+  useCallback,
+  useEffect
 } from "react";
 import { Order, OrderDetail } from "@/types/types";
 import { orderService } from "@/core/services/order.service";
@@ -83,10 +85,13 @@ export const OrderProvider = ({
 }) => {
   const [state, dispatch] = useReducer(orderReducer, initialState);
 
-  const fetchOrder = async (orderId: string) => {
+  const fetchOrder =  useCallback(async (orderId: string) => {
     try {
       const id = parseInt(orderId, 10);
-
+      if (isNaN(id)) {
+        dispatch({ type: "RESET_ORDER" });
+        return;
+      }
       orderService.getOrder$(id).subscribe({
         next: (order) => {
           dispatch({ type: "SET_ORDER", payload: order as Order });
@@ -111,7 +116,8 @@ export const OrderProvider = ({
       console.log("Error al obtener la orden:", error);
       dispatch({ type: "RESET_ORDER" });
     }
-  };
+  }, []);
+
 
   return (
     <OrderContext.Provider value={{ state, dispatch, fetchOrder, orderId }}>
