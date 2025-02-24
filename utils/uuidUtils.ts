@@ -11,4 +11,8 @@ export default function generateUUID () {
   return uuid
 }
 
-export const uuidEntero = ()=> Date.now() + Math.floor(Math.random() * 1000);
+export const uuidEntero = () => {
+  const timestamp = Date.now(); // Milisegundos desde 1970
+  const random = Math.floor(Math.random() * 1000000); // Rango de 0 a 999,999
+  return Number(`${timestamp}${random.toString().padStart(6, '0')}`);
+};
