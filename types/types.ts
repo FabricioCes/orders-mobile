@@ -79,12 +79,29 @@ export type OrderDetail = {
 };
 
 export interface GuardarOrdenRequest {
-  idUsuario: string
-  zona: string
-  mesa: string
-  detalles: OrderDetail[]
-  numeroOrden?: number
+  numeroOrden?: number;
+  numeroLugar?: string;
+  ubicacion: string;
+  observaciones?: string;
+  nombreCliente?: string;
+  idCliente?: number;
+  idUsuario: string;
+  autorizado: boolean;
+  totalSinDescuento?: number
+  imprimir: boolean;
+  detalles?: DetalleRequest[]
 }
+
+export interface DetalleRequest {
+  idProducto: number;
+  nombreProducto?: string;
+  cantidad: number;
+  precio?: number;
+  porcentajeDescProducto?: number;
+  ingrediente?: boolean;
+  quitarIngrediente?: boolean;
+}
+
 
 export interface MesasOcupadasDTO {
   zona: string

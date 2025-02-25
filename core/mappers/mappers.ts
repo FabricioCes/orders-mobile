@@ -1,13 +1,27 @@
-import { ActiveTable } from "@/types/tableTypes";
-import { Order } from "@/types/types";
+import { GuardarOrdenRequest, Order } from "@/types/types";
 
-export const mapOrdersToTables = (orders: Order[]): ActiveTable[] => {
-    return orders.map((order) => ({
-      identificador: order.numeroOrden,
-      numeroMesa: Number(order.numeroMesa),
-      zona: order.ubicacion,
-      nombreCliente: order.nombreCompletoCliente,
-      identificadorCliente: order.idCliente ?? 0,
-      totalConDescuento: order.totalConDescuento,
-    }));
+const mapToGuardarOrdenRequest = (order: Order, otrosValores: {imprimir: boolean, autorizado: boolean, quitarIngrediente: boolean}): GuardarOrdenRequest => {
+  return {
+    numeroOrden: order.numeroOrden,
+    numeroLugar: order.numeroMesa,
+    ubicacion: order.ubicacion || '',
+    observaciones: order.descripcion || '',
+    nombreCliente: order.nombreCliente || '',
+    idCliente: order.idCliente || 0,
+    idUsuario: order.idUsuario || 'admin',
+    autorizado: otrosValores.autorizado,
+    totalSinDescuento: order.totalSinDescuento,
+    imprimir: otrosValores.imprimir,
+    detalles: order.detalles?.map((detalle) => ({
+      idProducto: detalle.idProducto,
+      nombreProducto: detalle.nombreProducto,
+      cantidad: detalle.cantidad,
+      precio: detalle.costoUnitario,
+      porcentajeDescProducto: detalle.porcentajeDescuento || 0,
+      ingrediente: detalle.ingrediente || false,
+      quitarIngrediente: otrosValores.quitarIngrediente,
+    })),
   };
+}
+
+export default mapToGuardarOrdenRequest

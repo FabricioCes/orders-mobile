@@ -151,10 +151,11 @@ class TemporaryOrderService {
     return from(
       Promise.all(
         ordersToSync.map((order) =>
-          OrderApiRepository.createOrder(order).then(() => {
+          OrderApiRepository.createOrder(order).then((res) => {
             if (order.numeroOrden !== undefined) {
               this.removeTemporaryOrder(order.numeroOrden);
             }
+            order.numeroOrden = res;
           })
         )
       )

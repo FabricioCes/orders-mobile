@@ -1,28 +1,26 @@
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import { getBaseUrl } from '@/core/services/config'
 import { ApiResponse, Order, OrderDetail } from '@/types/types'
 import { Customer } from '@/types/customerTypes'
 import { ActiveTable } from '@/types/tableTypes'
 import { getToken } from '@/utils/tableUtils'
-
+import mapToGuardarOrdenRequest from '@/core/mappers/mappers'
 export class OrderApiRepository {
   private static async handleRequest<T> (
     endpoint: string,
     init?: RequestInit
   ): Promise<T> {
-    let token: string | null = "";
+    let token: string | null = ''
 
-    try{
+    try {
       token = await getToken()
       if (!token) {
         throw new Error(
           'No se encontró un token válido. Inicie sesión nuevamente.'
         )
       }
-    } catch(err) {
+    } catch (err) {
       console.log(err)
     }
-
 
     try {
       const headers: HeadersInit = {
@@ -40,13 +38,13 @@ export class OrderApiRepository {
       }
 
       const data: ApiResponse<T> = await response.json()
+
       if (data.error) {
         throw new Error(data.mensaje || 'Error en la respuesta de la API')
       }
-
       return data.resultado
     } catch (error) {
-      console.log('Error in handleRequest:', error)
+      console.log(error)
       throw new Error(
         'Error al procesar la solicitud: ' + (error as Error).message
       )
@@ -80,27 +78,41 @@ export class OrderApiRepository {
     const result = await this.handleRequest<OrderDetail[]>(
       `Orden/${orderId}/detalle`
     )
+    console.log('OBTENIENDO DETALLE DE ORDEN', result)
     return result
   }
 
   static async createOrder (order: Order): Promise<number> {
-    console.log("Creacion Orden")
     if (!order.detalles?.length) {
       throw new Error('La orden debe contener al menos un detalle')
     }
-    return this.handleRequest<number>('', {
+    order.numeroOrden = 0;
+    const mappedOrder = mapToGuardarOrdenRequest(order, {
+      imprimir: false,
+      autorizado: false,
+      quitarIngrediente: false
+    })
+    console.log('Creacion Orden:', mappedOrder)
+    return this.handleRequest<number>('Orden', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(order)
+      body: JSON.stringify(mappedOrder)
     })
   }
 
   static async updateOrder (order: Order): Promise<void> {
-    console.log("ACTUALIZACION DE ORDEN",order)
+    const mappedOrder = mapToGuardarOrdenRequest(order, {
+      imprimir: false,
+      autorizado: false,
+      quitarIngrediente: false
+    })
+
+    console.log('ORDEN MAPEADA: ', mappedOrder)
+
     await this.handleRequest<void>('Orden', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(order)
+      body: JSON.stringify(mappedOrder)
     })
   }
 
