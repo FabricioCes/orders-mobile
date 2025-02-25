@@ -1,22 +1,21 @@
+// context/SettingsContext.tsx
 import React, { createContext, useContext, useState, useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
-import { jwtDecode } from "jwt-decode";
-import { Alert } from "react-native";
-
-type SettingsType = {
-  idComputadora?: string;
-};
+import { SettingsService } from "../services/settings.service";
+import { TokenService } from "../services/token.service";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AuthService } from "../services/auth.service";
+import { ZonaService } from "../services/zone.service";
 
 type SettingsContextType = {
-  saveSettings: (value: Partial<SettingsType>) => void;
+  saveSettings: (value: any) => void;
   login: (username: string, password: string) => Promise<boolean>;
   logOut: () => void;
-  settings: SettingsType | null;
-  hasUser: boolean;
+  settings: any;
+  isLogin: boolean;
   userName: string;
   token: string;
-  checkTokenExpiration: () => void;
+  checkTokenExpiration: () => Promise<boolean>;
   zonas: Record<string, number>;
   fetchZonasMesas: () => Promise<void>;
   loadingZonas: boolean;
@@ -25,163 +24,82 @@ type SettingsContextType = {
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [settings, setSettings] = useState<SettingsType | null>(null);
-  const [hasUser, setHasUser] = useState<boolean>(false);
+  const [settings, setSettings] = useState<any>(null);
+  const [isLogin, setisLogin] = useState<boolean>(false);
   const [userName, setUserName] = useState<string>("");
   const [token, setToken] = useState<string>("");
   const [zonas, setZonas] = useState<Record<string, number>>({});
   const [loadingZonas, setLoadingZonas] = useState(false);
 
-  const saveSettings = async (value: Partial<SettingsType>) => {
-    try {
-      const updatedSettings: SettingsType = { ...settings, ...value };
-      await AsyncStorage.setItem("settings", JSON.stringify(updatedSettings));
-      setSettings(updatedSettings);
-    } catch (error) {
-      console.log("Error al guardar en AsyncStorage:", error);
-    }
+  const saveSettings = async (value: any) => {
+    await SettingsService.saveSettings(value);
+    setSettings(value);
   };
 
   const loadSettings = async () => {
-    try {
-      const storedSettings = await AsyncStorage.getItem("settings");
-      const userStatus = await AsyncStorage.getItem("hasUser");
-      const savedToken = await AsyncStorage.getItem("token");
-      const savedUserName = await AsyncStorage.getItem("userName");
+    const storedSettings = await SettingsService.loadSettings();
+    const savedToken = await TokenService.getToken();
+    const userStatus = await AsyncStorage.getItem("isLogin");
+    const savedUserName = await AsyncStorage.getItem("userName");
 
-      if (storedSettings) {
-        setSettings(JSON.parse(storedSettings));
-      }
+    if (storedSettings) setSettings(storedSettings);
+    if (savedToken) setToken(savedToken);
+    if (userStatus === "true") setisLogin(true);
+    if (savedUserName) setUserName(savedUserName);
 
-      if (userStatus === "true") {
-        setHasUser(true);
-      }
-
-      if (savedToken) {
-        setToken(savedToken);
-      }
-
-      if (savedUserName) {
-        setUserName(savedUserName);
-      }
-
-      checkTokenExpiration();
-    } catch (error) {
-      console.log("Error al cargar datos de AsyncStorage:", error);
-    }
+    checkTokenExpiration();
   };
 
   const login = async (username: string, password: string): Promise<boolean> => {
-    try {
-      console.log("login")
-      console.log(settings?.idComputadora)
-      const response = await fetch(
-        `http://${settings?.idComputadora}:5001/autenticacion/login`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nombre: username, clave: password }),
-        }
-      );
-      const data = await response.json();
-      console.log(data)
-
-      if (!response.ok) {
-        Alert.alert(`No se pudo conectar con la base de datos: ${response.status}`);
-        return false;
-      }
-
-      if (response.ok && data.resultado) {
-        await AsyncStorage.setItem("token", data.resultado);
-        await AsyncStorage.setItem("hasUser", "true");
-        await AsyncStorage.setItem("userName", username);
-        setToken(data.resultado);
-        setHasUser(true);
-        setUserName(username);
-        return true; // Login exitoso
-      } else {
-        Alert.alert("Error iniciando sesión");
-        return false; // Login fallido
-      }
-    } catch (error) {
-      console.log("Error de red o servidor", error);
-      return false; // Error de red o servidor
+    const apiUrl = `http://${settings?.idComputadora}:5001`;
+    const success = await AuthService.login(username, password, apiUrl);
+    if (success) {
+      setisLogin(true);
+      setUserName(username);
+      const token = await TokenService.getToken();
+      setToken(token ?? "");
+      fetchZonasMesas();
     }
+    return success;
   };
 
   const logOut = async () => {
-    try {
-      await AsyncStorage.removeItem("hasUser");
-      await AsyncStorage.removeItem("token");
-      setHasUser(false);
-      setUserName("");
-      setToken("");
-      router.navigate("/components/login"); // Redirige al login
-    } catch (error) {
-      console.log("Error al cerrar sesión:", error);
-    }
+    await AuthService.logout();
+    setisLogin(false);
+    setUserName("");
+    setToken("");
+    router.navigate("/components/login");
   };
 
-  const checkTokenExpiration = async () => {
-    if (!token) return;
-
-    try {
-      const decodedToken: { exp: number } = jwtDecode(token);
-      const currentTime = Math.floor(Date.now() / 1000);
-      if (decodedToken.exp < currentTime) {
-        await logOut();
-      }
-    } catch (error) {
-      console.log("Error al decodificar el token:", error);
-      await logOut();
-    }
+  const checkTokenExpiration = async ():Promise<boolean> => {
+    const isValid = await TokenService.checkTokenExpiration(token);
+//TODO CAMBIAR POR UNA  REFRESCAMIENTO  DETOKEN
+    return isValid;
   };
 
   const fetchZonasMesas = async () => {
-    if (!settings?.idComputadora || !token) {
-      console.log(`No se han configurado las credenciales {${settings?.idComputadora}, ${token}}`);
-      setLoadingZonas(false);
-      return;
-    }
+    if (!settings?.idComputadora || !token) return;
 
-    try {
-      setLoadingZonas(true);
-      const response = await fetch(
-        `http://${settings.idComputadora}:5001/Parametro/cantidad/mesas`,
-        {
-          method: "GET",
-          headers: { 
-            Accept: "application/json",
-            'Authorization': `Bearer ${token}`,
-           },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setZonas(data.resultado || {});
-    } catch (error) {
-      console.log("Error obteniendo zonas:", error);
-      Alert.alert("Error", "No se pudieron obtener las zonas y mesas");
-      setZonas({});
-    } finally {
-      setLoadingZonas(false);
-    }
-  };
-  const init = async () => {
-    await loadSettings();
-    if (settings?.idComputadora && token) {
-      await fetchZonasMesas(); // Llamada solo cuando settings y token están disponibles
-    }
+    setLoadingZonas(true);
+    const apiUrl = `http://${settings.idComputadora}:5001`;
+    const zonasData = await ZonaService.fetchZonasMesas(apiUrl, token);
+    setZonas(zonasData);
+    setLoadingZonas(false);
   };
 
   useEffect(() => {
-    init(); // Ejecutar la inicialización al montar el componente
-  }, [settings?.idComputadora, token]); // Dependencias para ejecutar cuando estén disponibles settings.idComputadora y token
+    loadSettings();
+  }, []);
 
+  useEffect(() => {
+    const fetchZonas = async () => {
+      const isValidToken = await checkTokenExpiration();
+      if(isValidToken) {
+        await fetchZonasMesas()
+      }
+    }
+    fetchZonas()
+  }, [token]);
 
   return (
     <SettingsContext.Provider
@@ -189,7 +107,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         settings,
         saveSettings,
         login,
-        hasUser,
+        isLogin,
         userName,
         logOut,
         token,
