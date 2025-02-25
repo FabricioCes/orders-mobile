@@ -1,13 +1,9 @@
-// RootLayout.tsx
 import { Stack, useLocalSearchParams } from "expo-router";
-import { View, StyleSheet, AppState } from "react-native";
+import { View, StyleSheet } from "react-native";
 import "../global.css";
 import Providers from "./providers";
 import { signalRService } from "@/core/services/real-time.service";
 import { useEffect } from "react";
-import { orderService } from "@/core/services/order.service";
-import { TokenService } from "@/core/services/token.service";
-import { AuthService } from "@/core/services/auth.service";
 
 interface ScreenConfig {
   name: string;
@@ -76,7 +72,7 @@ const THEME = {
         shadowOpacity: 0.1,
       },
       headerTitleStyle: {
-        fontWeight: "bold",
+        fontWeight: "700" as const, // Usar un valor literal permitido
         fontSize: 18,
       },
       headerTintColor: "#fff",
@@ -88,7 +84,7 @@ const THEME = {
         shadowOpacity: 0.15,
       },
       headerTitleStyle: {
-        fontWeight: "bold",
+        fontWeight: "700" as const, // Usar un valor literal permitido
         color: "#1E3A8A",
         fontSize: 18,
       },
@@ -97,56 +93,29 @@ const THEME = {
   },
 };
 
-/**
- * Hook que se encarga de cargar las órdenes activas tanto al montar
- * el componente como al cambiar el estado de la app a "active".
- */
-function useActiveOrders() {
-  useEffect(() => {
-    const loadActiveOrders = async () => {
-      const token = await TokenService.getToken();
-      const isLogin = await AuthService.isLogin();
-      if (await TokenService.checkTokenExpiration(String(token)) && isLogin) {
-        // Se suscribe a las órdenes activas
-        await orderService.loadActiveOrders()
-      }
-    };
-
-    // Cargar órdenes activas al montar
-    loadActiveOrders();
-
-    // Escuchar cambios en el estado de la aplicación
-    const subscription = AppState.addEventListener("change", async (state) => {
-      if (state === "active") {
-        loadActiveOrders();
-      }
-    });
-
-    return () => subscription.remove();
-  }, []);
-}
-
 export default function RootLayout() {
   const { orderId } = useLocalSearchParams();
 
   useEffect(() => {
     signalRService.start();
     return () => {
-      // Si es necesario, se puede detener la conexión aquí
+      // Si es necesario, detener la conexión aquí
     };
   }, []);
-
-  // Uso del hook para cargar órdenes activas
-  useActiveOrders();
 
   return (
     <Providers orderId={String(orderId)}>
       <View style={styles.container}>
         <Stack
           screenOptions={{
-            ...THEME.headers.default,
             gestureEnabled: true,
             fullScreenGestureEnabled: true,
+            headerStyle: THEME.headers.default.headerStyle,
+            headerTitleStyle: {
+              fontWeight: "700" as const, // Usar un valor literal permitido
+              fontSize: 18,
+            },
+            headerTintColor: THEME.headers.default.headerTintColor,
           }}
         >
           {SCREENS_CONFIG.map(({ name, options }) => {
