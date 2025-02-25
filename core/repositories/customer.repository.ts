@@ -45,7 +45,6 @@ export class CustomerApiRepository {
       }
       return data.resultado
     } catch (error) {
-      console.log('Error in handleRequest:', error)
       throw new Error(
         'Error al procesar la solicitud: ' + (error as Error).message
       )

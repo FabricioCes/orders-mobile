@@ -9,7 +9,7 @@ import { useCustomer } from "@/core/context/CustomerContext";
 import { useSettings } from "../../core/context/SettingsContext";
 import { Customer } from "@/types/customerTypes";
 import CustomerList from "../components/customers/ItemCustomerList";
-import useCustomerSearch from "../../core/hooks/usCustomerSearch";
+import useCustomerSearch from "../../core/hooks/useCustomerSearch";
 
 const CustomersScreen: React.FC = () => {
   const { settings, token } = useSettings();

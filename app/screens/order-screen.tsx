@@ -1,4 +1,3 @@
-// OrderScreen.tsx
 import { useState, useCallback, useEffect, useRef } from "react";
 import { View, Alert, Text } from "react-native";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
@@ -9,87 +8,85 @@ import { OrderDetail } from "@/types/types";
 import ProductOptionsModal from "../components/products/product-option-modal";
 import QuantityModal from "../components/products/quantity-modal";
 import OrderDetailsList from "../components/orders/order-details-list";
-import { orderService } from "@/core/services/order.service";
-import { useOrder } from "@/core/context/OrderContext";
-import { useOrderState } from "@/core/hooks/useOrderState";
-import { useOrderManagement } from "../../core/hooks/useOrderManagement";
 import { useCustomer } from "../../core/context/CustomerContext";
+import { useOrder } from "@/core/context/OrderContext";
+import Toast from "react-native-toast-message";
+import { temporaryOrderService } from "@/core/services/temporary_order.service";
+import { useOrderOperations } from "@/core/hooks/useOrderOperations";
 
 export default function OrderScreen() {
   const {
     tableId = "0",
     place = "",
     isActive = "false",
-    orderId = "0",
-    userName = "",
-    token = ""
+    orderId = "0"
   } = useLocalSearchParams();
   const orderIdentify = Number(orderId);
-  const { createNewOrder, clearCurrentOrder, temporaryRemoveOrderDetail } =
-    useOrderManagement(
-      orderIdentify,
-      String(userName),
-      String(token),
-      isActive === "true",
-      String(tableId),
-      String(place)
-    );
   const navigation = useNavigation();
 
-  const { state, dispatch, fetchOrder } = useOrder();
-  const { order, orderDetails } = state;
-  const { order: orderFromService, details } = useOrderState(
-    orderIdentify,
-    String(userName),
-    String(token),
-    String(place
-    )
-  );
-
+  const {
+    state: { order, orderDetails, loading, error },
+    dispatch,
+  } = useOrder();
   const { clearCustomer } = useCustomer();
+
+  // Hook de operaciones (guardar, eliminar, actualizar, etc.)
+  const {
+    loadOrder,
+    saveOrder,
+    removeProduct,
+    updateQuantity
+  } = useOrderOperations(orderIdentify, order);
 
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [selectedOrderDetail, setSelectedOrderDetail] =
     useState<OrderDetail | null>(null);
-
-  // Estado para controlar la visibilidad del resumen
   const [showSummary, setShowSummary] = useState(true);
 
-  const dirtyRef = useRef(false);
+  const hasInitializedOrder = useRef(false);
+  const isTemporary = order?.esTemporal ?? false;
 
+  const subtotal = isTemporary
+    ? orderDetails.reduce(
+        (sum, detail) => sum + detail.costoUnitario * detail.cantidad,
+        0
+      )
+    : order?.totalSinDescuento || 0;
+
+    useEffect(() => {
+      const createTemporalOrder = async () => {
+        if (orderIdentify === 0 && !order && !hasInitializedOrder.current) {
+          hasInitializedOrder.current = true;
+          try {
+            dispatch({ type: "SET_LOADING", payload: true });
+            const newOrder = await temporaryOrderService.createTemporaryOrder(
+              String(tableId),
+              String(place)
+            );
+            router.setParams({
+              orderId: newOrder.numeroOrden?.toString(),
+              tableId: newOrder.numeroMesa?.toString() ?? "0",
+              place: newOrder.ubicacion,
+            });
+            dispatch({ type: "SET_ORDER", payload: newOrder });
+            dispatch({ type: "SET_ORDER_DETAILS", payload: [] });
+          } catch (error) {
+            dispatch({ type: "SET_ERROR", payload: error instanceof Error ? error.message : "Unknown error" });
+          } finally {
+            dispatch({ type: "SET_LOADING", payload: false });
+          }
+        }
+      };
+      createTemporalOrder();
+    }, [orderIdentify, order, tableId, place, dispatch]);
+
+  // Si ya existe un orderId válido, se carga la orden desde el API vía el hook
   useEffect(() => {
-    if (orderFromService)
-      dispatch({ type: "SET_ORDER", payload: orderFromService });
-    if (details?.length)
-      dispatch({ type: "SET_ORDER_DETAILS", payload: details });
-  }, [orderFromService, details, dispatch]);
-
-  function hasOrderBeenModified() {
-    return dirtyRef.current;
-  }
-  const resetOrderState = () => {
-    dispatch({ type: "RESET_ORDER" });
-    clearCurrentOrder();
-    clearCustomer();
-  };
-
-  useEffect(() => {
-    if (
-      orderIdentify > 0 &&
-      order &&
-      !order.esTemporal &&
-      !hasOrderBeenModified()
-    ) {
-      console.log("Fetch");
-      fetchOrder(String(orderId));
-      dirtyRef.current = true;
-    } else if (orderIdentify === 0 && !order) {
-      resetOrderState();
-      createNewOrder();
-      dirtyRef.current = true;
+    if (!order?.esTemporal) {
+      loadOrder();
     }
-  }, [orderId, tableId, order]);
+  }, [order?.esTemporal, loadOrder]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("beforeRemove", (e) => {
@@ -99,19 +96,23 @@ export default function OrderScreen() {
         {
           text: "Salir",
           onPress: () => {
-            resetOrderState();
+            dispatch({ type: "RESET_ORDER" });
+            clearCustomer();
             navigation.dispatch(e.data.action);
           },
         },
       ]);
     });
     return unsubscribe;
-  }, [navigation]);
+  }, [navigation, dispatch, clearCustomer]);
 
   const handleNavigateToProducts = useCallback(() => {
     router.navigate({
       pathname: "/screens/products-screen",
-      params: { orderId: order?.numeroOrden?.toString() ?? "0", isActive },
+      params: {
+        order: JSON.stringify(order),
+        isActive,
+      },
     });
   }, [order, isActive]);
 
@@ -120,14 +121,58 @@ export default function OrderScreen() {
     setShowOptionsModal(true);
   }, []);
 
-  const handleSaveOrder = useCallback(() => {
-    if (order) {
-      orderService
-        .saveOrder({ ...order, detalles: orderDetails })
-        .then(() => Alert.alert("Éxito", "Orden guardada correctamente"))
-        .catch(() => Alert.alert("Error", "Error al guardar la orden"));
+  // Utiliza el hook para guardar la orden
+  const handleSaveOrder = useCallback(async () => {
+    if (!order) return;
+
+    try {
+      dispatch({ type: "SET_LOADING", payload: true });
+      await saveOrder();
+      Toast.show({
+        type: "success",
+        text1: "Orden guardada",
+        text2: "La orden se ha guardado correctamente.",
+      });
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2:
+          error instanceof Error
+            ? error.message
+            : "No se pudo guardar la orden.",
+      });
+    } finally {
+      dispatch({ type: "SET_LOADING", payload: false });
     }
-  }, [order, orderDetails]);
+  }, [order, dispatch, saveOrder]);
+
+  // En el modal de opciones, al eliminar se usa la función del hook
+  const handleDeleteProduct = useCallback(() => {
+    if (selectedOrderDetail) {
+      removeProduct(selectedOrderDetail.idOrdenDetalle);
+      setShowOptionsModal(false);
+    }
+  }, [selectedOrderDetail, removeProduct]);
+
+  // Para actualizar la cantidad se llama al hook y luego se cierra el modal
+  const handleUpdateQuantity = useCallback(
+    (newQuantity: number) => {
+      if (selectedOrderDetail) {
+        updateQuantity(selectedOrderDetail.idProducto, newQuantity);
+        setShowQuantityModal(false);
+      }
+    },
+    [selectedOrderDetail, updateQuantity]
+  );
+
+  if (error) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text className="text-red-500">{error}</Text>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -152,18 +197,17 @@ export default function OrderScreen() {
           />
         </View>
 
-        {/* Resumen de la Orden con toggle en el encabezado */}
         <OrderSummaryItem
-          subtotal={0}
-          total={order?.totalSinDescuento || 0}
-          tax={order?.totalIVA || 0}
-          service={order?.totalServicio || 0}
-          taxIncluded={true}
-          serviceIncluded={true}
+          subtotal={subtotal}
+          total={subtotal}
+          tax={isTemporary ? 0 : order?.totalIVA || 0}
+          service={isTemporary ? 0 : order?.totalServicio || 0}
+          taxIncluded={!isTemporary}
+          serviceIncluded={!isTemporary}
           itemsCount={orderDetails.length}
           onSave={handleSaveOrder}
           isActive={isActive === "true"}
-          isSaving={false}
+          isSaving={loading}
           expanded={showSummary}
           onToggle={() => setShowSummary(!showSummary)}
         />
@@ -174,12 +218,7 @@ export default function OrderScreen() {
           visible={showOptionsModal}
           product={selectedOrderDetail}
           onCancel={() => setShowOptionsModal(false)}
-          onDelete={() => {
-            temporaryRemoveOrderDetail(
-              selectedOrderDetail.identificadorOrdenDetalle
-            );
-            setShowOptionsModal(false);
-          }}
+          onDelete={handleDeleteProduct}
           onModify={() => {
             setShowOptionsModal(false);
             setShowQuantityModal(true);
@@ -192,13 +231,7 @@ export default function OrderScreen() {
           visible={showQuantityModal}
           product={selectedOrderDetail}
           onCancel={() => setShowQuantityModal(false)}
-          onConfirm={(newQuantity) => {
-            dispatch({
-              type: "UPDATE_ORDER_DETAIL",
-              payload: { ...selectedOrderDetail, cantidad: newQuantity },
-            });
-            setShowQuantityModal(false);
-          }}
+          onConfirm={handleUpdateQuantity}
         />
       )}
     </View>

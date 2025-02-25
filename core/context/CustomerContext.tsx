@@ -60,7 +60,6 @@ const customerReducer = (
     case "SET_SELECTED_CUSTOMER":
       return { ...state, selectedCustomer: action.payload };
     case "CLEAR_SELECTED_CUSTOMER":
-      console.log("clear Selected Customer");
       return { ...state, selectedCustomer: undefined };
     default:
       return state;

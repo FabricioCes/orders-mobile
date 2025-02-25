@@ -1,50 +1,89 @@
-
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
-import NetInfo from '@react-native-community/netinfo';
-import { Order } from '@/types/types';
+import { Order, OrderDetail } from '@/types/types';
 import { orderService } from '@/core/services/order.service';
+import { temporaryOrderService } from '@/core/services/temporary_order.service';
 import { useOrder } from '../context/OrderContext';
 import { Product } from '@/types/productTypes';
 import { uuidEntero } from '@/utils/uuidUtils';
+import { firstValueFrom } from 'rxjs';
 
-export const useOrderOperations = (orderId: number, order: Order) => {
+export const useOrderOperations = (orderId: number, currentOrder: Order | null = null) => {
   const { dispatch } = useOrder();
-  const handleModifyOrder = useCallback(
-    async (action: () => Promise<void>, errorMessage: string) => {
+  const [_, setIsInitialLoad] = useState(true);
+  const isTemporary = currentOrder?.esTemporal ?? orderId <= 0;
+
+  const handleAPIOperation = useCallback(
+    async <T>(operation: () => Promise<T>, errorMessage: string) => {
       try {
-        await action();
+        const result = await operation();
+        return result;
       } catch (error) {
-        Alert.alert('Error', errorMessage);
+        const errorDetail = error instanceof Error ? error.message : 'Unknown error';
+        Alert.alert('Error', `${errorMessage}: ${errorDetail}`);
         throw error;
       }
     },
     []
   );
 
+  const loadOrder = useCallback(async () => {
+    if (isTemporary) {
+      const tempOrder = temporaryOrderService.getTemporaryOrder(orderId);
+      if (tempOrder) {
+        dispatch({ type: 'SET_ORDER', payload: tempOrder });
+        dispatch({ type: 'SET_ORDER_DETAILS', payload: tempOrder.detalles || [] });
+      }
+    } else {
+      try {
+        dispatch({ type: 'SET_LOADING', payload: true });
+        const order = await orderService.getOrder(orderId);
+        const details = await orderService.getOrderDetails(orderId);
+        dispatch({ type: 'SET_ORDER', payload: order });
+        dispatch({ type: 'SET_ORDER_DETAILS', payload: details });
+      } catch (error) {
+        dispatch({
+          type: 'SET_ERROR',
+          payload: error instanceof Error ? error.message : 'Unknown error',
+        });
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
+        setIsInitialLoad(false);
+      }
+    }
+  }, [orderId, dispatch, isTemporary]);
+
   const addToOrder = useCallback(
     async (product: Product, quantity: number = 1) => {
-      const orderDetail = {
+      const newDetail: OrderDetail = {
         cantidad: quantity,
         nombreProducto: product.nombre,
-        precio: product.precio,
         costoUnitario: product.costo,
-        identificadorOrden: orderId,
-        identificadorOrdenDetalle: uuidEntero(),
-        identificadorProducto: product.identificador,
-        impuestoProducto: product.impuesto ?? 0
-      }
+        idOrden: orderId,
+        idOrdenDetalle: uuidEntero(),
+        idProducto: product.identificador,
+        impuestoProducto: product.impuesto ?? 0,
+      };
 
-      try {
-        const result = await orderService.addProduct(orderId, orderDetail)
-        return result
-      } catch (error) {
-        console.log('Error adding product:', error)
-        throw error
+      if (isTemporary) {
+        const tempOrder = temporaryOrderService.getTemporaryOrder(orderId);
+        if (!tempOrder) {
+          throw new Error('No se encontró la orden temporal');
+        }
+        const updatedOrder = temporaryOrderService.addOrderDetail(orderId, newDetail);
+        if (updatedOrder) {
+          dispatch({ type: 'SET_ORDER', payload: updatedOrder });
+          dispatch({ type: 'SET_ORDER_DETAILS', payload: updatedOrder.detalles || [] });
+        }
+        return updatedOrder?.detalles;
+      } else {
+        const updatedDetails = await orderService.addProduct(orderId, newDetail);
+        dispatch({ type: 'SET_ORDER_DETAILS', payload: updatedDetails });
+        return updatedDetails;
       }
     },
-    [orderId]
-  )
+    [orderId, dispatch, isTemporary]
+  );
 
   const removeProduct = useCallback(
     (detailId: number) => {
@@ -53,71 +92,135 @@ export const useOrderOperations = (orderId: number, order: Order) => {
         {
           text: 'Eliminar',
           style: 'destructive',
-          onPress: () => handleModifyOrder(
-            () => orderService.removeProduct(orderId, detailId),
-            'Error al eliminar producto'
-          )
-        }
+          onPress: async () => {
+            if (isTemporary) {
+              const updatedOrder = temporaryOrderService.removeOrderDetail(orderId, detailId);
+              if (updatedOrder) {
+                dispatch({ type: 'SET_ORDER', payload: updatedOrder });
+                dispatch({ type: 'SET_ORDER_DETAILS', payload: updatedOrder.detalles || [] });
+              }
+            } else {
+              await orderService.removeProduct(orderId, detailId);
+              const updatedDetails = await orderService.getOrderDetails(orderId);
+              dispatch({ type: 'SET_ORDER_DETAILS', payload: updatedDetails });
+            }
+          },
+        },
       ]);
     },
-    [handleModifyOrder, orderId]
+    [orderId, dispatch, isTemporary]
   );
 
-
   const updateQuantity = useCallback(
-    (productId: number, quantity: number) => {
-      handleModifyOrder(
-        () => orderService.updateProductQuantity(orderId, productId, quantity),
-        'Error al actualizar la cantidad'
-      );
+    async (productId: number, quantity: number) => {
+      if (isTemporary) {
+        const tempOrder = temporaryOrderService.getTemporaryOrder(orderId);
+        if (!tempOrder || !tempOrder.detalles) return;
+        const detail = tempOrder.detalles.find((d) => d.idProducto === productId);
+        if (detail) {
+          const updatedOrder = temporaryOrderService.updateOrderDetail(
+            orderId,
+            detail.idOrdenDetalle,
+            { cantidad: quantity }
+          );
+          if (updatedOrder) {
+            dispatch({ type: 'SET_ORDER', payload: updatedOrder });
+            dispatch({ type: 'SET_ORDER_DETAILS', payload: updatedOrder.detalles || [] });
+          }
+        }
+      } else {
+        await orderService.updateProductQuantity(orderId, productId, quantity);
+        const updatedDetails = await orderService.getOrderDetails(orderId);
+        dispatch({ type: 'SET_ORDER_DETAILS', payload: updatedDetails });
+        const updatedOrder = await orderService.getOrder(orderId);
+        dispatch({ type: 'SET_ORDER', payload: updatedOrder });
+      }
     },
-    [handleModifyOrder, orderId]
+    [orderId, dispatch, isTemporary]
   );
 
   const updateOrder = useCallback(
-    (order: Order) => handleModifyOrder(
-      () => orderService.saveOrder(order),
-      'Error al actualizar la orden'
-    ),
-    [handleModifyOrder]
+    async (order: Order) => {
+      if (isTemporary) {
+        const updatedOrder = temporaryOrderService.getTemporaryOrder(orderId);
+        if (updatedOrder) {
+          dispatch({ type: 'SET_ORDER', payload: { ...updatedOrder, ...order } });
+          dispatch({ type: 'SET_ORDER_DETAILS', payload: updatedOrder.detalles || [] });
+        }
+      } else {
+        const savedOrder = await orderService.saveOrder(order);
+        dispatch({ type: 'SET_ORDER', payload: savedOrder });
+      }
+    },
+    [orderId, dispatch, isTemporary]
   );
 
   const saveOrder = useCallback(async () => {
-    const netState = await NetInfo.fetch();
+    if (!currentOrder) return;
 
-    if (!netState.isConnected) {
-      Alert.alert(
-        'Sin conexión',
-        'La orden se guardará cuando se restablezca la conexión'
-      );
-      return;
-    }
+    return handleAPIOperation(async () => {
+      let savedOrder: Order | undefined;
 
-    Alert.alert('Guardar Orden', '¿Deseas guardar esta orden?', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Guardar',
-        onPress: () => handleModifyOrder(
-          () => {
-            const result = orderService.saveOrder(order)
-            Alert.alert('Éxito', 'Orden guardada correctamente');
-            return result;
-
-          },
-          'Error al guardar la orden'
-        )
+      if (isTemporary) {
+        // Sincronizar órdenes temporales con el servidor
+        await firstValueFrom(temporaryOrderService.syncTemporaryOrders());
+        // Obtener la orden temporal actualizada (puede que ya no exista localmente tras la sincronización)
+        const tempOrder = temporaryOrderService.getTemporaryOrder(orderId);
+        if (tempOrder) {
+          // Si aún está localmente, usarla; de lo contrario, recargar desde el servidor
+          savedOrder = tempOrder;
+        } else {
+          // Asumimos que la orden temporal se convirtió en persistente; recargar desde el servidor
+          savedOrder = await orderService.getOrder(orderId);
+        }
+      } else {
+        // Sincronizar órdenes persistentes con el servidor
+        await firstValueFrom(orderService.syncOrders());
+        savedOrder = await orderService.getOrder(orderId);
       }
-    ]);
-  }, [handleModifyOrder, orderId, order]);
 
-  const clearCurrentOrder = () => orderService.clearCurrentOrder()
+      if (savedOrder) {
+        dispatch({ type: 'SET_ORDER', payload: savedOrder });
+        dispatch({ type: 'SET_ORDER_DETAILS', payload: savedOrder.detalles || [] });
+      } else {
+        throw new Error('No se pudo recuperar la orden después de guardar');
+      }
 
-  const temporaryRemoveOrderDetail = useCallback((detailId: number) => {
+      return savedOrder;
+    }, isTemporary ? 'Error sincronizando orden temporal' : 'Error guardando orden');
+  }, [currentOrder, handleAPIOperation, dispatch, orderId, isTemporary]);
 
-    orderService.temporaryRemoveOrderDetail(detailId);
+  const clearCurrentOrder = useCallback(() => {
+    if (isTemporary) {
+      temporaryOrderService.removeTemporaryOrder(orderId);
+    }
+    dispatch({ type: 'RESET_ORDER' });
+  }, [dispatch, orderId, isTemporary]);
 
-    dispatch({ type: "REMOVE_ORDER_DETAIL", payload: detailId });
-  }, [dispatch]);
+  const temporaryRemoveOrderDetail = useCallback(
+    async (detailId: number) => {
+      if (isTemporary) {
+        const updatedOrder = temporaryOrderService.removeOrderDetail(orderId, detailId);
+        if (updatedOrder) {
+          dispatch({ type: 'SET_ORDER', payload: updatedOrder });
+          dispatch({ type: 'SET_ORDER_DETAILS', payload: updatedOrder.detalles || [] });
+        }
+      } else {
+        const updatedDetails = await orderService.temporaryRemoveOrderDetail(orderId, detailId);
+        dispatch({ type: 'SET_ORDER_DETAILS', payload: updatedDetails });
+      }
+    },
+    [dispatch, orderId, isTemporary]
+  );
 
-  return { removeProduct, updateOrder, saveOrder, updateQuantity, clearCurrentOrder,temporaryRemoveOrderDetail, addToOrder };
+  return {
+    removeProduct,
+    updateOrder,
+    saveOrder,
+    updateQuantity,
+    clearCurrentOrder,
+    temporaryRemoveOrderDetail,
+    addToOrder,
+    loadOrder,
+  };
 };

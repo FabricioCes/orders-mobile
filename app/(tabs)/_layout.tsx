@@ -1,8 +1,9 @@
 import { Tabs, useFocusEffect } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useColorScheme } from "react-native";
-import { useMemo, memo, useCallback } from "react";
-import { useTableNavigation } from "@/core/hooks/useTableNavigation";
+import { useMemo, memo, useCallback, useRef } from "react";
+import { useActiveTables } from "@/core/context/ActiveTablesContext";
+
 
 const staticTabs = [
   { name: "comedor", title: "Comedor", iconName: "home" },
@@ -36,9 +37,12 @@ const THEME = {
 };
 
 const TabLayout = memo(() => {
-  const { activeTables = [], loadActiveTables} = useTableNavigation('');
+  const { state, loadActiveTables } = useActiveTables();
+  const activeTables = state.activeTables;
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === "dark";
+  const lastLoaded = useRef<number | null>(null);
+
   const tablesByZone = useMemo(() => {
     return activeTables?.reduce((acc, table) => {
       const zona = table.zona?.trim().toLowerCase() || "sin-zona";
@@ -49,14 +53,19 @@ const TabLayout = memo(() => {
 
   useFocusEffect(
     useCallback(() => {
-      loadActiveTables();
-    }, [])
+      const now = Date.now();
+      if (!lastLoaded.current || now - lastLoaded.current > 60000) { // Recargar cada 60 segundos
+        loadActiveTables();
+        lastLoaded.current = now;
+      }
+    }, [loadActiveTables])
   );
+
   const renderedTabs = useMemo(
     () =>
       staticTabs.map((tab) => {
         const zoneKey = tab.title.toLowerCase();
-        const activeCount = (tablesByZone?.[zoneKey] || 0);
+        const activeCount = tablesByZone?.[zoneKey] || 0;
 
         return (
           <Tabs.Screen
@@ -110,9 +119,7 @@ const TabLayout = memo(() => {
         options={{
           title: "Conf",
           headerTitle: "Configuraciones",
-          tabBarIcon: () => (
-            <FontAwesome name="cog" size={24} color="#888" />
-          ),
+          tabBarIcon: () => <FontAwesome name="cog" size={24} color="#888" />,
           tabBarLabelStyle: {
             fontSize: 10,
             color: "#888",

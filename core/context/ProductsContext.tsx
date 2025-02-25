@@ -70,7 +70,6 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({
         setLoading(false);
       },
       error: (err) => {
-        console.log("Error en la búsqueda:", err);
         setError(err.message);
         setLoading(false);
       },

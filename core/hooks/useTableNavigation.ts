@@ -1,30 +1,20 @@
-import { useEffect } from 'react'
-import { Alert } from 'react-native'
-import { router } from 'expo-router'
-import { useSettings } from '@/core/context/SettingsContext'
-import { useOrderManagement } from '@/core/hooks/useOrderManagement'
-import { ActiveTable } from '@/types/tableTypes'
-import { orderService } from '@/core/services/order.service'
-import { useOrder } from '../context/OrderContext'
+import { useEffect } from 'react';
+import { Alert } from 'react-native';
+import { router } from 'expo-router';
+import { useSettings } from '@/core/context/SettingsContext';
+import { ActiveTable } from '@/types/tableTypes';
+import { useActiveTables } from '../context/ActiveTablesContext';
 
 export const useTableNavigation = (place: string) => {
-  const { hasUser, checkTokenExpiration, settings, userName, token } = useSettings()
-  const { activeTables} = useOrderManagement(0,userName, token, false, '0', place)
-  const {fetchOrder} = useOrder();
-
-  const loadActiveTables = () => {
-    try {
-      orderService.loadActiveOrders$();
-    } catch {
-      throw new Error("Error cargando mesas activas");
-    }
-  };
+  const { isLogin, settings } = useSettings();
+  const { state, loadActiveTables } = useActiveTables();
+  const activeTables = state.activeTables;
 
   useEffect(() => {
-    if (hasUser) {
-      loadActiveTables()
+    if (isLogin) {
+      loadActiveTables();
     }
-  }, [place, hasUser])
+  }, [isLogin, loadActiveTables]);
 
   const handleTablePress = (tableId: number) => {
     const isActive: boolean =
@@ -32,44 +22,40 @@ export const useTableNavigation = (place: string) => {
         (order: ActiveTable) =>
           Number(order.numeroMesa) === tableId &&
           order.zona.trim().toUpperCase() === place.trim().toUpperCase()
-      ) || false
+      ) || false;
 
     const activeOrder = activeTables?.find(
       (order: ActiveTable) =>
         Number(order.numeroMesa) === tableId &&
         order.zona.trim().toUpperCase() === place.trim().toUpperCase()
-    )
-  console.log("orden activa",JSON.stringify(activeOrder))
-    if(isActive && activeOrder?.identificador !== undefined) {
-      fetchOrder(activeOrder.identificador.toString());
-    }
+    );
+
     const navigationParams = {
       tableId,
       place,
       isActive: isActive.toString(),
       orderId: activeOrder?.identificador || 0,
-      totalOrder: activeOrder?.totalConDescuento || 0
-    }
-    console.log("orden navigationParams",JSON.stringify(navigationParams))
-    handleNavigation(navigationParams)
-  }
+      totalOrder: activeOrder?.totalConDescuento || 0,
+    };
+
+    handleNavigation(navigationParams);
+  };
 
   const handleNavigation = (params: {
-    tableId: number
-    place: string
-    isActive: string
-    orderId: number
-    totalOrder: number
+    tableId: number;
+    place: string;
+    isActive: string;
+    orderId: number;
+    totalOrder: number;
   }) => {
-    if (hasUser) {
-      checkTokenExpiration()
-      router.navigate({ pathname: '/screens/order-screen', params })
+    if (isLogin) {
+      router.navigate({ pathname: '/screens/order-screen', params });
     } else if (!settings) {
-      showConfigurationAlert()
+      showConfigurationAlert();
     } else {
-      showLoginAlert()
+      showLoginAlert();
     }
-  }
+  };
 
   const showConfigurationAlert = () =>
     Alert.alert(
@@ -77,17 +63,17 @@ export const useTableNavigation = (place: string) => {
       'Debes configurar la IP',
       [{ text: 'Aceptar', onPress: () => router.navigate('/settings') }],
       { cancelable: false }
-    )
+    );
 
   const showLoginAlert = () =>
     Alert.alert(
       'Oops! 🥺🏼',
       'Debes Iniciar Sesión 🧑',
       [
-        { text: 'Aceptar', onPress: () => router.navigate('/components/login') }
+        { text: 'Aceptar', onPress: () => router.navigate('/components/login') },
       ],
       { cancelable: false }
-    )
+    );
 
   return {
     handleTablePress,
@@ -100,7 +86,7 @@ export const useTableNavigation = (place: string) => {
             Number(order.numeroMesa) === tableId &&
             order.zona.trim().toUpperCase() === place.trim().toUpperCase()
         ) || false
-      )
-    }
-  }
-}
+      );
+    },
+  };
+};

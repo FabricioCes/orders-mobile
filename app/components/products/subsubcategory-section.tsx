@@ -31,6 +31,7 @@ const SubSubCategorySection: React.FC<SubSubCategorySectionProps> = React.memo(
       }
     }, [expanded, localProducts.length, loadProductsForSubSubCategory, subSubCategory]);
 
+    useEffect(()=> console.log(localProducts), [localProducts])
     return (
       <View style={{ marginLeft: 24 }}>
         <TouchableOpacity

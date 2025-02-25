@@ -56,11 +56,11 @@ export type OrderDetail = {
   costoUnitario: number;
   creadoPor?: string;
   encargadoComisionEspecifico?: string;
-  identificadorOrden: number;
-  identificadorOrdenDetalle: number;
-  identificadorProducto: number;
-  identificadorRegistroUnico?: number;
-  identificadorUnicoGrupo?: number;
+  idOrden: number;
+  idOrdenDetalle: number;
+  idProducto: number;
+  idRegistroUnico?: number;
+  idUnicoGrupo?: number;
   impuestoProducto: number;
   ingrediente?: boolean;
   mitad?: boolean;

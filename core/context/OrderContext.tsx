@@ -1,52 +1,51 @@
-// OrderContext.tsx
 import React, {
   createContext,
   useReducer,
   useContext,
   ReactNode,
-  useCallback,
-  useEffect
+  useEffect,
 } from "react";
 import { Order, OrderDetail } from "@/types/types";
-import { orderService } from "@/core/services/order.service";
-
+import { useOrderOperations } from "../hooks/useOrderOperations";
 
 interface OrderState {
   order: Order | null;
   orderDetails: OrderDetail[];
+  loading: boolean;
+  error: string | null;
 }
 
 type OrderAction =
   | { type: "SET_ORDER"; payload: Order }
+  | { type: "SET_ORDER_DETAILS"; payload: OrderDetail[] }
   | { type: "RESET_ORDER" }
   | { type: "ADD_ORDER_DETAIL"; payload: OrderDetail }
   | { type: "UPDATE_ORDER_DETAIL"; payload: OrderDetail }
-  | { type: "REMOVE_ORDER_DETAIL"; payload: number } // payload es el id del detalle
-  | { type: "SET_ORDER_DETAILS"; payload: OrderDetail[] };
+  | { type: "REMOVE_ORDER_DETAIL"; payload: number }
+  | { type: "SET_LOADING"; payload: boolean }
+  | { type: "SET_ERROR"; payload: string | null };
 
 const initialState: OrderState = {
   order: null,
   orderDetails: [],
+  loading: false,
+  error: null,
 };
 
 const OrderContext = createContext<{
   state: OrderState;
   dispatch: React.Dispatch<OrderAction>;
-  fetchOrder: (orderId: string) => Promise<void>;
-  orderId: string;
 }>({
   state: initialState,
   dispatch: () => undefined,
-  fetchOrder: async () => new Promise<void>((resolve) => resolve()),
-  orderId: "",
 });
 
 const orderReducer = (state: OrderState, action: OrderAction): OrderState => {
   switch (action.type) {
     case "SET_ORDER":
-      return { ...state, order: action.payload };
+      return { ...state, order: action.payload, loading: false };
     case "SET_ORDER_DETAILS":
-      return { ...state, orderDetails: action.payload };
+      return { ...state, orderDetails: action.payload, loading: false };
     case "RESET_ORDER":
       return initialState;
     case "ADD_ORDER_DETAIL":
@@ -58,8 +57,8 @@ const orderReducer = (state: OrderState, action: OrderAction): OrderState => {
       return {
         ...state,
         orderDetails: state.orderDetails.map((detail) =>
-          detail.identificadorOrdenDetalle ===
-          action.payload.identificadorOrdenDetalle
+          detail.idOrdenDetalle ===
+          action.payload.idOrdenDetalle
             ? action.payload
             : detail
         ),
@@ -68,9 +67,13 @@ const orderReducer = (state: OrderState, action: OrderAction): OrderState => {
       return {
         ...state,
         orderDetails: state.orderDetails.filter(
-          (detail) => detail.identificadorOrdenDetalle !== action.payload
+          (detail) => detail.idOrdenDetalle !== action.payload
         ),
       };
+    case "SET_LOADING":
+      return { ...state, loading: action.payload };
+    case "SET_ERROR":
+      return { ...state, error: action.payload };
     default:
       return state;
   }
@@ -84,43 +87,20 @@ export const OrderProvider = ({
   orderId: string;
 }) => {
   const [state, dispatch] = useReducer(orderReducer, initialState);
+  const { loadOrder } = useOrderOperations(Number(orderId), state.order);
 
-  const fetchOrder =  useCallback(async (orderId: string) => {
-    try {
-      const id = parseInt(orderId, 10);
-      if (isNaN(id)) {
-        dispatch({ type: "RESET_ORDER" });
-        return;
-      }
-      orderService.getOrder$(id).subscribe({
-        next: (order) => {
-          dispatch({ type: "SET_ORDER", payload: order as Order });
-        },
-        error: (err) => {
-          console.log(err)
-        },
-      });
-
-      orderService.getOrderDetails$(id).subscribe({
-        next: (details) => {
-
-          dispatch({ type: "SET_ORDER_DETAILS", payload: details as OrderDetail[] });
-        },
-        error: (err) => {
-          console.log(err)
-        },
-      });
-
-
-    } catch (error) {
-      console.log("Error al obtener la orden:", error);
+  useEffect(() => {
+    const id = parseInt(orderId, 10);
+    if (!isNaN(id) && !state.order?.esTemporal) {
+      loadOrder();
+    } else if (state.order?.esTemporal) {
+    } else {
       dispatch({ type: "RESET_ORDER" });
     }
-  }, []);
-
+  }, [orderId, loadOrder, state.order?.esTemporal]);
 
   return (
-    <OrderContext.Provider value={{ state, dispatch, fetchOrder, orderId }}>
+    <OrderContext.Provider value={{ state, dispatch }}>
       {children}
     </OrderContext.Provider>
   );

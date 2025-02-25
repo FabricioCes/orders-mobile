@@ -25,7 +25,6 @@ const CustomerGroupAccordion: React.FC<CustomerGroupAccordionProps> =
     const animation = useRef(new Animated.Value(0)).current;
     const { loadCustomersForLetter } = useCustomer();
 
-    console.log(letter);
     useEffect(() => {
       if (expanded) {
         setLoading(true);

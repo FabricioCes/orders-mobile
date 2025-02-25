@@ -23,7 +23,9 @@ export default function OrderDetailsList({
   return (
     <FlatList
       data={orderDetails}
-      keyExtractor={(item) => item.identificadorOrdenDetalle.toString()}
+      keyExtractor={(item, index) =>
+        item.idOrdenDetalle ? item.idOrdenDetalle.toString() : index.toString()
+      }
       renderItem={({ item }) => (
         <TouchableOpacity
           onPress={() => onProductPress(item)}

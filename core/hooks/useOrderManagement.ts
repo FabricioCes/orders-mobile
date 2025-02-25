@@ -1,10 +1,7 @@
-import { useOrderState } from './useOrderState'
+import { temporaryOrderService } from '../services/temporary_order.service'
 import { useOrderOperations } from './useOrderOperations'
 import { useProducts } from '@/core/context/ProductsContext'
-import { useEffect } from 'react'
-import { orderService } from '@/core/services/order.service'
-import { Subject, takeUntil } from 'rxjs'
-import { router } from 'expo-router'
+import { Order } from '@/types/types'
 
 export const useOrderManagement = (
   orderId: number,
@@ -12,19 +9,15 @@ export const useOrderManagement = (
   token: string,
   isActive: boolean,
   numeroMesa: string,
-  zona: string
+  zona: string,
+  order?: Order,
 ) => {
 
-  const {
-    order,
-    activeTables,
-    details: orderDetails,
-    loading,
-    error
-  } = useOrderState(orderId, userName, token, zona)
+  // Estado de productos (por ejemplo, para saber si están cargando)
   const { loading: productsLoading, error: productsError } = useProducts()
 
-  const unmount$ = new Subject<void>();
+  // Obtiene las operaciones para actualizar la orden.
+  // Se asume que 'order' ya fue cargada, por lo que se utiliza la aserción no nula.
   const {
     removeProduct,
     updateOrder,
@@ -35,37 +28,16 @@ export const useOrderManagement = (
     addToOrder
   } = useOrderOperations(orderId, order!)
 
-  useEffect(() => {
-    const sub = orderService.activeTables$.subscribe()
-    return () => {
-      sub.unsubscribe()
-      unmount$.next();   // Emitir un valor para notificar el desmontaje
-      unmount$.complete(); // Completar el Subject
-    }
-  }, [])
 
-  const createNewOrder = () => {
-    console.log(order)
+
+  // Función para crear una orden temporal, en caso de que no exista una orden actual
+  const createNewOrder = async () => {
     if (orderId === 0 && !order) {
-      orderService
-        .createTemporaryOrder(numeroMesa, zona)
-        .pipe(takeUntil(unmount$))
-        .subscribe({
-          next: newOrder => {
-            router.setParams({ orderId: String(newOrder.numeroOrden) })
-          },
-          error: err => console.log(err)
-        })
+      await temporaryOrderService.createTemporaryOrder(numeroMesa, zona)
     }
   }
 
-
   return {
-    order,
-    activeTables,
-    orderDetails,
-    loading,
-    error,
     productsLoading,
     productsError,
     removeProduct,

@@ -6,12 +6,12 @@ import UserSection from "../components/settings/user-section";
 import LoginPrompt from "../components/settings/login-prompt";
 
 const SettingsScreen = () => {
-  const { hasUser } = useSettings();
+  const { isLogin } = useSettings();
 
   return (
     <View className="flex-1 bg-gray-100 items-center p-5">
       <ComputerIdForm />
-      {hasUser ? <UserSection /> : <LoginPrompt />}
+      {isLogin ? <UserSection /> : <LoginPrompt />}
     </View>
   );
 };
