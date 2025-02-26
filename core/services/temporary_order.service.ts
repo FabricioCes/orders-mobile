@@ -1,5 +1,5 @@
 import { BehaviorSubject, Observable, from } from 'rxjs';
-import { tap, map } from 'rxjs/operators';
+import { tap } from 'rxjs/operators';
 import { OrderApiRepository } from '@/core/repositories/order.repository';
 import { Order, OrderDetail } from '@/types/types';
 import { uuidEntero } from '@/utils/uuidUtils';
@@ -143,28 +143,32 @@ class TemporaryOrderService {
   }
 
   /**
-   * Sincroniza las órdenes temporales con el servidor y las elimina del estado temporal.
-   * @returns Observable que se completa cuando la sincronización termina.
-   */
-  syncTemporaryOrders(): Observable<void> {
+ * Sincroniza las órdenes temporales con el servidor y las elimina del estado temporal.
+ * @returns Observable que emite un array de { temporaryOrderId, newOrderId }
+ */
+  syncTemporaryOrders(): Observable<{ temporaryOrderId: number; newOrderId: number }[]> {
     const ordersToSync = this.temporaryOrdersSubject.value;
+    console.log("Órdenes a sincronizar", ordersToSync);
+  
     return from(
       Promise.all(
-        ordersToSync.map((order) =>
-          OrderApiRepository.createOrder(order).then((res) => {
-            if (order.numeroOrden !== undefined) {
-              this.removeTemporaryOrder(order.numeroOrden);
-            }
-            order.numeroOrden = res;
-          })
-        )
+        ordersToSync.map(async (order) => {
+          // Verificación para asegurar que numeroOrden esté definido
+          if (order.numeroOrden === undefined) {
+            throw new Error('La orden temporal no tiene un numeroOrden asignado');
+          }
+          const temporaryOrderId = order.numeroOrden; // Ahora TypeScript sabe que es number
+          const newOrderId = await OrderApiRepository.createOrder(order);
+          this.removeTemporaryOrder(temporaryOrderId);
+          console.log(temporaryOrderId, newOrderId)
+          return { temporaryOrderId, newOrderId };
+        })
       )
     ).pipe(
       tap({
-        next: () => console.log('Órdenes temporales sincronizadas'),
+        next: (results) => console.log('Órdenes temporales sincronizadas:', results),
         error: (err) => console.log('Error al sincronizar órdenes temporales:', err),
-      }),
-      map(() => void 0)
+      })
     );
   }
 

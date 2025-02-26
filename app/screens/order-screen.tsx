@@ -19,7 +19,7 @@ export default function OrderScreen() {
     tableId = "0",
     place = "",
     isActive = "false",
-    orderId = "0"
+    orderId = "0",
   } = useLocalSearchParams();
   const orderIdentify = Number(orderId);
   const navigation = useNavigation();
@@ -30,18 +30,18 @@ export default function OrderScreen() {
   } = useOrder();
   const { clearCustomer } = useCustomer();
 
-  // Hook de operaciones (guardar, eliminar, actualizar, etc.)
   const {
     loadOrder,
     saveOrder,
     removeProduct,
-    updateQuantity
+    updateQuantity,
+    reloadOriginalOrder,
+    hasUnsavedChanges,
   } = useOrderOperations(orderIdentify, order);
 
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
-  const [selectedOrderDetail, setSelectedOrderDetail] =
-    useState<OrderDetail | null>(null);
+  const [selectedOrderDetail, setSelectedOrderDetail] = useState<OrderDetail | null>(null);
   const [showSummary, setShowSummary] = useState(true);
 
   const hasInitializedOrder = useRef(false);
@@ -54,34 +54,33 @@ export default function OrderScreen() {
       )
     : order?.totalSinDescuento || 0;
 
-    useEffect(() => {
-      const createTemporalOrder = async () => {
-        if (orderIdentify === 0 && !order && !hasInitializedOrder.current) {
-          hasInitializedOrder.current = true;
-          try {
-            dispatch({ type: "SET_LOADING", payload: true });
-            const newOrder = await temporaryOrderService.createTemporaryOrder(
-              String(tableId),
-              String(place)
-            );
-            router.setParams({
-              orderId: newOrder.numeroOrden?.toString(),
-              tableId: newOrder.numeroMesa?.toString() ?? "0",
-              place: newOrder.ubicacion,
-            });
-            dispatch({ type: "SET_ORDER", payload: newOrder });
-            dispatch({ type: "SET_ORDER_DETAILS", payload: [] });
-          } catch (error) {
-            dispatch({ type: "SET_ERROR", payload: error instanceof Error ? error.message : "Unknown error" });
-          } finally {
-            dispatch({ type: "SET_LOADING", payload: false });
-          }
+  useEffect(() => {
+    const createTemporalOrder = async () => {
+      if (orderIdentify === 0 && !order && !hasInitializedOrder.current) {
+        hasInitializedOrder.current = true;
+        try {
+          dispatch({ type: "SET_LOADING", payload: true });
+          const newOrder = await temporaryOrderService.createTemporaryOrder(
+            String(tableId),
+            String(place)
+          );
+          router.setParams({
+            orderId: newOrder.numeroOrden?.toString(),
+            tableId: newOrder.numeroMesa?.toString() ?? "0",
+            place: newOrder.ubicacion,
+          });
+          dispatch({ type: "SET_ORDER", payload: newOrder });
+          dispatch({ type: "SET_ORDER_DETAILS", payload: [] });
+        } catch (error) {
+          dispatch({ type: "SET_ERROR", payload: error instanceof Error ? error.message : "Unknown error" });
+        } finally {
+          dispatch({ type: "SET_LOADING", payload: false });
         }
-      };
-      createTemporalOrder();
-    }, [orderIdentify, order, tableId, place, dispatch]);
+      }
+    };
+    createTemporalOrder();
+  }, [orderIdentify, order, tableId, place, dispatch]);
 
-  // Si ya existe un orderId válido, se carga la orden desde el API vía el hook
   useEffect(() => {
     if (!order?.esTemporal) {
       loadOrder();
@@ -91,20 +90,30 @@ export default function OrderScreen() {
   useEffect(() => {
     const unsubscribe = navigation.addListener("beforeRemove", (e) => {
       e.preventDefault();
-      Alert.alert("Salir", "¿Desea salir de la orden?", [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Salir",
-          onPress: () => {
-            dispatch({ type: "RESET_ORDER" });
-            clearCustomer();
-            navigation.dispatch(e.data.action);
-          },
-        },
-      ]);
+      if (hasUnsavedChanges) {
+        Alert.alert(
+          "Cambios no guardados",
+          "Tienes cambios sin guardar. ¿Deseas salir y descartarlos?",
+          [
+            { text: "Cancelar", style: "cancel" },
+            {
+              text: "Salir",
+              onPress: async () => {
+                await reloadOriginalOrder(); // Recargar la orden original antes de salir
+                clearCustomer();
+                navigation.dispatch(e.data.action);
+              },
+            },
+          ]
+        );
+      } else {
+        dispatch({ type: "RESET_ORDER" });
+        clearCustomer();
+        navigation.dispatch(e.data.action);
+      }
     });
     return unsubscribe;
-  }, [navigation, dispatch, clearCustomer]);
+  }, [navigation, dispatch, clearCustomer, hasUnsavedChanges, reloadOriginalOrder]);
 
   const handleNavigateToProducts = useCallback(() => {
     router.navigate({
@@ -121,7 +130,6 @@ export default function OrderScreen() {
     setShowOptionsModal(true);
   }, []);
 
-  // Utiliza el hook para guardar la orden
   const handleSaveOrder = useCallback(async () => {
     if (!order) return;
 
@@ -137,29 +145,24 @@ export default function OrderScreen() {
       Toast.show({
         type: "error",
         text1: "Error",
-        text2:
-          error instanceof Error
-            ? error.message
-            : "No se pudo guardar la orden.",
+        text2: error instanceof Error ? error.message : "No se pudo guardar la orden.",
       });
     } finally {
       dispatch({ type: "SET_LOADING", payload: false });
     }
   }, [order, dispatch, saveOrder]);
 
-  // En el modal de opciones, al eliminar se usa la función del hook
   const handleDeleteProduct = useCallback(() => {
     if (selectedOrderDetail) {
-      removeProduct(selectedOrderDetail.idOrdenDetalle);
+      removeProduct(selectedOrderDetail.idOrdenDetalle); // Ajustado a idOrdenDetalle
       setShowOptionsModal(false);
     }
   }, [selectedOrderDetail, removeProduct]);
 
-  // Para actualizar la cantidad se llama al hook y luego se cierra el modal
   const handleUpdateQuantity = useCallback(
     (newQuantity: number) => {
       if (selectedOrderDetail) {
-        updateQuantity(selectedOrderDetail.idProducto, newQuantity);
+        updateQuantity(selectedOrderDetail.idProducto, newQuantity); // Ajustado a identificadorProducto
         setShowQuantityModal(false);
       }
     },
