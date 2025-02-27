@@ -7,6 +7,8 @@ import { useOrder } from '../context/OrderContext'
 import { Product } from '@/types/productTypes'
 import { uuidEntero } from '@/utils/uuidUtils'
 import { firstValueFrom } from 'rxjs'
+import { router } from 'expo-router'
+import { useOrderUpdater } from './useGetSaveOptions'
 
 export const useOrderOperations = (
   orderId: number,
@@ -16,6 +18,7 @@ export const useOrderOperations = (
   const [_, setIsInitialLoad] = useState(true)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false) // Bandera para cambios no sincronizados
   const isTemporary = currentOrder?.esTemporal ?? orderId <= 0
+  const { getSaveOptions } = useOrderUpdater()
 
   const handleAPIOperation = useCallback(
     async <T>(operation: () => Promise<T>, errorMessage: string) => {
@@ -33,12 +36,6 @@ export const useOrderOperations = (
   )
 
   const loadOrder = useCallback(async () => {
-    console.log(
-      'loadOrder called - isTemporary:',
-      isTemporary,
-      'orderId:',
-      orderId
-    )
     if (isTemporary) {
       const tempOrder = temporaryOrderService.getTemporaryOrder(orderId)
       if (tempOrder) {
@@ -195,56 +192,32 @@ export const useOrderOperations = (
     [orderId, dispatch, isTemporary]
   )
 
-  const updateOrder = useCallback(
-    async (order: Order) => {
-      if (isTemporary) {
-        const updatedOrder = temporaryOrderService.getTemporaryOrder(orderId)
-        if (updatedOrder) {
-          dispatch({
-            type: 'SET_ORDER',
-            payload: { ...updatedOrder, ...order }
-          })
-          dispatch({
-            type: 'SET_ORDER_DETAILS',
-            payload: updatedOrder.detalles || []
-          })
-          setHasUnsavedChanges(true)
-        }
-      } else {
-        const savedOrder = await orderService.saveOrder(order)
-        dispatch({ type: 'SET_ORDER', payload: savedOrder })
-        setHasUnsavedChanges(true)
-      }
-    },
-    [orderId, dispatch, isTemporary]
-  )
-
+ 
   const saveOrder = useCallback(async () => {
     if (!currentOrder) return
 
     return handleAPIOperation(
       async () => {
+        let  options = await getSaveOptions(currentOrder)
         let savedOrder: Order | undefined
 
         if (isTemporary) {
           // Sincronizamos las órdenes temporales y obtenemos los nuevos IDs
-          const syncResults = await firstValueFrom(
-            temporaryOrderService.syncTemporaryOrders()
+          const syncResult = await firstValueFrom(
+            temporaryOrderService.syncTemporaryOrder(options)
           )
-          // Buscamos el resultado correspondiente al orderId temporal actual
-          const syncResult = syncResults.find(
-            result => result.temporaryOrderId === orderId
-          )
+
           if (syncResult) {
             const newOrderId = syncResult.newOrderId
-            console.log("SOLICITANDO ORDEN", newOrderId)
+            // Actualizamos los parámetros de la ruta para reflejar el nuevo orderId
+            router.setParams({ orderId: newOrderId.toString() })
             // Recargamos la orden desde el servidor con el nuevo ID
             savedOrder = await orderService.getOrder(newOrderId)
           } else {
-            throw new Error('No se pudo encontrar la orden sincronizada')
+            throw new Error('No se pudo encontrar la ordern sincronizada')
           }
         } else {
-          await firstValueFrom(orderService.syncOrders())
+          await firstValueFrom(orderService.syncOrders(options))
           savedOrder = await orderService.getOrder(orderId)
         }
 
@@ -304,7 +277,6 @@ export const useOrderOperations = (
 
   return {
     removeProduct,
-    updateOrder,
     saveOrder,
     updateQuantity,
     clearCurrentOrder,

@@ -1,3 +1,5 @@
+import { ModoImpresion } from "./enums"
+
 export type Table = {
   qty: number
   place: string
@@ -89,6 +91,7 @@ export interface GuardarOrdenRequest {
   autorizado: boolean;
   totalSinDescuento?: number
   imprimir: boolean;
+  modoImpresion?: ModoImpresion;
   detalles?: DetalleRequest[]
 }
 
@@ -124,4 +127,11 @@ export interface ApiResponse<T> {
   mensaje?: string;
   error?: boolean;
   paginacion?: Paginacion;
+}
+
+export interface SaveOptions {
+  idUsuario: string
+  idCliente: number
+  imprimir: boolean
+  modoImpresion?: ModoImpresion
 }

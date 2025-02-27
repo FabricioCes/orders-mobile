@@ -20,7 +20,7 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({ customerId, orderId }
 
   if (!customerId) return;
 
-  let cancelled = false; 
+  let cancelled = false;
   setLoadingCustomer(true);
 
   CustomerApiRepository.getCustomer(customerId)

@@ -1,9 +1,10 @@
 import { BehaviorSubject, Observable, from } from 'rxjs'
 import { tap, map } from 'rxjs/operators'
 import { OrderApiRepository } from '@/core/repositories/order.repository'
-import { Order, OrderDetail } from '@/types/types'
+import { Order, OrderDetail, SaveOptions } from '@/types/types'
 import { ActiveTable } from '@/types/tableTypes'
 import { TokenService } from './token.service'
+import { ModoImpresion } from '@/types/enums'
 
 class OrderService {
   // Estado local de las órdenes
@@ -62,7 +63,7 @@ class OrderService {
     product: OrderDetail
   ): Promise<OrderDetail[]> {
     try {
-       const currentOrders = this.ordersSubject.value
+      const currentOrders = this.ordersSubject.value
       const orderIndex = currentOrders.findIndex(o => o.numeroOrden === orderId)
 
       if (orderIndex === -1) {
@@ -134,15 +135,13 @@ class OrderService {
     }
   }
 
-  async saveOrder (order: Order): Promise<Order> {
+  /* async saveOrder (order: Order): Promise<Order> {
     try {
       let savedOrder: Order
       if (order.esTemporal) {
         const newOrderId = await OrderApiRepository.createOrder(order)
-        console.log("NUEVA ORDEN",newOrderId)
         savedOrder = { ...order, numeroOrden: newOrderId }
       } else {
-        console.log("Update",order)
         await OrderApiRepository.updateOrder(order)
         savedOrder = order
       }
@@ -152,7 +151,7 @@ class OrderService {
       console.error('Error al guardar orden:', err)
       throw err
     }
-  }
+  } */
 
   async updateProductQuantity (
     orderId: number,
@@ -248,12 +247,12 @@ class OrderService {
    * Sincroniza las órdenes locales con el servidor.
    * @returns Observable que se completa cuando la sincronización termina.
    */
-  syncOrders (): Observable<void> {
+  syncOrders (options: SaveOptions): Observable<void> {
     const ordersToSync = this.ordersSubject.value
     return from(
       Promise.all(
         ordersToSync.map(order =>
-          OrderApiRepository.updateOrder(order).then(() => {
+          OrderApiRepository.updateOrder(order, options).then(() => {
             console.log(`Orden ${order.numeroOrden} sincronizada`)
           })
         )

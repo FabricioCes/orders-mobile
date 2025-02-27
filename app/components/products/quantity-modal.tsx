@@ -30,7 +30,11 @@ const QuantityModal: React.FC<QuantityModalProps> = ({
   // Reinicia la cantidad a "1" cada vez que se abre el modal
   useEffect(() => {
     if (visible) {
-      setQuantity("1");
+      if ('cantidad' in product) {
+        setQuantity(product.cantidad.toString());
+      } else {
+        setQuantity("1");
+      }
     }
   }, [visible]);
 

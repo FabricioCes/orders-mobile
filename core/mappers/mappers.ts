@@ -1,17 +1,18 @@
-import { GuardarOrdenRequest, Order } from "@/types/types";
+import { GuardarOrdenRequest, Order, SaveOptions } from "@/types/types";
 
-const mapToGuardarOrdenRequest = (order: Order, otrosValores: {imprimir: boolean, autorizado: boolean, quitarIngrediente: boolean}): GuardarOrdenRequest => {
+const mapToGuardarOrdenRequest = (order: Order, otrosValores: SaveOptions): GuardarOrdenRequest => {
   return {
     numeroOrden: order.numeroOrden,
     numeroLugar: order.numeroMesa,
     ubicacion: order.ubicacion || '',
     observaciones: order.descripcion || '',
     nombreCliente: order.nombreCliente || '',
-    idCliente: order.idCliente || 0,
-    idUsuario: order.idUsuario || 'admin',
-    autorizado: otrosValores.autorizado,
+    idCliente: otrosValores.idCliente || 0,
+    idUsuario: otrosValores.idUsuario || '',
+    autorizado: true,
     totalSinDescuento: order.totalSinDescuento,
     imprimir: otrosValores.imprimir,
+    modoImpresion: otrosValores.modoImpresion,
     detalles: order.detalles?.map((detalle) => ({
       idProducto: detalle.idProducto,
       nombreProducto: detalle.nombreProducto,
@@ -19,7 +20,7 @@ const mapToGuardarOrdenRequest = (order: Order, otrosValores: {imprimir: boolean
       precio: detalle.costoUnitario,
       porcentajeDescProducto: detalle.porcentajeDescuento || 0,
       ingrediente: detalle.ingrediente || false,
-      quitarIngrediente: otrosValores.quitarIngrediente,
+      quitarIngrediente: false,
     })),
   };
 }
