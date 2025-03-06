@@ -13,6 +13,7 @@ import { useOrder } from "@/core/context/OrderContext";
 import Toast from "react-native-toast-message";
 import { temporaryOrderService } from "@/core/services/temporary_order.service";
 import { useOrderOperations } from "@/core/hooks/useOrderOperations";
+import { useSettings } from "@/core/context/SettingsContext";
 
 export default function OrderScreen() {
   const {
@@ -29,7 +30,7 @@ export default function OrderScreen() {
     dispatch,
   } = useOrder();
   const { clearCustomer } = useCustomer();
-
+  const { checkTokenExpiration } = useSettings();
   const {
     loadOrder,
     saveOrder,
@@ -41,7 +42,8 @@ export default function OrderScreen() {
 
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
-  const [selectedOrderDetail, setSelectedOrderDetail] = useState<OrderDetail | null>(null);
+  const [selectedOrderDetail, setSelectedOrderDetail] =
+    useState<OrderDetail | null>(null);
   const [showSummary, setShowSummary] = useState(true);
 
   const hasInitializedOrder = useRef(false);
@@ -56,35 +58,75 @@ export default function OrderScreen() {
 
   useEffect(() => {
     const createTemporalOrder = async () => {
-      if (orderIdentify === 0 && !order && !hasInitializedOrder.current) {
-        hasInitializedOrder.current = true;
-        try {
-          dispatch({ type: "SET_LOADING", payload: true });
-          const newOrder = await temporaryOrderService.createTemporaryOrder(
-            String(tableId),
-            String(place)
-          );
-          router.setParams({
-            orderId: newOrder.numeroOrden?.toString(),
-            tableId: newOrder.numeroMesa?.toString() ?? "0",
-            place: newOrder.ubicacion,
-          });
-          dispatch({ type: "SET_ORDER", payload: newOrder });
-          dispatch({ type: "SET_ORDER_DETAILS", payload: [] });
-        } catch (error) {
-          dispatch({ type: "SET_ERROR", payload: error instanceof Error ? error.message : "Unknown error" });
-        } finally {
-          dispatch({ type: "SET_LOADING", payload: false });
-        }
+      const isTokenValid = await checkTokenExpiration();
+      if (!isTokenValid) {
+        Toast.show({
+          type: 'error', // Estilo de error (generalmente en rojo)
+          text1: 'Sesión expirada', // Título del mensaje
+          text2: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.', // Subtítulo
+          position: 'top', // Aparece en la parte superior
+          visibilityTime: 4000, // Dura 4 segundos
+          autoHide: true, // Se oculta automáticamente
+          topOffset: 30, // Distancia desde la parte superior
+          onHide: () => {
+            router.navigate("/components/login"); // Redirige al login cuando se oculta
+          },
+        });
+        return;
       }
+        if (orderIdentify === 0 && !order && !hasInitializedOrder.current) {
+          hasInitializedOrder.current = true;
+          try {
+            dispatch({ type: "SET_LOADING", payload: true });
+            const newOrder = await temporaryOrderService.createTemporaryOrder(
+              String(tableId),
+              String(place)
+            );
+            router.setParams({
+              orderId: newOrder.numeroOrden?.toString(),
+              tableId: newOrder.numeroMesa?.toString() ?? "0",
+              place: newOrder.ubicacion,
+            });
+            dispatch({ type: "SET_ORDER", payload: newOrder });
+            dispatch({ type: "SET_ORDER_DETAILS", payload: [] });
+          } catch (error) {
+            dispatch({
+              type: "SET_ERROR",
+              payload: error instanceof Error ? error.message : "Unknown error",
+            });
+          } finally {
+            dispatch({ type: "SET_LOADING", payload: false });
+          }
+        }
     };
+
     createTemporalOrder();
   }, [orderIdentify, order, tableId, place, dispatch]);
 
   useEffect(() => {
-    if (!order?.esTemporal) {
-      loadOrder();
-    }
+    const checkTokenAndLoadOrder = async () => {
+      const isTokenValid = await checkTokenExpiration();
+      if (!isTokenValid) {
+        Toast.show({
+          type: 'error',
+          text1: 'Sesión expirada',
+          text2: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
+          position: 'top',
+          visibilityTime: 4000,
+          autoHide: true,
+          topOffset: 30,
+          onHide: () => {
+            router.navigate("/components/login");
+          },
+        });
+        return;
+      }
+      if (!order?.esTemporal) {
+        loadOrder();
+      }
+    };
+
+    checkTokenAndLoadOrder();
   }, [order?.esTemporal, loadOrder]);
 
   useEffect(() => {
@@ -113,7 +155,13 @@ export default function OrderScreen() {
       }
     });
     return unsubscribe;
-  }, [navigation, dispatch, clearCustomer, hasUnsavedChanges, reloadOriginalOrder]);
+  }, [
+    navigation,
+    dispatch,
+    clearCustomer,
+    hasUnsavedChanges,
+    reloadOriginalOrder,
+  ]);
 
   const handleNavigateToProducts = useCallback(() => {
     router.navigate({
@@ -142,10 +190,18 @@ export default function OrderScreen() {
         text2: "La orden se ha guardado correctamente.",
       });
     } catch (error) {
+      console.log("Error saving order:", error);
       Toast.show({
         type: "error",
         text1: "Error",
-        text2: error instanceof Error ? error.message : "No se pudo guardar la orden.",
+        text2:
+          error instanceof Error
+            ? error.message
+            : "No se pudo guardar la orden.",
+        autoHide: true,
+        position: "top",
+        swipeable: true,
+        visibilityTime: 1000,
       });
     } finally {
       dispatch({ type: "SET_LOADING", payload: false });
@@ -162,7 +218,7 @@ export default function OrderScreen() {
   const handleUpdateQuantity = useCallback(
     (newQuantity: number) => {
       if (selectedOrderDetail) {
-        updateQuantity(selectedOrderDetail.idProducto, newQuantity); // Ajustado a identificadorProducto
+        updateQuantity(selectedOrderDetail.idProducto, newQuantity);
         setShowQuantityModal(false);
       }
     },

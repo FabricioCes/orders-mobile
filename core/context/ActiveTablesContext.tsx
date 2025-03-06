@@ -48,7 +48,7 @@ const activeTablesReducer = (
 
 export const ActiveTablesProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(activeTablesReducer, initialState);
-  const { isLogin, checkTokenExpiration } = useSettings();
+  const { isLogin, checkTokenExpiration, token} = useSettings();
 
   const loadActiveTables = useCallback(async () => {
     if (!isLogin) return;
@@ -62,7 +62,7 @@ export const ActiveTablesProvider = ({ children }: { children: ReactNode }) => {
     } catch  {
       dispatch({ type: "SET_ERROR", payload: "Error al cargar mesas activas" });
     }
-  }, [isLogin]);
+  }, [isLogin, token, checkTokenExpiration]);
 
   useEffect(() => {
     loadActiveTables();

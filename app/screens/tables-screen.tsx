@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   useWindowDimensions,
@@ -12,7 +12,9 @@ import TableGrid from "../components/tables/TableGrid";
 import { useTableNavigation } from "@/core/hooks/useTableNavigation";
 import { useSettings } from "@/core/context/SettingsContext";
 import { router } from "expo-router";
-
+import { signalRService } from "@/core/services/real-time.service";
+import { useActiveTables } from "@/core/context/ActiveTablesContext";
+import { notificationService } from "@/core/services/notification.service";
 type TablesProps = {
   place: string;
   qty?: number;
@@ -119,13 +121,84 @@ const LoadingState = () => (
 export default function Tables({ place, qty: propQty }: TablesProps) {
   const { width } = useWindowDimensions();
   const { zonas, loadingZonas, token } = useSettings();
-
   const isTablet = width >= 768;
   const columns = isTablet ? 9 : 3;
   const qty = propQty || zonas[place] || 0;
   const tables = Array.from({ length: qty }, (_, i) => i + 1);
-
+  const [isConnected, _] = useState(true);
   const { handleTablePress, isTableActive } = useTableNavigation(place);
+
+/*   useEffect(() => {
+    const handleReconnected = () => {
+      fetchZonasMesas();
+      loadActiveTables();
+    };
+    console.log("onReconnected", handleReconnected);
+    signalRService.onReconnected(handleReconnected);
+
+    return () => {
+      signalRService.offReconnected(handleReconnected);
+    };
+  }, [fetchZonasMesas, loadActiveTables]); */
+
+  /* const handleReconnectionError = (error: any) => {
+    console.log("Error de reconexión:", error);
+    // Lógica adicional de manejo de errores
+  };
+  useEffect(() => {
+    const updateConnectionStatus = (state: string) => {
+      setIsConnected(state === "Connected");
+
+      if (state === "Disconnected") {
+        notificationService.sendNotification(
+          "Desconectado",
+          "No hay conexión con el servidor"
+        );
+      }
+
+      if (state === "Reconnecting") {
+        notificationService.sendNotification(
+          "Reconectando",
+          "Intentando recuperar la conexión..."
+        );
+      }
+    };
+
+    signalRService.onConnectionStatusChanged(updateConnectionStatus);
+    return () => {
+      signalRService.offConnectionStatusChanged(updateConnectionStatus);
+    };
+  }, []); */
+
+  /* useEffect(() => {
+    const handleReconnected = () => {
+      notificationService.sendNotification(
+        "Conexión restablecida",
+        "Se ha recuperado la conexión con el servidor"
+      );
+    };
+
+    signalRService.onReconnected(handleReconnected);
+    return () => signalRService.offReconnected(handleReconnected);
+  }, []);
+  useEffect(() => {
+    signalRService.onReconnectionFailed(handleReconnectionError);
+    console.log("onReconnectionFailed", handleReconnectionError);
+    return () => {
+      signalRService.offReconnectionFailed(handleReconnectionError);
+    };
+  }, []);
+
+  useEffect(() => {
+    const updateConnectionStatus = (state: string) => {
+      setIsConnected(state === "Connected");
+    };
+    console.log("updateConnectionStatus", updateConnectionStatus);
+    signalRService.onConnectionStatusChanged(updateConnectionStatus);
+    return () => {
+      signalRService.offConnectionStatusChanged(updateConnectionStatus);
+    };
+  }, []); */
 
   if (loadingZonas) return <LoadingState />;
 
@@ -138,7 +211,7 @@ export default function Tables({ place, qty: propQty }: TablesProps) {
             text="Debe iniciar sesión para ver las mesas"
             action={{
               label: "Ir al Login",
-              onPress: () => router.navigate("/components/login")
+              onPress: () => router.navigate("/components/login"),
             }}
           />
         ) : (
@@ -152,6 +225,17 @@ export default function Tables({ place, qty: propQty }: TablesProps) {
           <Text className="text-gray-500 text-sm mt-4 text-center">
             Contacte al administrador si necesita acceso
           </Text>
+        )}
+        {!isConnected && (
+          <Animated.View
+            entering={FadeIn}
+            exiting={FadeOut}
+            className="absolute top-2 right-2 bg-yellow-100 p-2 rounded-md"
+          >
+            <Text className="text-yellow-800 text-sm">
+              Reconectando con el servidor...
+            </Text>
+          </Animated.View>
         )}
       </View>
     );

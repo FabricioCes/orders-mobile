@@ -1,9 +1,9 @@
 import { Tabs, useFocusEffect } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useColorScheme } from "react-native";
-import { useMemo, memo, useCallback, useRef } from "react";
+import { useMemo, memo, useCallback, useRef, useEffect } from "react";
 import { useActiveTables } from "@/core/context/ActiveTablesContext";
-
+import { useSettings } from "@/core/context/SettingsContext";
 
 const staticTabs = [
   { name: "comedor", title: "Comedor", iconName: "home" },
@@ -38,23 +38,28 @@ const THEME = {
 
 const TabLayout = memo(() => {
   const { state, loadActiveTables } = useActiveTables();
-  const activeTables = state.activeTables;
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === "dark";
   const lastLoaded = useRef<number | null>(null);
+  const { isLogin, token } = useSettings();
+
+  let activeTables = state.activeTables;
 
   const tablesByZone = useMemo(() => {
+    if (!isLogin) return {}; // Reiniciar cuando el usuario no está logueado
+
     return activeTables?.reduce((acc, table) => {
       const zona = table.zona?.trim().toLowerCase() || "sin-zona";
       acc[zona] = (acc[zona] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-  }, [activeTables]);
+  }, [activeTables, isLogin]);
 
   useFocusEffect(
     useCallback(() => {
       const now = Date.now();
-      if (!lastLoaded.current || now - lastLoaded.current > 60000) { // Recargar cada 60 segundos
+      if (!lastLoaded.current || now - lastLoaded.current > 60000) {
+        // Recargar cada 60 segundos
         loadActiveTables();
         lastLoaded.current = now;
       }
@@ -99,7 +104,7 @@ const TabLayout = memo(() => {
           />
         );
       }),
-    [tablesByZone]
+    [tablesByZone, isLogin]
   );
 
   return (

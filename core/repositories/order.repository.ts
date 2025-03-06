@@ -10,7 +10,7 @@ export class OrderApiRepository {
     init?: RequestInit
   ): Promise<T> {
     let token: string | null = ''
-    let response2 = null
+
     try {
       token = await getToken()
       if (!token) {
@@ -22,34 +22,25 @@ export class OrderApiRepository {
       console.log(err)
     }
 
-    try {
-      const headers: HeadersInit = {
-        ...init?.headers,
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      }
-      const response = await fetch(`${await getBaseUrl()}/${endpoint}`, {
-        ...init,
-        headers
-      })
-      response2 = response
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data: ApiResponse<T> = await response.json()
-
-      if (data.error) {
-        throw new Error(data.mensaje || 'Error en la respuesta de la API')
-      }
-      return data.resultado
-    } catch (error) {
-      console.log(response2)
-      console.log(error)
-      throw new Error(
-        'Error al procesar la solicitud: ' + (error as Error).message
-      )
+    const headers: HeadersInit = {
+      ...init?.headers,
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
     }
+    const response = await fetch(`${await getBaseUrl()}/${endpoint}`, {
+      ...init,
+      headers
+    })
+
+    const data: ApiResponse<T> = await response.json()
+
+    if (data.error) {
+      throw new Error(data.mensaje || 'Error en la respuesta de la API', {
+        cause: data.tipoError
+      })
+    }
+
+    return data.resultado
   }
 
   static async getOrder (orderId: number): Promise<Order> {
@@ -92,7 +83,7 @@ export class OrderApiRepository {
     order.numeroOrden = 0
 
     const mappedOrder = mapToGuardarOrdenRequest(order, options)
-    console.log('Creacion Orden:', mappedOrder)
+
     return this.handleRequest<number>('Orden', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

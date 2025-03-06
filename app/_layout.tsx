@@ -2,8 +2,6 @@ import { Stack, useLocalSearchParams } from "expo-router";
 import { View, StyleSheet } from "react-native";
 import "../global.css";
 import Providers from "./providers";
-import { signalRService } from "@/core/services/real-time.service";
-import { useEffect } from "react";
 
 interface ScreenConfig {
   name: string;
@@ -95,13 +93,6 @@ const THEME = {
 
 export default function RootLayout() {
   const { orderId } = useLocalSearchParams();
-
-  useEffect(() => {
-    signalRService.start();
-    return () => {
-      // Si es necesario, detener la conexión aquí
-    };
-  }, []);
 
   return (
     <Providers orderId={String(orderId)}>

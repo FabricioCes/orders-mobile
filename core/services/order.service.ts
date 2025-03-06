@@ -4,7 +4,6 @@ import { OrderApiRepository } from '@/core/repositories/order.repository'
 import { Order, OrderDetail, SaveOptions } from '@/types/types'
 import { ActiveTable } from '@/types/tableTypes'
 import { TokenService } from './token.service'
-import { ModoImpresion } from '@/types/enums'
 
 class OrderService {
   // Estado local de las órdenes
@@ -23,7 +22,7 @@ class OrderService {
       const activeTables = await OrderApiRepository.getActiveTables()
       return activeTables
     } catch (err) {
-      console.error('Error al cargar mesas activas:', err)
+      console.log('Error al cargar mesas activas:', err)
       throw err
     }
   }
@@ -53,7 +52,7 @@ class OrderService {
       this.updateLocalOrderDetails(orderId, details)
       return details
     } catch (err) {
-      console.error('Error al obtener los detalles:', err)
+      console.log('Error al obtener los detalles:', err)
       throw err
     }
   }
@@ -86,7 +85,7 @@ class OrderService {
 
       return updatedDetails
     } catch (err) {
-      console.error('Error al añadir producto:', err)
+      console.log('Error al añadir producto:', err)
       throw err
     }
   }
@@ -130,7 +129,7 @@ class OrderService {
       updatedOrders[orderIndex] = updatedOrder
       this.ordersSubject.next(updatedOrders)
     } catch (err) {
-      console.error('Error al eliminar producto:', err)
+      console.log('Error al eliminar producto:', err)
       throw err
     }
   }
@@ -148,7 +147,7 @@ class OrderService {
       this.updateLocalOrder(savedOrder)
       return savedOrder
     } catch (err) {
-      console.error('Error al guardar orden:', err)
+      console.log('Error al guardar orden:', err)
       throw err
     }
   } */
@@ -192,7 +191,45 @@ class OrderService {
       updatedOrders[orderIndex] = updatedOrder
       this.ordersSubject.next(updatedOrders)
     } catch (err) {
-      console.error('Error al actualizar cantidad:', err)
+      console.log('Error al actualizar cantidad:', err)
+      throw err
+    }
+  }
+  /**
+   * Actualiza una orden existente con los datos proporcionados.
+   * @param orderId - ID de la orden a actualizar.
+   * @param updatedOrderData - Datos parciales de la orden a actualizar.
+   * @param options - Opciones de guardado (opcional).
+   * @returns La orden actualizada o undefined si no se encontró la orden.
+   */
+  async updateOrder (
+    orderId: number,
+    updatedOrderData: Partial<Order>,
+    options?: SaveOptions
+  ): Promise<Order | undefined> {
+    try {
+      const currentOrder = this.getLocalOrder(orderId)
+      if (!currentOrder) {
+        throw new Error(`Orden con ID ${orderId} no encontrada localmente`)
+      }
+
+      const updatedOrder: Order = {
+        ...currentOrder,
+        ...updatedOrderData,
+        totalSinDescuento: updatedOrderData.detalles
+          ? this.calculateTotal(updatedOrderData.detalles)
+          : currentOrder.totalSinDescuento
+      }
+
+      this.updateLocalOrder(updatedOrder)
+
+      if (options) {
+        await OrderApiRepository.updateOrder(updatedOrder, options)
+      }
+
+      return updatedOrder
+    } catch (err) {
+      console.log('Error al actualizar la orden:', err)
       throw err
     }
   }
@@ -226,7 +263,7 @@ class OrderService {
 
       return updatedDetails
     } catch (err) {
-      console.error('Error en temporaryRemoveOrderDetail:', err)
+      console.log('Error en temporaryRemoveOrderDetail:', err)
       throw err
     }
   }
@@ -260,7 +297,7 @@ class OrderService {
     ).pipe(
       tap({
         next: () => console.log('Órdenes sincronizadas con el servidor'),
-        error: err => console.error('Error al sincronizar órdenes:', err)
+        error: err => console.log('Error al sincronizar órdenes:', err)
       }),
       map(() => void 0)
     )

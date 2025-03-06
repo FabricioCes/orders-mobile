@@ -32,7 +32,7 @@ const CustomerList: React.FC<CustomerListProps> = ({
           setLoading(false);
         },
         error: (err) => {
-          console.error("Error fetching letters", err);
+          console.log("Error fetching letters", err);
           setLoading(false);
         }
       });

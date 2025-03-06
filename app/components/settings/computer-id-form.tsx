@@ -28,6 +28,7 @@ const ComputerIdForm = () => {
       return;
     }
     saveSettings({ idComputadora: pcId });
+    //TODOR
     Alert.alert("Éxito", "ID guardado exitosamente");
     setIsLocked(true);
   };

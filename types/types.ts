@@ -126,6 +126,7 @@ export interface ApiResponse<T> {
   resultado: T;
   mensaje?: string;
   error?: boolean;
+  tipoError?: string;
   paginacion?: Paginacion;
 }
 

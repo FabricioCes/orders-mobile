@@ -39,7 +39,7 @@ const CustomerGroupAccordion: React.FC<CustomerGroupAccordionProps> =
             }).start();
           },
           error: (err: any) => {
-            console.error(err);
+            console.log(err);
             setLoading(false);
           },
         });

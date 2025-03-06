@@ -82,7 +82,7 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
         dispatch({ type: "SET_CUSTOMERS", payload: fetchedCustomers });
         dispatch({ type: "SET_STATUS", payload: "success" });
       } catch (error) {
-        console.error(error);
+        console.log(error);
         dispatch({ type: "SET_STATUS", payload: "error" });
         dispatch({ type: "SET_CUSTOMERS", payload: [] });
       }

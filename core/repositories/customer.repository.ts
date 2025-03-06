@@ -1,4 +1,4 @@
-// CustomerApiRepository.ts
+
 import { getBaseUrl } from '@/core/services/config'
 import { Customer, FirstCustomerLetter } from '@/types/customerTypes'
 import { ApiResponse } from '@/types/types'

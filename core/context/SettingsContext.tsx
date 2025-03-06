@@ -1,5 +1,5 @@
 // context/SettingsContext.tsx
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { router } from "expo-router";
 import { SettingsService } from "../services/settings.service";
 import { TokenService } from "../services/token.service";
@@ -21,9 +21,13 @@ type SettingsContextType = {
   loadingZonas: boolean;
 };
 
-const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
+const SettingsContext = createContext<SettingsContextType | undefined>(
+  undefined
+);
 
-export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [settings, setSettings] = useState<any>(null);
   const [isLogin, setisLogin] = useState<boolean>(false);
   const [userName, setUserName] = useState<string>("");
@@ -50,9 +54,13 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     checkTokenExpiration();
   };
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (
+    username: string,
+    password: string
+  ): Promise<boolean> => {
     const apiUrl = `http://${settings?.idComputadora}:5001`;
     const success = await AuthService.login(username, password, apiUrl);
+    console.log("login", success);
     if (success) {
       setisLogin(true);
       setUserName(username);
@@ -71,13 +79,13 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     router.navigate("/components/login");
   };
 
-  const checkTokenExpiration = async ():Promise<boolean> => {
-    const isValid = await TokenService.checkTokenExpiration(token);
-//TODO CAMBIAR POR UNA  REFRESCAMIENTO  DETOKEN
+  const checkTokenExpiration = async (): Promise<boolean> => {
+    const isValid = await TokenService.checkTokenExpiration();
+    console.log("Token valido", isValid);
     return isValid;
   };
 
-  const fetchZonasMesas = async () => {
+  const fetchZonasMesas = useCallback(async () => {
     if (!settings?.idComputadora || !token) return;
 
     setLoadingZonas(true);
@@ -85,21 +93,24 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const zonasData = await ZonaService.fetchZonasMesas(apiUrl, token);
     setZonas(zonasData);
     setLoadingZonas(false);
-  };
+  }, [settings?.idComputadora, token]);
 
   useEffect(() => {
     loadSettings();
   }, []);
 
+
   useEffect(() => {
     const fetchZonas = async () => {
       const isValidToken = await checkTokenExpiration();
-      if(isValidToken) {
-        await fetchZonasMesas()
+      if (isValidToken) {
+        await fetchZonasMesas();
+      } else {
+          
       }
-    }
-    fetchZonas()
-  }, [token]);
+    };
+    fetchZonas();
+  }, [token, isLogin, fetchZonasMesas]);
 
   return (
     <SettingsContext.Provider

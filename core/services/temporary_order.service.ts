@@ -3,7 +3,6 @@ import { tap } from 'rxjs/operators'
 import { OrderApiRepository } from '@/core/repositories/order.repository'
 import { Order, OrderDetail, SaveOptions } from '@/types/types'
 import { uuidEntero } from '@/utils/uuidUtils'
-import { ModoImpresion } from '@/types/enums'
 
 class TemporaryOrderService {
   // Se utiliza BehaviorSubject con un único Order o null
@@ -43,7 +42,33 @@ class TemporaryOrderService {
       this.temporaryOrderSubject.next(null)
     }
   }
+  /**
+   * Actualiza la orden temporal con los datos proporcionados.
+   * @param orderId - ID de la orden temporal a actualizar.
+   * @param updatedOrderData - Datos parciales de la orden a actualizar.
+   * @returns La orden actualizada o undefined si no se encontró la orden.
+   */
+  updateTemporaryOrder (
+    orderId: number,
+    updatedOrderData: Partial<Order>
+  ): Order | undefined {
+    const currentOrder = this.temporaryOrderSubject.value
+    if (!currentOrder || currentOrder.numeroOrden !== orderId) return undefined
 
+    // Creamos una copia de la orden actual y actualizamos los campos proporcionados
+    const updatedOrder: Order = {
+      ...currentOrder,
+      ...updatedOrderData,
+      // Si se actualizan los detalles, recalculamos el total; si no, mantenemos el actual
+      totalSinDescuento: updatedOrderData.detalles
+        ? this.calculateTotal(updatedOrderData.detalles)
+        : currentOrder.totalSinDescuento
+    }
+
+    // Emitimos la orden actualizada a través del BehaviorSubject
+    this.temporaryOrderSubject.next(updatedOrder)
+    return updatedOrder
+  }
   /**
    * Agrega un detalle a la orden temporal.
    * @param orderId - ID de la orden.
@@ -179,7 +204,10 @@ class TemporaryOrderService {
     return from(
       (async () => {
         const temporaryOrderId = Number(currentOrder.numeroOrden)
-        const newOrderId = await OrderApiRepository.createOrder(currentOrder, options)
+        const newOrderId = await OrderApiRepository.createOrder(
+          currentOrder,
+          options
+        )
         this.removeTemporaryOrder(Number(temporaryOrderId))
         return { temporaryOrderId, newOrderId }
       })()
