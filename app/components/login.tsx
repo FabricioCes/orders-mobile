@@ -12,6 +12,7 @@ import { router } from "expo-router";
 import { useSettings } from "@/core/context/SettingsContext";
 import UsuarioApiRepository from "@/core/repositories/usuario.repository";
 import { UsuarioDto } from "@/types/usuarioTypes";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function Login() {
   const [users, setUsers] = useState<UsuarioDto[]>([]);
@@ -76,21 +77,42 @@ export default function Login() {
         </>
       ) : (
         <>
-          <Text style={styles.label}>
-            Usuario: {selectedUser.nombreCompleto}
-          </Text>
-          <Text style={styles.label}>Contraseña</Text>
-          <TextInput
-            style={[styles.input, error ? styles.inputError : null]}
-            placeholder="Ingrese su contraseña"
-            secureTextEntry
-            onChangeText={setPassword}
-            value={password}
-          />
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-          <TouchableOpacity style={styles.button} onPress={handleLogin}>
-            <Text style={styles.buttonText}>Iniciar Sesión</Text>
+          <Text style={styles.label}>Bienvenido de vuelta</Text>
+
+          <View style={{ position: "relative", width: "100%" }}>
+            <View style={styles.inputIconContainer}>
+              <Ionicons name="person" size={24} color="#64748B" />
+            </View>
+            <TextInput
+              style={[styles.input, error ? styles.inputError : null]}
+              placeholder="Ingrese su contraseña"
+              placeholderTextColor="#94A3B8"
+              secureTextEntry
+              onChangeText={setPassword}
+              value={password}
+            />
+          </View>
+
+          {error && (
+            <View style={styles.errorContainer}>
+              <Ionicons
+                name="alert-circle"
+                size={20}
+                color="#DC2626"
+                style={styles.errorIcon}
+              />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          )}
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleLogin}
+            activeOpacity={0.9}
+          >
+            <Text style={styles.buttonText}>Ingresar al sistema</Text>
           </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => {
@@ -98,9 +120,10 @@ export default function Login() {
               setPassword("");
               setError("");
             }}
+            activeOpacity={0.7}
           >
             <Text style={styles.backButtonText}>
-              Volver a seleccionar usuario
+              ← Seleccionar otro usuario
             </Text>
           </TouchableOpacity>
         </>
@@ -112,70 +135,108 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F3F4F6",
-    padding: 16,
+    backgroundColor: "#F8FAFC",
+    padding: 24,
   },
   label: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 8,
-    color: "#374151",
+    fontSize: 18,
+    fontFamily: "Inter-SemiBold",
+    marginBottom: 16,
+    color: "#1E293B",
+    textAlign: "center",
   },
   input: {
     width: "100%",
-    padding: 12,
+    padding: 16,
     borderWidth: 1,
-    borderColor: "#D1D5DB",
-    borderRadius: 8,
-    marginBottom: 16,
+    borderColor: "#CBD5E1",
+    borderRadius: 12,
+    marginBottom: 20,
     backgroundColor: "#FFFFFF",
-    color: "#111827",
+    color: "#0F172A",
+    fontSize: 16,
+    paddingLeft: 48,
   },
   inputError: {
-    borderColor: "#EF4444",
+    borderColor: "#DC2626",
+    backgroundColor: "#FEF2F2",
   },
   errorText: {
-    color: "#EF4444",
+    color: "#DC2626",
     fontSize: 14,
     marginBottom: 16,
+    fontFamily: "Inter-Medium",
+    textAlign: "center",
+    paddingHorizontal: 20,
   },
   button: {
-    padding: 16,
-    borderRadius: 8,
-    backgroundColor: "#60A5FA",
+    padding: 18,
+    borderRadius: 12,
+    backgroundColor: "#2563EB",
     alignItems: "center",
     marginBottom: 16,
+    shadowColor: "#2563EB",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 3,
   },
   buttonText: {
     color: "#FFFFFF",
-    fontWeight: "bold",
+    fontFamily: "Inter-Bold",
     fontSize: 18,
+    letterSpacing: 0.5,
   },
   userItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-    backgroundColor: '#FFFFFF',
-    marginVertical: 4,
-    borderRadius: 8,
+    padding: 20,
+    backgroundColor: "#FFFFFF",
+    marginVertical: 8,
+    borderRadius: 12,
+    shadowColor: "#64748B",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
     elevation: 2,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
   },
   userUsername: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1F2937',
+    fontSize: 18,
+    fontFamily: "Inter-Bold",
+    color: "#1E293B",
+    marginBottom: 4,
   },
   userName: {
     fontSize: 14,
-    color: '#6B7280',
-    marginTop: 4,
+    color: "#64748B",
+    fontFamily: "Inter-Regular",
   },
   backButton: {
-    padding: 10,
+    padding: 12,
     alignItems: "center",
+    marginTop: 8,
   },
   backButtonText: {
-    color: "#60A5FA",
-    textDecorationLine: "underline",
+    color: "#2563EB",
+    fontFamily: "Inter-SemiBold",
+    fontSize: 14,
+    textDecorationLine: "none",
+  },
+  // Nuevos estilos para iconos
+  inputIconContainer: {
+    position: "absolute",
+    left: 16,
+    top: 16,
+    zIndex: 2,
+  },
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginBottom: 16,
+  },
+  errorIcon: {
+    marginRight: 8,
   },
 });
