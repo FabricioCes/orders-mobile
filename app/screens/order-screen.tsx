@@ -44,7 +44,7 @@ export default function OrderScreen() {
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [selectedOrderDetail, setSelectedOrderDetail] =
     useState<OrderDetail | null>(null);
-  const [showSummary, setShowSummary] = useState(true);
+  const [showSummary, setShowSummary] = useState(false);
 
   const hasInitializedOrder = useRef(false);
   const isTemporary = order?.esTemporal ?? false;
