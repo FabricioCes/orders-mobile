@@ -9,7 +9,7 @@ type TableItemProps = {
   isActive: boolean;
   onPress: (tableNumber: number) => void;
   testID?: string;
-  place: string; 
+  place: string;
 };
 
 const TableItem = ({
@@ -21,17 +21,16 @@ const TableItem = ({
 }: TableItemProps) => {
   const { state } = useActiveTables();
 
-  const clientLoaded = state.activeTables.some(
-    (table) => {
-      console.log(table)
-      return table.zona?.toLowerCase() === place.toLowerCase() &&
+  const clientLoaded = state.activeTables.some((table) => {
+    const backendZone = table.zona?.toLowerCase().replace(/\s/g, "");
+    const currentPlace = place.toLowerCase().replace(/\s/g, "");
+
+    return (
+      backendZone === currentPlace &&
       table.numeroMesa === tableNumber &&
       table.nombreCliente
-
-    }
-  );
-
-
+    );
+  });
 
   const getStyles = () => {
     let backgroundColor = "#60A5FA";
@@ -70,7 +69,7 @@ const TableItem = ({
 
   const clientName = state.activeTables.find(
     (table) =>
-      table.zona?.toLowerCase() === place.toLowerCase() &&
+      table.zona?.trim().toLowerCase() === place.trim().toLowerCase() &&
       table.numeroMesa === tableNumber
   )?.nombreCliente;
 
