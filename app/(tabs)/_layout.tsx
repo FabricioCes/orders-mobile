@@ -1,7 +1,7 @@
 import { Tabs, useFocusEffect } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useColorScheme } from "react-native";
-import { useMemo, memo, useCallback, useRef, useEffect } from "react";
+import { useMemo, memo, useCallback, useRef } from "react";
 import { useActiveTables } from "@/core/context/ActiveTablesContext";
 import { useSettings } from "@/core/context/SettingsContext";
 
@@ -114,26 +114,11 @@ const TabLayout = memo(() => {
         tabBarInactiveTintColor: isDarkMode ? "#888" : "#333",
         headerStyle: THEME.headers.default.headerStyle,
         headerTintColor: !isDarkMode ? "#fff" : "#0s00",
+        headerShown: false,
         lazy: true,
       }}
     >
       {renderedTabs}
-
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: "Conf",
-          headerTitle: "Configuraciones",
-          tabBarIcon: () => <FontAwesome name="cog" size={24} color="#888" />,
-          tabBarLabelStyle: {
-            fontSize: 10,
-            color: "#888",
-          },
-          headerStyle: THEME.headers.default.headerStyle,
-          headerTitleStyle: THEME.headers.default.headerTitleStyle,
-          headerTintColor: THEME.headers.default.headerTintColor,
-        }}
-      />
     </Tabs>
   );
 });

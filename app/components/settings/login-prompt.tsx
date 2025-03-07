@@ -13,8 +13,6 @@ const LoginPrompt = () => {
       </Text>
       </View>
 
-      
-
       <Link href="/components/login" asChild>
         <TouchableOpacity
           className="py-4 px-6 bg-blue-500 rounded-xl shadow-md flex-row justify-center items-center"

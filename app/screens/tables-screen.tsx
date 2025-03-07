@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   useWindowDimensions,
@@ -11,7 +11,7 @@ import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import TableGrid from "../components/tables/TableGrid";
 import { useTableNavigation } from "@/core/hooks/useTableNavigation";
 import { useSettings } from "@/core/context/SettingsContext";
-import { router } from "expo-router";
+import { router, useFocusEffect, useNavigation } from "expo-router";
 import { signalRService } from "@/core/services/real-time.service";
 import { useActiveTables } from "@/core/context/ActiveTablesContext";
 import { notificationService } from "@/core/services/notification.service";
@@ -127,7 +127,14 @@ export default function Tables({ place, qty: propQty }: TablesProps) {
   const tables = Array.from({ length: qty }, (_, i) => i + 1);
   const [isConnected, _] = useState(true);
   const { handleTablePress, isTableActive } = useTableNavigation(place);
+  const navigation = useNavigation();
 
+  useFocusEffect(
+    useCallback(() => {
+      const formattedPlace = place.charAt(0).toUpperCase() + place.slice(1).toLowerCase();
+      navigation.getParent()?.setOptions({ title: formattedPlace });
+    }, [place])
+  );
 /*   useEffect(() => {
     const handleReconnected = () => {
       fetchZonasMesas();

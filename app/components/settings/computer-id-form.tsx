@@ -28,7 +28,6 @@ const ComputerIdForm = () => {
       return;
     }
     saveSettings({ idComputadora: pcId });
-    //TODOR
     Alert.alert("Éxito", "ID guardado exitosamente");
     setIsLocked(true);
   };
@@ -87,52 +86,57 @@ const ComputerIdForm = () => {
 const styles = StyleSheet.create({
   formContainer: {
     width: "100%",
-    padding: 16,
-    backgroundColor: "#fff",
-    borderRadius: 8,
+    padding: 32, // Más espacio interno
+    backgroundColor: "#fff", // Fondo blanco
+    borderRadius: 16, // Bordes más redondeados
     marginBottom: 20,
-    elevation: 3,
+    elevation: 5, // Sombra más suave y pronunciada
   },
   title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#374151",
-    marginBottom: 8,
+    fontSize: 24, // Texto más grande
+    fontWeight: "700", // Negrita
+    color: "#1F2937", // Gris oscuro
+    marginBottom: 16,
+    textAlign: "center", // Centrado
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#D1D5DB",
-    borderRadius: 8,
-    height: 48,
-    paddingHorizontal: 12,
+    borderWidth: 2, // Borde más grueso
+    borderColor: "#9CA3AF", // Gris claro
+    borderRadius: 12, // Bordes redondeados
+    height: 56, // Mayor altura
+    paddingHorizontal: 16,
     color: "#4B5563",
     backgroundColor: "#fff",
   },
   inputLocked: {
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#E5E7EB", // Fondo gris claro cuando está bloqueado
   },
   saveButton: {
-    backgroundColor: "#3B82F6",
+    backgroundColor: "#3B82F6", // Azul
     marginTop: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 16, // Padding vertical consistente
+    borderRadius: 12, // Bordes más redondeados
+    elevation: 2, // Sombra suave
   },
   editButton: {
-    backgroundColor: "#F59E0B",
+    backgroundColor: "#F59E0B", // Naranja
     marginTop: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 16,
+    borderRadius: 12,
+    elevation: 2,
   },
   scanButton: {
-    backgroundColor: "#10B981",
+    backgroundColor: "#10B981", // Verde
     marginTop: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 16,
+    borderRadius: 12,
+    elevation: 2,
   },
   buttonText: {
-    color: "#fff",
-    fontWeight: "700",
+    color: "#fff", // Texto blanco
+    fontWeight: "700", // Negrita
     textAlign: "center",
+    fontSize: 18, // Tamaño de texto más grande
   },
 });
 
