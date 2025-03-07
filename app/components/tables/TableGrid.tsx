@@ -13,51 +13,61 @@ type TableGridProps = {
   place?: string;
 };
 
-const TableGrid = React.memo(({
-  tables,
-  columns,
-  isActive,
-  onTablePress,
-  place = "comedor",
-}: TableGridProps) => {
-  const rows = useMemo(
-    () => generateTableRows(tables, columns),
-    [tables, columns]
-  );
+const TableGrid = React.memo(
+  ({
+    tables,
+    columns,
+    isActive,
+    onTablePress,
+    place = "comedor",
+  }: TableGridProps) => {
+    const rows = useMemo(
+      () => generateTableRows(tables, columns),
+      [tables, columns]
+    );
 
-  const renderRow = useCallback(
-    ({ item: row, index }: { item: number[]; index: number }) => (
-      <TableRow
-        key={`${place}-row-${index}`}
-        tables={row}
-        isActive={isActive}
-        onTablePress={onTablePress}
-        rowIndex={index}
-        totalColumns={columns}
-      />
-    ),
-    [columns, isActive, onTablePress, place]
-  );
+    const renderRow = useCallback(
+      ({ item: row, index }: { item: number[]; index: number }) => (
+        <TableRow
+          key={`${place}-row-${index}`}
+          place={place}
+          tables={row}
+          isActive={isActive}
+          onTablePress={onTablePress}
+          rowIndex={index}
+          totalColumns={columns}
+        />
+      ),
+      [columns, isActive, onTablePress, place]
+    );
 
-  if (!rows.length) {
+    if (!rows.length) {
+      return (
+        <View className="flex-1 justify-center items-center p-4">
+          <Text className="text-gray-500 text-lg">
+            No hay mesas disponibles
+          </Text>
+        </View>
+      );
+    }
+
     return (
-      <View className="flex-1 justify-center items-center p-4">
-        <Text className="text-gray-500 text-lg">No hay mesas disponibles</Text>
-      </View>
+      <FlashList
+        data={rows}
+        renderItem={renderRow}
+        keyExtractor={(_, index) => `${place}-row-${index}`}
+        estimatedItemSize={120}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingVertical: 10,
+          alignItems: "center",
+          flexGrow: 1,
+        }}
+        testID="table-grid-scrollview"
+        horizontal={false}
+      />
     );
   }
-
-  return (
-    <FlashList
-      data={rows}
-      renderItem={renderRow}
-      keyExtractor={(_, index) => `${place}-row-${index}`}
-      estimatedItemSize={120} // Ajustar según altura del row
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingVertical: 10 }}
-      testID="table-grid-scrollview"
-    />
-  );
-});
+);
 
 export default TableGrid;

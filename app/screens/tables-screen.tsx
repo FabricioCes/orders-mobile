@@ -1,5 +1,11 @@
 import React, { useCallback } from "react";
-import { View, useWindowDimensions, ActivityIndicator, Text, TouchableOpacity } from "react-native";
+import {
+  View,
+  useWindowDimensions,
+  ActivityIndicator,
+  Text,
+  TouchableOpacity,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import TableGrid from "../components/tables/TableGrid";
@@ -30,16 +36,35 @@ const variantStyles = {
 
 type Variant = "error" | "warning" | "info";
 
-const ErrorMessage = ({ text, variant = "error", action }: { text: string; variant?: Variant; action?: { label: string; onPress: () => void } }) => {
+const ErrorMessage = ({
+  text,
+  variant = "error",
+  action,
+}: {
+  text: string;
+  variant?: Variant;
+  action?: { label: string; onPress: () => void };
+}) => {
   const styles = variantStyles[variant];
 
   return (
-    <Animated.View entering={FadeIn} exiting={FadeOut} className={`p-5 rounded-2xl shadow-lg ${styles.bg}`}>
+    <Animated.View
+      entering={FadeIn}
+      exiting={FadeOut}
+      className={`p-5 rounded-2xl shadow-lg ${styles.bg}`}
+    >
       <View className="items-center">
         <Ionicons name={styles.iconName} size={40} color={styles.iconColor} />
-        <Text className={`mt-3 text-center text-lg font-semibold ${styles.text}`}>{text}</Text>
+        <Text
+          className={`mt-3 text-center text-lg font-semibold ${styles.text}`}
+        >
+          {text}
+        </Text>
         {action && (
-          <TouchableOpacity onPress={action.onPress} className="mt-4 px-6 py-3 bg-blue-500 rounded-full">
+          <TouchableOpacity
+            onPress={action.onPress}
+            className="mt-4 px-6 py-3 bg-blue-500 rounded-full"
+          >
             <Text className="text-white font-bold">{action.label}</Text>
           </TouchableOpacity>
         )}
@@ -49,9 +74,14 @@ const ErrorMessage = ({ text, variant = "error", action }: { text: string; varia
 };
 
 const LoadingState = () => (
-  <Animated.View entering={FadeIn} className="flex-1 justify-center items-center">
+  <Animated.View
+    entering={FadeIn}
+    className="flex-1 justify-center items-center"
+  >
     <ActivityIndicator size="large" color="#2563EB" />
-    <Text className="mt-4 text-gray-500">Cargando configuración de mesas...</Text>
+    <Text className="mt-4 text-gray-500">
+      Cargando configuración de mesas...
+    </Text>
   </Animated.View>
 );
 
@@ -72,7 +102,8 @@ export default function Tables({ place, qty: propQty }: TablesProps) {
 
   useFocusEffect(
     useCallback(() => {
-      const formattedPlace = place.charAt(0).toUpperCase() + place.slice(1).toLowerCase();
+      const formattedPlace =
+        place.charAt(0).toUpperCase() + place.slice(1).toLowerCase();
       navigation.getParent()?.setOptions({ title: formattedPlace });
     }, [place])
   );
@@ -85,17 +116,27 @@ export default function Tables({ place, qty: propQty }: TablesProps) {
         {!token ? (
           <ErrorMessage
             text="Debe iniciar sesión para ver las mesas"
-            action={{ label: "Ir al Login", onPress: () => router.navigate("/components/login") }}
+            action={{
+              label: "Ir al Login",
+              onPress: () => router.navigate("/components/login"),
+            }}
           />
         ) : (
-          <ErrorMessage text={`No hay mesas configuradas para ${place}`} variant="warning" />
+          <ErrorMessage
+            text={`No hay mesas configuradas para ${place}`}
+            variant="warning"
+          />
         )}
       </View>
     );
   }
 
   return (
-    <Animated.View entering={FadeIn} className="flex-1 p-5 bg-white rounded-2xl shadow-lg">
+    <Animated.View
+      entering={FadeIn}
+      className="flex-1 p-5 bg-white"
+      style={{ justifyContent: "center" }} // Centrado vertical
+    >
       <TableGrid
         tables={tables}
         columns={columns}

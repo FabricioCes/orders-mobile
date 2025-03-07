@@ -5,6 +5,7 @@ export type TableRowProps = {
   rowIndex: number
   totalColumns: number
   accessibilityLabel?: string
+  place?: string
 }
 
 export interface ActiveTable {

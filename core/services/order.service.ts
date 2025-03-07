@@ -13,8 +13,7 @@ class OrderService {
   orders$ = this.ordersSubject.asObservable()
 
   async tokenIsValid (): Promise<boolean> {
-    const token = await TokenService.getToken()
-    return TokenService.checkTokenExpiration(String(token))
+    return TokenService.checkTokenExpiration()
   }
 
   async loadActiveOrders (): Promise<ActiveTable[]> {
