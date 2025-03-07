@@ -1,18 +1,29 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { Link } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 const LoginPrompt = () => {
   return (
-    <View className="w-full p-5 bg-white shadow-md rounded-lg mt-5">
-      <Text className="text-center text-red-500 font-semibold text-lg">
-        Oops! No has iniciado sesión. ⚠️
+    <View className="w-full p-8 bg-white rounded-2xl shadow-lg shadow-black/20 mt-5">
+      <View className="items-center mb-6">
+        <Ionicons name="person" size={40} color="#F59E0B" />
+        <Text className="text-center text-2xl font-bold text-gray-800 mb-3">
+        Login
       </Text>
-      <Link
-        href="/components/login"
-        className="mt-5 py-3 px-4 bg-blue-500 text-white font-bold text-center rounded-lg"
-      >
-        Iniciar Sesión
+      </View>
+
+      
+
+      <Link href="/components/login" asChild>
+        <TouchableOpacity
+          className="py-4 px-6 bg-blue-500 rounded-xl shadow-md flex-row justify-center items-center"
+        >
+          <Ionicons name="log-in" size={20} color="white" />
+          <Text className="text-white font-semibold text-lg ml-2">
+            Ingresar
+          </Text>
+        </TouchableOpacity>
       </Link>
     </View>
   );

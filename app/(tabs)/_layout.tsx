@@ -41,7 +41,7 @@ const TabLayout = memo(() => {
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === "dark";
   const lastLoaded = useRef<number | null>(null);
-  const { isLogin, token } = useSettings();
+  const { isLogin } = useSettings();
 
   let activeTables = state.activeTables;
 
