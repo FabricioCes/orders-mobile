@@ -1,5 +1,7 @@
-import React, { useMemo } from "react";
-import { ScrollView, View, Text } from "react-native";
+// TableGrid.tsx
+import React, { useCallback, useMemo } from "react";
+import { View, Text } from "react-native";
+import { FlashList } from "@shopify/flash-list";
 import TableRow from "./TableRow";
 import { generateTableRows } from "@/utils/tableUtils";
 
@@ -8,10 +10,10 @@ type TableGridProps = {
   columns: number;
   isActive: (tableId: number) => boolean;
   onTablePress: (tableId: number) => void;
-  place?: string; // Nueva prop para mejor manejo de keys
+  place?: string;
 };
 
-const TableGrid = ({
+const TableGrid = React.memo(({
   tables,
   columns,
   isActive,
@@ -23,6 +25,20 @@ const TableGrid = ({
     [tables, columns]
   );
 
+  const renderRow = useCallback(
+    ({ item: row, index }: { item: number[]; index: number }) => (
+      <TableRow
+        key={`${place}-row-${index}`}
+        tables={row}
+        isActive={isActive}
+        onTablePress={onTablePress}
+        rowIndex={index}
+        totalColumns={columns}
+      />
+    ),
+    [columns, isActive, onTablePress, place]
+  );
+
   if (!rows.length) {
     return (
       <View className="flex-1 justify-center items-center p-4">
@@ -32,26 +48,16 @@ const TableGrid = ({
   }
 
   return (
-    <ScrollView
-      contentContainerStyle={{ paddingVertical: 10 }}
+    <FlashList
+      data={rows}
+      renderItem={renderRow}
+      keyExtractor={(_, index) => `${place}-row-${index}`}
+      estimatedItemSize={120} // Ajustar según altura del row
       showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ paddingVertical: 10 }}
       testID="table-grid-scrollview"
-    >
-      {rows.map((row, rowIndex) => (
-        <TableRow
-          key={getRowKey(place, rowIndex)}
-          tables={row}
-          isActive={isActive}
-          onTablePress={onTablePress}
-          rowIndex={rowIndex}
-          totalColumns={columns}
-        />
-      ))}
-    </ScrollView>
+    />
   );
-};
+});
 
-const getRowKey = (place: string, rowIndex: number) =>
-  `${place}-row-${rowIndex}`;
-
-export default React.memo(TableGrid);
+export default TableGrid;

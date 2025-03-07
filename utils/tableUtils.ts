@@ -1,13 +1,23 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 export const generateTableRows = (tables: number[], columns: number) => {
-    const rows = [];
-    for (let i = 0; i < tables.length; i += columns) {
-      rows.push(tables.slice(i, i + columns));
-    }
-    return rows;
-  };
+  const rows: number[][] = []
+  let currentRow: number[] = []
 
+  tables.forEach((table, index) => {
+    currentRow.push(table)
+    if ((index + 1) % columns === 0) {
+      rows.push(currentRow)
+      currentRow = []
+    }
+  })
+
+  if (currentRow.length > 0) {
+    rows.push(currentRow)
+  }
+
+  return rows
+}
 
 export const getToken = async (): Promise<string | null> => {
   try {
@@ -18,4 +28,3 @@ export const getToken = async (): Promise<string | null> => {
     return null
   }
 }
-

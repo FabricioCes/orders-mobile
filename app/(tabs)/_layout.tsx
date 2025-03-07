@@ -1,16 +1,16 @@
 import { Tabs, useFocusEffect } from "expo-router";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { FontAwesome5 } from '@expo/vector-icons';
 import { useColorScheme } from "react-native";
 import { useMemo, memo, useCallback, useRef } from "react";
 import { useActiveTables } from "@/core/context/ActiveTablesContext";
 import { useSettings } from "@/core/context/SettingsContext";
 
 const staticTabs = [
-  { name: "comedor", title: "Comedor", iconName: "home" },
-  { name: "barra", title: "Barra", iconName: "glass" },
-  { name: "express", title: "Express", iconName: "bolt" },
-  { name: "llevar", title: "Llevar", iconName: "shopping-bag" },
-  { name: "terraza", title: "Terraza", iconName: "tree" },
+  { name: 'comedor', title: 'Comedor', icon: 'home' },
+  { name: 'barra', title: 'Barra', icon: 'glass-martini' },
+  { name: 'express', title: 'Express', icon: 'bolt' },
+  { name: 'llevar', title: 'Llevar', icon: 'shopping-bag' },
+  { name: 'terraza', title: 'Terraza', icon: 'tree' },
 ];
 
 const THEME = {
@@ -83,17 +83,13 @@ const TabLayout = memo(() => {
             options={{
               title: tab.title,
               tabBarIcon: ({ color }: { color: string }) => (
-                <FontAwesome
-                  size={28}
-                  name={tab.iconName as keyof typeof FontAwesome.glyphMap}
-                  color={color}
-                />
+                <FontAwesome5 name={tab.icon} size={24} color={color} />
               ),
               tabBarBadge: activeCount > 0 ? activeCount : undefined,
               tabBarBadgeStyle: {
-                backgroundColor: "#34D399CC",
+                backgroundColor: '#34D399',
                 color: "white",
-                fontSize: 8,
+                fontSize: 10,
                 fontWeight: "bold",
                 marginLeft: 5,
               },
@@ -109,15 +105,23 @@ const TabLayout = memo(() => {
 
   return (
     <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: THEME.colors.primary,
-        tabBarInactiveTintColor: isDarkMode ? "#888" : "#333",
-        headerStyle: THEME.headers.default.headerStyle,
-        headerTintColor: !isDarkMode ? "#fff" : "#0s00",
-        headerShown: false,
-        lazy: true,
-      }}
-    >
+    screenOptions={{
+      tabBarActiveTintColor: '#2563EB',
+      tabBarInactiveTintColor: '#64748B',
+      tabBarStyle: {
+        backgroundColor: '#F8FAFC',
+        borderTopWidth: 1,
+        borderTopColor: '#E2E8F0',
+        height: 60,
+      },
+      tabBarLabelStyle: {
+        fontSize: 12,
+        fontFamily: 'Inter-SemiBold',
+        paddingBottom: 4,
+      },
+      headerShown: false,
+    }}
+  >
       {renderedTabs}
     </Tabs>
   );
