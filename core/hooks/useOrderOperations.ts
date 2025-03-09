@@ -9,12 +9,11 @@ import { uuidEntero } from '@/utils/uuidUtils'
 import { firstValueFrom } from 'rxjs'
 import { router } from 'expo-router'
 import { useOrderUpdater } from './useGetSaveOptions'
-import { CustomerService } from '../services/customer.service'
 import { useCustomer } from '../context/CustomerContext'
 
 export const useOrderOperations = (orderId: number) => {
   const { state, dispatch } = useOrder()
-  const { state: customerState, dispatch: dispatchCustomer } = useCustomer()
+  const { state: customerState } = useCustomer()
   const [_, setIsInitialLoad] = useState(true)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const { getSaveOptions } = useOrderUpdater()
@@ -48,6 +47,7 @@ export const useOrderOperations = (orderId: number) => {
     } else {
       try {
         dispatch({ type: 'SET_LOADING', payload: true })
+        orderService.clearLocalOrders()
         const order = await orderService.getOrder(orderId)
         const details = await orderService.getOrderDetails(orderId)
         dispatch({ type: 'SET_ORDER', payload: order })
@@ -210,9 +210,7 @@ export const useOrderOperations = (orderId: number) => {
     const currentOrder = state.order
     if (!currentOrder) throw new Error('No hay orden actual para guardar')
 
-    const options = await getSaveOptions(
-      currentOrder
-    )
+    const options = await getSaveOptions(currentOrder)
 
     let orderIdToUse: number
 
@@ -226,7 +224,7 @@ export const useOrderOperations = (orderId: number) => {
       orderIdToUse = syncResult.newOrderId
       router.setParams({ orderId: orderIdToUse.toString() })
     } else {
-      await firstValueFrom(orderService.syncOrders(options))
+      await firstValueFrom(orderService.syncOrder(currentOrder, options))
       orderIdToUse = orderId
     }
     return updateOrderState(orderIdToUse)

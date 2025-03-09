@@ -2,6 +2,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Alert } from 'react-native'
 import { ErrorService } from './error.service'
+import { orderService } from './order.service'
 
 export class AuthService {
 
@@ -45,6 +46,7 @@ export class AuthService {
     try {
       await AsyncStorage.removeItem('isLogin')
       await AsyncStorage.removeItem('token')
+      orderService.clearLocalOrders();
     } catch (error) {
       ErrorService.handleError(error,'Error al cerrar sesión:' )
     }

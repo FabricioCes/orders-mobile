@@ -6,6 +6,7 @@ import { TokenService } from "../services/token.service";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthService } from "../services/auth.service";
 import { ZonaService } from "../services/zone.service";
+import { orderService } from "../services/order.service";
 
 type SettingsContextType = {
   saveSettings: (value: any) => void;
@@ -76,6 +77,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
     setUserName("");
     setToken("");
     router.navigate("/components/login");
+    
   };
 
   const checkTokenExpiration = async (): Promise<boolean> => {

@@ -265,31 +265,30 @@ class OrderService {
    * Sincroniza las órdenes locales con el servidor.
    * @returns Observable que se completa cuando la sincronización termina.
    */
-  syncOrders (options: SaveOptions): Observable<void> {
-    const ordersToSync = this.ordersSubject.value
+  syncOrder (order: Order, options: SaveOptions): Observable<void> {
     return from(
-      Promise.all(
-        ordersToSync.map(order =>
-          OrderApiRepository.updateOrder(order, options).then(() => {
-            console.log(`Orden ${order.numeroOrden} sincronizada`)
-          })
-        )
-      )
+      OrderApiRepository.updateOrder(order, options).then(() => {
+        console.log(`Orden ${order.numeroOrden} sincronizada`)
+        this.updateLocalOrder(order) // Actualizar solo esta orden
+      })
     ).pipe(
       tap({
-        next: () => console.log('Órdenes sincronizadas con el servidor'),
-        error: err => console.log('Error al sincronizar órdenes:', err)
+        next: () => console.log('Orden sincronizada con el servidor'),
+        error: err => console.log('Error al sincronizar orden:', err)
       }),
       map(() => void 0)
     )
   }
-
   /**
    * Actualiza o agrega una orden al estado local.
    * @param order - Orden a actualizar o agregar.
    */
   private updateLocalOrder (order: Order): void {
     const currentOrders = this.ordersSubject.value
+    const filteredOrders = currentOrders.filter(
+      o => o.numeroOrden !== order.numeroOrden
+    )
+    this.ordersSubject.next([...filteredOrders, order])
     const orderIndex = currentOrders.findIndex(
       o => o.numeroOrden === order.numeroOrden
     )
@@ -303,7 +302,10 @@ class OrderService {
 
     this.ordersSubject.next(updatedOrders)
   }
-
+  public clearLocalOrders (): void {
+    this.ordersSubject.next([])
+    console.log('Órdenes locales limpiadas')
+  }
   /**
    * Actualiza los detalles de una orden en el estado local.
    * @param orderId - ID de la orden.
