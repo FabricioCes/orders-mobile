@@ -4,6 +4,9 @@ import { OrderProvider } from "@/core/context/OrderContext";
 import { ProductsProvider } from "@/core/context/ProductsContext";
 import { CustomerProvider } from "@/core/context/CustomerContext";
 import { ActiveTablesProvider } from "@/core/context/ActiveTablesContext";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { PortalProvider } from "@gorhom/portal";
+
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -11,7 +14,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       <ActiveTablesProvider>
         <CustomerProvider>
           <OrderProvider>
-            <ProductsProvider>{children}</ProductsProvider>
+            <ProductsProvider>
+              <GestureHandlerRootView style={{ flex: 1 }}>
+                <PortalProvider>{children}</PortalProvider>
+              </GestureHandlerRootView>
+            </ProductsProvider>
           </OrderProvider>
         </CustomerProvider>
       </ActiveTablesProvider>

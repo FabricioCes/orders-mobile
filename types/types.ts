@@ -77,9 +77,14 @@ export type OrderDetail = {
   tipoIngrediente?: string;
   totalCostoUnitario?: number;
   totalDescProducto?: number;
-  unidad?: number;
+  unidad?: number,
+  adicionales?: AdicionalType[];
 };
-
+export type AdicionalType = {
+  idAdicional: number;
+  nombre: string;
+  precio: number;
+};
 export interface GuardarOrdenRequest {
   numeroOrden?: number;
   numeroLugar?: string;

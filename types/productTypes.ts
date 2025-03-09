@@ -25,6 +25,7 @@ export type Product = {
   subSubCategoria: string
   unidad?: number
 }
+
 export type Category = {
   identificadorCategoria: number
   nombreCategoria: string

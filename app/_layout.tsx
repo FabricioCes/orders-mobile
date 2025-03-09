@@ -16,6 +16,14 @@ interface ScreenConfig {
 
 const SCREENS_CONFIG: ScreenConfig[] = [
   {
+    name: "index",
+    options: {
+      type: "default",
+      title: "",
+      animation: "fade",
+    },
+  },
+  {
     name: "(tabs)",
     options: {
       type: "tabs",
@@ -27,7 +35,7 @@ const SCREENS_CONFIG: ScreenConfig[] = [
     name: "screens/order-screen",
     options: {
       type: "default",
-      title: "Detalle de Orden",
+      title: "",
       animation: "slide_from_right",
     },
   },
@@ -114,73 +122,77 @@ export default function RootLayout() {
   }, [orderId]);
 
   return (
-    <Providers>
-      <View style={styles.container}>
-        <Stack
-          screenOptions={{
-            gestureEnabled: true,
-            fullScreenGestureEnabled: true,
-            headerStyle: THEME.headers.default.headerStyle,
-            headerTitleStyle: THEME.headers.default.headerTitleStyle,
-            headerTintColor: THEME.headers.default.headerTintColor,
-            headerTitleAlign: "center", // Centrar el título
-          }}
-        >
-          {SCREENS_CONFIG.map(({ name, options }) => {
-            const isModal = options.type === "modal";
-            const headerShown = true;
-            const presentation = isModal ? "modal" : "card";
-            const gestureDirection =
-              options.animation === "slide_from_bottom"
-                ? "vertical"
-                : "horizontal";
 
-            return (
-              <Stack.Screen
-                key={name}
-                name={name}
-                options={{
-                  title: options.title,
-                  headerShown,
-                  presentation,
-                  headerStyle: isModal
-                    ? THEME.headers.modal.headerStyle
-                    : THEME.headers.default.headerStyle,
-                  headerTitleStyle: isModal
-                    ? THEME.headers.modal.headerTitleStyle
-                    : THEME.headers.default.headerTitleStyle,
-                  headerTintColor: isModal
-                    ? THEME.headers.modal.headerTintColor
-                    : THEME.headers.default.headerTintColor,
-                  animation: options.animation,
-                  gestureDirection,
-                  headerLeft: isModal ? () => null : undefined,
-                  headerRight: () => (
-                    <View style={{ flexDirection: "row", marginRight: 10 }}>
-                      <TouchableOpacity
-                        onPress={() => alert("Mostrar notificaciones")}
-                      >
-                        <Ionicons
-                          name="notifications"
-                          size={24}
-                          color="#1E3A8A"
-                        />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => router.push("/screens/settings-screen")}
-                        style={{ marginLeft: 15 }}
-                      >
-                        <Ionicons name="settings" size={24} color="#1E3A8A" />
-                      </TouchableOpacity>
-                    </View>
-                  ),
-                }}
-              />
-            );
-          })}
-        </Stack>
-      </View>
-    </Providers>
+      <Providers>
+        <View style={styles.container}>
+          <Stack
+            screenOptions={{
+              gestureEnabled: true,
+              fullScreenGestureEnabled: true,
+              headerStyle: THEME.headers.default.headerStyle,
+              headerTitleStyle: THEME.headers.default.headerTitleStyle,
+              headerTintColor: THEME.headers.default.headerTintColor,
+              headerTitleAlign: "center", // Centrar el título
+            }}
+          >
+            {SCREENS_CONFIG.map(({ name, options }) => {
+              const isModal = options.type === "modal";
+              const headerShown = true;
+              const presentation = isModal ? "modal" : "card";
+              const gestureDirection =
+                options.animation === "slide_from_bottom"
+                  ? "vertical"
+                  : "horizontal";
+
+              return (
+                <Stack.Screen
+                  key={name}
+                  name={name}
+                  options={{
+                    title: options.title,
+                    headerShown,
+                    presentation,
+                    headerStyle: isModal
+                      ? THEME.headers.modal.headerStyle
+                      : THEME.headers.default.headerStyle,
+                    headerTitleStyle: isModal
+                      ? THEME.headers.modal.headerTitleStyle
+                      : THEME.headers.default.headerTitleStyle,
+                    headerTintColor: isModal
+                      ? THEME.headers.modal.headerTintColor
+                      : THEME.headers.default.headerTintColor,
+                    animation: options.animation,
+                    gestureDirection,
+                    headerLeft: isModal ? () => null : undefined,
+                    headerRight: () => (
+                      <View style={{ flexDirection: "row", marginRight: 10 }}>
+                        <TouchableOpacity
+                          onPress={() => alert("Mostrar notificaciones")}
+                        >
+                          <Ionicons
+                            name="notifications"
+                            size={24}
+                            color="#1E3A8A"
+                          />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() =>
+                            router.push("/screens/settings-screen")
+                          }
+                          style={{ marginLeft: 15 }}
+                        >
+                          <Ionicons name="settings" size={24} color="#1E3A8A" />
+                        </TouchableOpacity>
+                      </View>
+                    ),
+                  }}
+                />
+              );
+            })}
+          </Stack>
+        </View>
+      </Providers>
+
   );
 }
 

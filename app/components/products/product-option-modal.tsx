@@ -1,7 +1,7 @@
-// ProductOptionsModal.tsx
 import React from "react";
-import { Modal, Text, TouchableOpacity, View, StyleSheet } from "react-native";
+import { Text, TouchableOpacity, View, StyleSheet } from "react-native";
 import { OrderDetail } from "@/types/types";
+import CustomModal from "../custom-modal";
 
 interface ProductOptionsModalProps {
   visible: boolean;
@@ -19,103 +19,87 @@ const ProductOptionsModal: React.FC<ProductOptionsModalProps> = ({
   onModify,
 }) => {
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onCancel}
-    >
-      <View style={styles.modalBackground}>
-        <View style={styles.modalContainer}>
-          <Text style={styles.title}>
-            {product.nombreProducto || "Producto"}
-          </Text>
-          <Text style={styles.subtitle}>
-            ¿Qué deseas hacer con este producto?
-          </Text>
-          <View style={styles.optionsContainer}>
-            <TouchableOpacity style={styles.optionButton} onPress={onDelete}>
-              <Text style={[styles.optionText, styles.deleteText]}>Eliminar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.optionButton} onPress={onModify}>
-              <Text style={[styles.optionText, styles.modifyText]}>
-                Modificar cantidad
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
-            <Text style={styles.cancelButtonText}>Cancelar</Text>
+    <CustomModal visible={visible} onClose={onCancel}>
+      <View style={styles.contentContainer}>
+        <Text style={styles.title}>{product.nombreProducto || "Producto"}</Text>
+        <Text style={styles.subtitle}>
+          ¿Qué deseas hacer con este producto?
+        </Text>
+
+        <View style={styles.optionsContainer}>
+          <TouchableOpacity
+            style={[styles.button, styles.deleteButton]}
+            onPress={onDelete}
+          >
+            <Text style={styles.deleteText}>Eliminar</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, styles.modifyButton]}
+            onPress={onModify}
+          >
+            <Text style={styles.modifyText}>Modificar cantidad</Text>
           </TouchableOpacity>
         </View>
+
       </View>
-    </Modal>
+    </CustomModal>
   );
 };
 
 const styles = StyleSheet.create({
-  modalBackground: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
+  contentContainer: {
+    padding: 24,
     alignItems: "center",
-    padding: 20,
-  },
-  modalContainer: {
-    backgroundColor: "#fff",
-    width: "90%",
-    maxWidth: 300,
-    borderRadius: 10,
-    padding: 20,
-    alignItems: "center",
-    // Sombra para iOS y elevación para Android
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   title: {
-    fontSize: 20,
-    fontWeight: "600",
-    marginBottom: 8,
-    color: "#333",
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#1e293b",
+    marginBottom: 12,
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
+    color: "#64748b",
+    marginBottom: 20,
     textAlign: "center",
-    color: "#666",
-    marginBottom: 16,
   },
   optionsContainer: {
     width: "100%",
     marginBottom: 16,
+    gap: 12,
   },
-  optionButton: {
-    paddingVertical: 12,
-    width: "100%",
+  button: {
+    padding: 16,
+    borderRadius: 12,
     alignItems: "center",
-    borderBottomWidth: 1,
-    borderColor: "#eee",
+    justifyContent: "center",
   },
-  optionText: {
+  deleteButton: {
+    backgroundColor: "#fee2e2",
+  },
+  modifyButton: {
+    backgroundColor: "#dbeafe",
+  },
+  deleteText: {
+    color: "#dc2626",
     fontSize: 16,
     fontWeight: "500",
   },
-  deleteText: {
-    color: "#d11a2a",
-  },
   modifyText: {
-    color: "#3b82f6",
+    color: "#2563eb",
+    fontSize: 16,
+    fontWeight: "500",
   },
   cancelButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    backgroundColor: "#f3f4f6",
-    borderRadius: 6,
+    marginTop: 16,
+    padding: 12,
   },
-  cancelButtonText: {
+  cancelText: {
+    color: "#64748b",
     fontSize: 16,
-    color: "#555",
+    fontWeight: "500",
   },
 });
 

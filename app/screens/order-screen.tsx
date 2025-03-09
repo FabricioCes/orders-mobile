@@ -29,7 +29,7 @@ export default function OrderScreen() {
     state: { order, orderDetails, loading, error },
     dispatch,
   } = useOrder();
-  const { clearCustomer } = useCustomer();
+  const { state: customerState, clearCustomer } = useCustomer();
   const { checkTokenExpiration } = useSettings();
   const {
     loadOrder,
@@ -40,12 +40,11 @@ export default function OrderScreen() {
     hasUnsavedChanges,
   } = useOrderOperations(Number(orderId));
 
-
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [selectedOrderDetail, setSelectedOrderDetail] =
     useState<OrderDetail | null>(null);
-  const [showSummary, setShowSummary] = useState(true);
+  const [showSummary, setShowSummary] = useState(false);
 
   const hasInitializedOrder = useRef(false);
   const isTemporary = order?.esTemporal ?? false;
@@ -57,20 +56,39 @@ export default function OrderScreen() {
       )
     : order?.totalSinDescuento || 0;
 
+  // Determinar si el cliente ha cambiado (solo después de la inicialización)
+  const hasCustomerChanged = useRef(false);
+  useEffect(() => {
+    if (hasInitializedOrder.current && order?.idCliente) {
+      hasCustomerChanged.current =
+        customerState.selectedCustomer?.identificacion !== order?.idCliente;
+    }
+  }, [customerState.selectedCustomer?.identificacion, order?.idCliente]);
+
+  // Combinar cambios en productos y cliente, con depuración
+  const [hasChanges, setHasChanges] = useState(false);
+  useEffect(() => {
+    console.log("Checking changes - hasUnsavedChanges:", hasUnsavedChanges, "hasCustomerChanged:", hasCustomerChanged.current);
+    const newHasChanges = hasUnsavedChanges || hasCustomerChanged.current;
+    if (hasChanges !== newHasChanges) {
+      setHasChanges(newHasChanges);
+    }
+  }, [hasUnsavedChanges, hasCustomerChanged.current, orderDetails]); // Reactiva a cambios en orderDetails
+
   useEffect(() => {
     const handleOrder = async () => {
       const isTokenValid = await checkTokenExpiration();
       if (!isTokenValid) {
         Toast.show({
-          type: 'error', // Estilo de error (generalmente en rojo)
-          text1: 'Sesión expirada', // Título del mensaje
-          text2: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.', // Subtítulo
-          position: 'top', // Aparece en la parte superior
-          visibilityTime: 4000, // Dura 4 segundos
-          autoHide: true, // Se oculta automáticamente
-          topOffset: 30, // Distancia desde la parte superior
+          type: "error",
+          text1: "Sesión expirada",
+          text2: "Tu sesión ha expirada. Por favor, inicia sesión nuevamente.",
+          position: "top",
+          visibilityTime: 4000,
+          autoHide: true,
+          topOffset: 30,
           onHide: () => {
-            router.navigate("/components/login"); // Redirige al login cuando se oculta
+            router.navigate("/components/login");
           },
         });
         return;
@@ -104,6 +122,7 @@ export default function OrderScreen() {
         try {
           dispatch({ type: "SET_LOADING", payload: true });
           await loadOrder();
+          hasInitializedOrder.current = true;
         } catch (error) {
           // Manejo de error
         } finally {
@@ -116,9 +135,18 @@ export default function OrderScreen() {
   }, [tableId, place, isTemporary, loadOrder, dispatch]);
 
   useEffect(() => {
+    const formattedPlace =
+      place.toString().charAt(0).toUpperCase() +
+      place.toString().slice(1).toLowerCase();
+    navigation.setOptions({
+      title: `Mesa ${tableId.toString().trim()} - ${formattedPlace}`,
+    });
+  }, [tableId, place, navigation]);
+
+  useEffect(() => {
     const unsubscribe = navigation.addListener("beforeRemove", (e) => {
       e.preventDefault();
-      if (hasUnsavedChanges) {
+      if (hasChanges) {
         Alert.alert(
           "Cambios no guardados",
           "Tienes cambios sin guardar. ¿Deseas salir y descartarlos?",
@@ -141,13 +169,7 @@ export default function OrderScreen() {
       }
     });
     return unsubscribe;
-  }, [
-    navigation,
-    dispatch,
-    clearCustomer,
-    hasUnsavedChanges,
-    reloadOriginalOrder,
-  ]);
+  }, [navigation, dispatch, clearCustomer, reloadOriginalOrder, hasChanges]);
 
   const handleNavigateToProducts = useCallback(() => {
     router.navigate({
@@ -212,14 +234,6 @@ export default function OrderScreen() {
 
   return (
     <View className="flex-1 bg-gray-50">
-      <View className="p-4 bg-white shadow-sm">
-        <View className="flex-row justify-center">
-          <Text className="text-xl font-semibold">
-            Mesa {tableId} - {place}
-          </Text>
-        </View>
-      </View>
-
       <View className="flex-1">
         <CustomerSection
           customerId={Number(order?.idCliente ?? 0)}
@@ -234,18 +248,14 @@ export default function OrderScreen() {
         </View>
 
         <OrderSummaryItem
-          subtotal={subtotal}
           total={subtotal}
-          tax={isTemporary ? 0 : order?.totalIVA || 0}
-          service={isTemporary ? 0 : order?.totalServicio || 0}
-          taxIncluded={!isTemporary}
-          serviceIncluded={!isTemporary}
           itemsCount={orderDetails.length}
           onSave={handleSaveOrder}
           isActive={isActive === "true"}
           isSaving={loading}
           expanded={showSummary}
           onToggle={() => setShowSummary(!showSummary)}
+          hasChanges={hasChanges}
         />
       </View>
 
