@@ -5,21 +5,15 @@ import { ProductsProvider } from "@/core/context/ProductsContext";
 import { CustomerProvider } from "@/core/context/CustomerContext";
 import { ActiveTablesProvider } from "@/core/context/ActiveTablesContext";
 
-export default function Providers({
-  children,
-  orderId,
-}: {
-  children: React.ReactNode;
-  orderId?: string;
-}) {
+export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SettingsProvider>
       <ActiveTablesProvider>
-        <OrderProvider orderId={String(orderId)}>
-          <ProductsProvider>
-            <CustomerProvider>{children}</CustomerProvider>
-          </ProductsProvider>
-        </OrderProvider>
+        <CustomerProvider>
+          <OrderProvider>
+            <ProductsProvider>{children}</ProductsProvider>
+          </OrderProvider>
+        </CustomerProvider>
       </ActiveTablesProvider>
     </SettingsProvider>
   );

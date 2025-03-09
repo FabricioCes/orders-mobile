@@ -6,7 +6,7 @@ const mapToGuardarOrdenRequest = (order: Order, otrosValores: SaveOptions): Guar
     numeroLugar: order.numeroMesa,
     ubicacion: order.ubicacion || '',
     observaciones: order.descripcion || '',
-    nombreCliente: order.nombreCliente || '',
+    nombreCliente: otrosValores.nombreCliente || '',
     idCliente: otrosValores.idCliente || 0,
     idUsuario: otrosValores.idUsuario || '',
     autorizado: true,

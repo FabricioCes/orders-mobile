@@ -1,12 +1,5 @@
-import React, {
-  createContext,
-  useReducer,
-  useContext,
-  ReactNode,
-  useEffect,
-} from "react";
+import React, { createContext, useReducer, ReactNode, useContext } from "react";
 import { Order, OrderDetail } from "@/types/types";
-import { useOrderOperations } from "../hooks/useOrderOperations";
 
 interface OrderState {
   order: Order | null;
@@ -43,7 +36,8 @@ const OrderContext = createContext<{
 const orderReducer = (state: OrderState, action: OrderAction): OrderState => {
   switch (action.type) {
     case "SET_ORDER":
-      return { ...state, order: action.payload, loading: false };
+      const updteOrder = { ...state, order: action.payload, loading: false };
+      return updteOrder;
     case "SET_ORDER_DETAILS":
       return { ...state, orderDetails: action.payload, loading: false };
     case "RESET_ORDER":
@@ -57,8 +51,7 @@ const orderReducer = (state: OrderState, action: OrderAction): OrderState => {
       return {
         ...state,
         orderDetails: state.orderDetails.map((detail) =>
-          detail.idOrdenDetalle ===
-          action.payload.idOrdenDetalle
+          detail.idOrdenDetalle === action.payload.idOrdenDetalle
             ? action.payload
             : detail
         ),
@@ -79,28 +72,11 @@ const orderReducer = (state: OrderState, action: OrderAction): OrderState => {
   }
 };
 
-export const OrderProvider = ({
-  children,
-  orderId,
-}: {
-  children: ReactNode;
-  orderId: string;
-}) => {
-  const [state, dispatch] = useReducer(orderReducer, initialState);
-  const { loadOrder } = useOrderOperations(Number(orderId), state.order);
-
-  useEffect(() => {
-    const id = parseInt(orderId, 10);
-    if (!isNaN(id) && !state.order?.esTemporal) {
-      loadOrder();
-    } else if (state.order?.esTemporal) {
-    } else {
-      dispatch({ type: "RESET_ORDER" });
-    }
-  }, [orderId, loadOrder, state.order?.esTemporal]);
+export const OrderProvider = ({ children }: { children: ReactNode }) => {
+  const [orderState, dispatch] = useReducer(orderReducer, initialState);
 
   return (
-    <OrderContext.Provider value={{ state, dispatch }}>
+    <OrderContext.Provider value={{ state: orderState, dispatch }}>
       {children}
     </OrderContext.Provider>
   );

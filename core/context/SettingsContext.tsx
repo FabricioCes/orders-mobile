@@ -60,7 +60,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   ): Promise<boolean> => {
     const apiUrl = `http://${settings?.idComputadora}:5001`;
     const success = await AuthService.login(username, password, apiUrl);
-    console.log("login", success);
     if (success) {
       setisLogin(true);
       setUserName(username);
@@ -81,7 +80,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const checkTokenExpiration = async (): Promise<boolean> => {
     const isValid = await TokenService.checkTokenExpiration();
-    console.log("Token valido", isValid);
     return isValid;
   };
 

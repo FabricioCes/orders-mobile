@@ -10,41 +10,38 @@ type CustomerSectionProps = {
   orderId: number;
 };
 
-const CustomerSection: React.FC<CustomerSectionProps> = ({ customerId, orderId }) => {
+const CustomerSection: React.FC<CustomerSectionProps> = ({
+  customerId,
+  orderId,
+}) => {
   const { state, dispatch } = useCustomer();
   const [loadingCustomer, setLoadingCustomer] = useState(true);
 
   const { selectedCustomer } = state;
   useEffect(() => {
-  dispatch({ type: "CLEAR_SELECTED_CUSTOMER" });
+    dispatch({ type: "CLEAR_SELECTED_CUSTOMER" });
 
-  if (!customerId) return;
+    if (!customerId) return;
 
-  let cancelled = false;
-  setLoadingCustomer(true);
+    setLoadingCustomer(true);
 
-  CustomerApiRepository.getCustomer(customerId)
-    .then((client) => {
-      if (!cancelled) {
-        dispatch({ type: "SET_SELECTED_CUSTOMER", payload: client });
+    const fetchCustomer = async () => {
+      try {
+        const client = await CustomerApiRepository.getCustomer(customerId);
+
+          dispatch({ type: "SET_SELECTED_CUSTOMER", payload: client });
+      } catch (error) {
+
+          dispatch({ type: "CLEAR_SELECTED_CUSTOMER" });
+      } finally {
+
+          setLoadingCustomer(false);
       }
-    })
-    .catch(() => {
-      if (!cancelled) {
-        dispatch({ type: "CLEAR_SELECTED_CUSTOMER" });
-      }
-    })
-    .finally(() => {
-      if (!cancelled) {
-        setLoadingCustomer(false);
-      }
-    });
+    };
 
-  return () => {
-    cancelled = true;
-  };
-}, [orderId, customerId, dispatch]);
+    fetchCustomer();
 
+  }, [orderId, customerId, dispatch]);
 
   if (loadingCustomer && customerId) {
     return <ActivityIndicator size="small" />;
@@ -72,7 +69,9 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({ customerId, orderId }
       {selectedCustomer && (
         <View className="flex-row items-center justify-between bg-blue-50 p-3 rounded-lg">
           <Text className="text-base flex-1">{selectedCustomer.nombre}</Text>
-          <TouchableOpacity onPress={() => dispatch({ type: "CLEAR_SELECTED_CUSTOMER" })}>
+          <TouchableOpacity
+            onPress={() => dispatch({ type: "CLEAR_SELECTED_CUSTOMER" })}
+          >
             <FontAwesome name="times-circle" size={20} color="#ef4444" />
           </TouchableOpacity>
         </View>

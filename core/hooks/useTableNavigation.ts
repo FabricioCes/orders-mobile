@@ -29,7 +29,6 @@ export const useTableNavigation = (place: string) => {
         Number(order.numeroMesa) === tableId &&
         order.zona.trim().toUpperCase() === place.trim().toUpperCase()
     );
-
     const navigationParams = {
       tableId,
       place,
@@ -61,7 +60,7 @@ export const useTableNavigation = (place: string) => {
     Alert.alert(
       'Oops! 🥺🏼',
       'Debes configurar la IP',
-      [{ text: 'Aceptar', onPress: () => router.navigate('/settings') }],
+      [{ text: 'Aceptar', onPress: () => router.navigate('/screens/settings-screen') }],
       { cancelable: false }
     );
 

@@ -22,7 +22,7 @@ const ProductScreen: React.FC = () => {
     console.log("Error parsing order from local search params:", error);
   }
   const orderId = order?.numeroOrden ?? 0;
-  const { addToOrder } = useOrderOperations(orderId, order);
+  const { addToOrder } = useOrderOperations(orderId);
 
   const {
     categories,

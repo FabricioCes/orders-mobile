@@ -28,7 +28,7 @@ const StartPage = () => {
       [
         {
           text: "Aceptar",
-          onPress: () => router.navigate("/(tabs)/settings"),
+          onPress: () => router.navigate("/screens/settings-screen"),
         },
       ],
       { cancelable: false }

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Alert } from 'react-native'
 import { ApiResponse, Order, OrderDetail } from '@/types/types'
 import { orderService } from '@/core/services/order.service'
@@ -9,35 +9,28 @@ import { uuidEntero } from '@/utils/uuidUtils'
 import { firstValueFrom } from 'rxjs'
 import { router } from 'expo-router'
 import { useOrderUpdater } from './useGetSaveOptions'
-import Toast from 'react-native-toast-message'
+import { CustomerService } from '../services/customer.service'
+import { useCustomer } from '../context/CustomerContext'
 
-export const useOrderOperations = (
-  orderId: number,
-  currentOrder: Order | null = null
-) => {
-  const { dispatch } = useOrder()
+export const useOrderOperations = (orderId: number) => {
+  const { state, dispatch } = useOrder()
+  const { state: customerState, dispatch: dispatchCustomer } = useCustomer()
   const [_, setIsInitialLoad] = useState(true)
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false) // Bandera para cambios no sincronizados
-  const isTemporary = currentOrder?.esTemporal ?? orderId <= 0
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const { getSaveOptions } = useOrderUpdater()
+
+  const isTemporary = state.order?.esTemporal ?? false
 
   const handleAPIOperation = useCallback(
     async <T>(operation: () => Promise<T>, errorMessage: string) => {
-        const result = await operation()
-
-        if (
-          result &&
-          typeof result === 'object' &&
-          'codigoRespuesta' in result
-        ) {
-          const apiResponse = result as unknown as ApiResponse<any>
-
-          if (apiResponse.error) {
-            throw new Error(apiResponse.mensaje || errorMessage)
-          }
+      const result = await operation()
+      if (result && typeof result === 'object' && 'codigoRespuesta' in result) {
+        const apiResponse = result as unknown as ApiResponse<any>
+        if (apiResponse.error) {
+          throw new Error(apiResponse.mensaje || errorMessage)
         }
-
-        return result
+      }
+      return result
     },
     []
   )
@@ -59,6 +52,14 @@ export const useOrderOperations = (
         const details = await orderService.getOrderDetails(orderId)
         dispatch({ type: 'SET_ORDER', payload: order })
         dispatch({ type: 'SET_ORDER_DETAILS', payload: details })
+
+        dispatch({ type: 'SET_ORDER', payload: order })
+        dispatch({ type: 'SET_ORDER_DETAILS', payload: details })
+        router.setParams({
+          orderId: order.numeroOrden?.toString(),
+          tableId: order.numeroMesa?.toString() ?? '0',
+          place: order.ubicacion
+        })
       } catch (error) {
         dispatch({
           type: 'SET_ERROR',
@@ -67,14 +68,13 @@ export const useOrderOperations = (
       } finally {
         dispatch({ type: 'SET_LOADING', payload: false })
         setIsInitialLoad(false)
-        setHasUnsavedChanges(false) // Reseteamos al cargar la orden original
+        setHasUnsavedChanges(false)
       }
     }
   }, [orderId, dispatch, isTemporary])
 
   const reloadOriginalOrder = useCallback(async () => {
     if (isTemporary) {
-      // Para órdenes temporales, reiniciamos el estado ya que no hay "original" en el servidor
       const tempOrder = temporaryOrderService.getTemporaryOrder(orderId)
       if (tempOrder) {
         dispatch({ type: 'SET_ORDER', payload: tempOrder })
@@ -86,7 +86,6 @@ export const useOrderOperations = (
         dispatch({ type: 'RESET_ORDER' })
       }
     } else {
-      // Para órdenes persistentes, recargamos desde el servidor
       await loadOrder()
     }
     setHasUnsavedChanges(false)
@@ -94,6 +93,8 @@ export const useOrderOperations = (
 
   const addToOrder = useCallback(
     async (product: Product, quantity: number = 1) => {
+      if (!state.order) return
+
       const newDetail: OrderDetail = {
         cantidad: quantity,
         nombreProducto: product.nombre,
@@ -105,10 +106,6 @@ export const useOrderOperations = (
       }
 
       if (isTemporary) {
-        const tempOrder = temporaryOrderService.getTemporaryOrder(orderId)
-        if (!tempOrder) {
-          throw new Error('No se encontró la orden temporal')
-        }
         const updatedOrder = temporaryOrderService.addOrderDetail(
           orderId,
           newDetail
@@ -119,19 +116,18 @@ export const useOrderOperations = (
             type: 'SET_ORDER_DETAILS',
             payload: updatedOrder.detalles || []
           })
-          setHasUnsavedChanges(true) // Marcamos cambios no guardados
+          setHasUnsavedChanges(true)
         }
         return updatedOrder?.detalles
       } else {
         const updatedDetails = await orderService.addProduct(orderId, newDetail)
         dispatch({ type: 'SET_ORDER_DETAILS', payload: updatedDetails })
-        setHasUnsavedChanges(true) // Marcamos cambios no guardados
+        setHasUnsavedChanges(true)
         return updatedDetails
       }
     },
-    [orderId, dispatch, isTemporary]
+    [orderId, dispatch, isTemporary, state.order]
   )
-
   const removeProduct = useCallback(
     (detailId: number) => {
       Alert.alert('Eliminar Producto', '¿Estás seguro?', [
@@ -199,26 +195,28 @@ export const useOrderOperations = (
     [orderId, dispatch, isTemporary]
   )
 
-  const updateOrderState = async (orderId: number): Promise<Order> => {
-    const savedOrder = await orderService.getOrder(orderId)
+  const updateOrderState = async (orderIdToUse: number): Promise<Order> => {
+    const savedOrder = await orderService.getOrder(orderIdToUse)
     if (!savedOrder) {
       throw new Error('No se pudo recuperar la orden después de guardar')
     }
     dispatch({ type: 'SET_ORDER', payload: savedOrder })
-    dispatch({
-      type: 'SET_ORDER_DETAILS',
-      payload: savedOrder.detalles || []
-    })
+    dispatch({ type: 'SET_ORDER_DETAILS', payload: savedOrder.detalles || [] })
     setHasUnsavedChanges(false)
     return savedOrder
   }
 
   const createOrUpdateOrder = async (): Promise<Order> => {
-    const options = await getSaveOptions(currentOrder as Order)
+    const currentOrder = state.order
+    if (!currentOrder) throw new Error('No hay orden actual para guardar')
+
+    const options = await getSaveOptions(
+      currentOrder
+    )
+
     let orderIdToUse: number
 
-    if (isTemporary) {
-      // Sincronizamos las órdenes temporales y obtenemos el nuevo ID.
+    if (currentOrder.esTemporal) {
       const syncResult = await firstValueFrom(
         temporaryOrderService.syncTemporaryOrder(options)
       )
@@ -226,26 +224,35 @@ export const useOrderOperations = (
         throw new Error('No se pudo encontrar la orden sincronizada')
       }
       orderIdToUse = syncResult.newOrderId
-      // Actualizamos la ruta con el nuevo orderId.
       router.setParams({ orderId: orderIdToUse.toString() })
     } else {
       await firstValueFrom(orderService.syncOrders(options))
       orderIdToUse = orderId
     }
-
     return updateOrderState(orderIdToUse)
   }
 
   const saveOrder = useCallback(async () => {
-    if (!currentOrder) return
-
-    return handleAPIOperation(
-      async () => createOrUpdateOrder(),
-      isTemporary
-        ? 'Error sincronizando orden temporal'
-        : 'Error guardando orden'
-    )
-  }, [currentOrder, handleAPIOperation, orderId, isTemporary])
+    if (!state.order) {
+      Alert.alert('Error', 'No hay una orden actual para guardar')
+      return
+    }
+    try {
+      const savedOrder = await handleAPIOperation(
+        async () => createOrUpdateOrder(),
+        isTemporary
+          ? 'Error sincronizando orden temporal'
+          : 'Error guardando orden'
+      )
+      return savedOrder
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        error instanceof Error ? error.message : 'Error desconocido'
+      )
+      throw error
+    }
+  }, [handleAPIOperation, isTemporary, state.order, customerState.selectedCustomer ])
 
   const clearCurrentOrder = useCallback(() => {
     if (isTemporary) {
@@ -255,81 +262,13 @@ export const useOrderOperations = (
     setHasUnsavedChanges(false)
   }, [dispatch, orderId, isTemporary])
 
-  const temporaryRemoveOrderDetail = useCallback(
-    async (detailId: number) => {
-      if (isTemporary) {
-        const updatedOrder = temporaryOrderService.removeOrderDetail(
-          orderId,
-          detailId
-        )
-        if (updatedOrder) {
-          dispatch({ type: 'SET_ORDER', payload: updatedOrder })
-          dispatch({
-            type: 'SET_ORDER_DETAILS',
-            payload: updatedOrder.detalles || []
-          })
-          setHasUnsavedChanges(true)
-        }
-      } else {
-        const updatedDetails = await orderService.temporaryRemoveOrderDetail(
-          orderId,
-          detailId
-        )
-        dispatch({ type: 'SET_ORDER_DETAILS', payload: updatedDetails })
-        setHasUnsavedChanges(true)
-      }
-    },
-    [dispatch, orderId, isTemporary]
-  )
-  const addClientToOrder = useCallback(
-    async (clientId: number) => {
-      // Verificamos si existe una orden actual
-      if (!currentOrder) {
-        Alert.alert('Error', 'No hay una orden actual para actualizar')
-        return
-      }
-
-      // Creamos una copia de la orden actual con el nuevo ID del cliente
-      const updatedOrder = { ...currentOrder, idCliente: clientId }
-
-      if (isTemporary) {
-        // Si la orden es temporal
-        try {
-          const tempOrder = temporaryOrderService.updateTemporaryOrder(
-            orderId,
-            updatedOrder
-          )
-          if (tempOrder) {
-            // Actualizamos el estado en el contexto con la orden temporal modificada
-            dispatch({ type: 'SET_ORDER', payload: tempOrder })
-            setHasUnsavedChanges(true) // Marcamos que hay cambios sin guardar
-          }
-        } catch {
-          Alert.alert('Error', 'No se pudo actualizar la orden temporal')
-        }
-      } else {
-        // Si la orden es persistente
-        try {
-          await orderService.updateOrder(orderId, updatedOrder)
-          // Actualizamos el estado en el contexto con la orden persistente modificada
-          dispatch({ type: 'SET_ORDER', payload: updatedOrder })
-          setHasUnsavedChanges(true) // Marcamos que hay cambios sin guardar
-        } catch (error) {
-          Alert.alert('Error', 'No se pudo actualizar la orden en el servidor')
-        }
-      }
-    },
-    [currentOrder, orderId, isTemporary, dispatch]
-  )
   return {
     removeProduct,
     saveOrder,
     updateQuantity,
     clearCurrentOrder,
-    temporaryRemoveOrderDetail,
     addToOrder,
     loadOrder,
-    addClientToOrder,
     reloadOriginalOrder,
     hasUnsavedChanges
   }

@@ -1,7 +1,14 @@
-import React, { createContext, useReducer, useContext, ReactNode, useEffect, useCallback } from "react";
+import React, {
+  createContext,
+  useReducer,
+  useContext,
+  ReactNode,
+  useEffect,
+  useCallback,
+} from "react";
 import { ActiveTable } from "@/types/tableTypes";
 import { orderService } from "@/core/services/order.service";
-import { useSettings } from "@/core/context/SettingsContext"; // Ajusta la ruta
+import { useSettings } from "@/core/context/SettingsContext";
 
 interface ActiveTablesState {
   activeTables: ActiveTable[];
@@ -12,7 +19,9 @@ interface ActiveTablesState {
 type ActiveTablesAction =
   | { type: "SET_ACTIVE_TABLES"; payload: ActiveTable[] }
   | { type: "SET_LOADING"; payload: boolean }
-  | { type: "SET_ERROR"; payload: string | null };
+  | { type: "SET_ERROR"; payload: string | null }
+  | { type: "UPDATE_TABLE"; payload: ActiveTable } // Nueva acción
+  | { type: "REMOVE_TABLE"; payload: number }; // Nueva acción
 
 const initialState: ActiveTablesState = {
   activeTables: [],
@@ -24,10 +33,14 @@ const ActiveTablesContext = createContext<{
   state: ActiveTablesState;
   dispatch: React.Dispatch<ActiveTablesAction>;
   loadActiveTables: () => Promise<void>;
+  updateTable: (table: ActiveTable) => void; // Nueva función
+  removeTable: (tableId: number) => void; // Nueva función
 }>({
   state: initialState,
   dispatch: () => undefined,
   loadActiveTables: async () => {},
+  updateTable: () => {},
+  removeTable: () => {},
 });
 
 const activeTablesReducer = (
@@ -41,6 +54,20 @@ const activeTablesReducer = (
       return { ...state, loading: action.payload };
     case "SET_ERROR":
       return { ...state, error: action.payload, loading: false };
+    case "UPDATE_TABLE":
+      return {
+        ...state,
+        activeTables: state.activeTables.map((table) =>
+          table.identificador === action.payload.identificador? action.payload : table
+        ),
+      };
+    case "REMOVE_TABLE":
+      return {
+        ...state,
+        activeTables: state.activeTables.filter(
+          (table) => table.identificador !== action.payload
+        ),
+      };
     default:
       return state;
   }
@@ -48,7 +75,7 @@ const activeTablesReducer = (
 
 export const ActiveTablesProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(activeTablesReducer, initialState);
-  const { isLogin, checkTokenExpiration, token} = useSettings();
+  const { isLogin, checkTokenExpiration } = useSettings();
 
   const loadActiveTables = useCallback(async () => {
     if (!isLogin) return;
@@ -59,17 +86,33 @@ export const ActiveTablesProvider = ({ children }: { children: ReactNode }) => {
     try {
       const activeTables = await orderService.loadActiveOrders();
       dispatch({ type: "SET_ACTIVE_TABLES", payload: activeTables });
-    } catch  {
+    } catch {
       dispatch({ type: "SET_ERROR", payload: "Error al cargar mesas activas" });
     }
-  }, [isLogin, token, checkTokenExpiration]);
+  }, [isLogin, checkTokenExpiration]);
+
+  const updateTable = useCallback((table: ActiveTable) => {
+    dispatch({ type: "UPDATE_TABLE", payload: table });
+  }, []);
+
+  const removeTable = useCallback((tableId: number) => {
+    dispatch({ type: "REMOVE_TABLE", payload: tableId });
+  }, []);
 
   useEffect(() => {
     loadActiveTables();
-  }, [isLogin]);
+  }, [loadActiveTables]);
 
   return (
-    <ActiveTablesContext.Provider value={{ state, dispatch, loadActiveTables }}>
+    <ActiveTablesContext.Provider
+      value={{
+        state,
+        dispatch,
+        loadActiveTables,
+        updateTable,
+        removeTable,
+      }}
+    >
       {children}
     </ActiveTablesContext.Provider>
   );
@@ -78,7 +121,9 @@ export const ActiveTablesProvider = ({ children }: { children: ReactNode }) => {
 export const useActiveTables = () => {
   const context = useContext(ActiveTablesContext);
   if (!context) {
-    throw new Error("useActiveTables debe usarse dentro de un ActiveTablesProvider");
+    throw new Error(
+      "useActiveTables debe usarse dentro de un ActiveTablesProvider"
+    );
   }
   return context;
 };

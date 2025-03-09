@@ -12,7 +12,7 @@ import TableGrid from "../components/tables/TableGrid";
 import { useTableNavigation } from "@/core/hooks/useTableNavigation";
 import { useSettings } from "@/core/context/SettingsContext";
 import { router, useFocusEffect, useNavigation } from "expo-router";
-
+import { useActiveTables } from "@/core/context/ActiveTablesContext";
 const variantStyles = {
   error: {
     bg: "bg-red-50",
@@ -54,7 +54,7 @@ const ErrorMessage = ({
       className={`p-5 rounded-2xl shadow-lg ${styles.bg}`}
     >
       <View className="items-center">
-        <Ionicons name={styles.iconName} size={40} color={styles.iconColor} />
+        <Ionicons name={styles.iconName as keyof typeof Ionicons.glyphMap} size={40} color={styles.iconColor} />
         <Text
           className={`mt-3 text-center text-lg font-semibold ${styles.text}`}
         >
@@ -93,6 +93,7 @@ interface TablesProps {
 export default function Tables({ place, qty: propQty }: TablesProps) {
   const { width } = useWindowDimensions();
   const { zonas, loadingZonas, token } = useSettings();
+  const { loadActiveTables } = useActiveTables(); 
   const isTablet = width >= 768;
   const columns = isTablet ? 9 : 3;
   const qty = propQty || zonas[place] || 0;
@@ -105,7 +106,17 @@ export default function Tables({ place, qty: propQty }: TablesProps) {
       const formattedPlace =
         place.charAt(0).toUpperCase() + place.slice(1).toLowerCase();
       navigation.getParent()?.setOptions({ title: formattedPlace });
-    }, [place])
+
+      const loadData = async () => {
+        try {
+          await loadActiveTables();
+        } catch (error) {
+          console.error("Error al cargar mesas activas:", error);
+        }
+      };
+
+      loadData();
+    }, [place, loadActiveTables])
   );
 
   if (loadingZonas) return <LoadingState />;

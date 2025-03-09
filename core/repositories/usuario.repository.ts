@@ -26,7 +26,6 @@ export default class UsuarioApiRepository {
 
     const baseUrl = await getBaseUrl();
     const url = `${baseUrl}/${endpoint}`;
-    console.log("URL de la petición:", url);
 
     try {
       const response = await fetch(url, {

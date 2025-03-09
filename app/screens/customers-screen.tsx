@@ -12,13 +12,14 @@ import CustomerList from "../components/customers/ItemCustomerList";
 import useCustomerSearch from "../../core/hooks/useCustomerSearch";
 
 const CustomersScreen: React.FC = () => {
+
   const { settings, token } = useSettings();
   const { state, dispatch, fetchCustomers } = useCustomer();
   const { customers, status } = state;
   const [searchQuery, setSearchQuery] = useState("");
   const filteredCustomers = useCustomerSearch(customers, searchQuery);
 
-  const handleSelect = (customer: Customer) => {
+  const handleSelect = async (customer: Customer) => {
     dispatch({ type: "SET_SELECTED_CUSTOMER", payload: customer });
     router.back();
   };
@@ -61,3 +62,4 @@ const styles = StyleSheet.create({
 });
 
 export default CustomersScreen;
+

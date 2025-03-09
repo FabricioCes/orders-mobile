@@ -133,24 +133,6 @@ class OrderService {
     }
   }
 
-  /* async saveOrder (order: Order): Promise<Order> {
-    try {
-      let savedOrder: Order
-      if (order.esTemporal) {
-        const newOrderId = await OrderApiRepository.createOrder(order)
-        savedOrder = { ...order, numeroOrden: newOrderId }
-      } else {
-        await OrderApiRepository.updateOrder(order)
-        savedOrder = order
-      }
-      this.updateLocalOrder(savedOrder)
-      return savedOrder
-    } catch (err) {
-      console.log('Error al guardar orden:', err)
-      throw err
-    }
-  } */
-
   async updateProductQuantity (
     orderId: number,
     productId: number,

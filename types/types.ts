@@ -132,6 +132,7 @@ export interface ApiResponse<T> {
 
 export interface SaveOptions {
   idUsuario: string
+  nombreCliente: string
   idCliente: number
   imprimir: boolean
   modoImpresion?: ModoImpresion

@@ -1,8 +1,9 @@
-import { router, Stack, useLocalSearchParams } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import "../global.css";
 import Providers from "./providers";
 import { Ionicons } from "@expo/vector-icons";
+import { useEffect } from "react";
 
 interface ScreenConfig {
   name: string;
@@ -101,10 +102,19 @@ const THEME = {
   },
 };
 export default function RootLayout() {
-  const { orderId } = useLocalSearchParams();
+  const { orderId = "0" } = useLocalSearchParams();
+  const router = useRouter();
+
+  // Efecto para asegurar que el orderId esté actualizado
+  useEffect(() => {
+    // Si no hay orderId, establecer un valor por defecto
+    if (!orderId || orderId === "0") {
+      router.setParams({ orderId: "0" });
+    }
+  }, [orderId]);
 
   return (
-    <Providers orderId={String(orderId)}>
+    <Providers>
       <View style={styles.container}>
         <Stack
           screenOptions={{

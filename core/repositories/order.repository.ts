@@ -93,6 +93,7 @@ export class OrderApiRepository {
 
   static async updateOrder (order: Order, options: SaveOptions): Promise<void> {
     const mappedOrder = mapToGuardarOrdenRequest(order, options)
+
     await this.handleRequest<void>('Orden', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },

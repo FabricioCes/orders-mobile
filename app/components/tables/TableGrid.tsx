@@ -60,8 +60,6 @@ const TableGrid = React.memo(
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingVertical: 10,
-          alignItems: "center",
-          flexGrow: 1,
         }}
         testID="table-grid-scrollview"
         horizontal={false}

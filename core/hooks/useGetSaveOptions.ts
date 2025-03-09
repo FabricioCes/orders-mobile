@@ -26,6 +26,7 @@ export const useOrderUpdater = () => {
     }
     return {
       idUsuario: userName,
+      nombreCliente: customerState.selectedCustomer?.nombre || order.nombreCliente || '',
       idCliente:
         customerState.selectedCustomer?.identificacion || order.idCliente || 0,
       imprimir: printOption.imprimir,

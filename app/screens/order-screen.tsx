@@ -38,13 +38,14 @@ export default function OrderScreen() {
     updateQuantity,
     reloadOriginalOrder,
     hasUnsavedChanges,
-  } = useOrderOperations(orderIdentify, order);
+  } = useOrderOperations(Number(orderId));
+
 
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [selectedOrderDetail, setSelectedOrderDetail] =
     useState<OrderDetail | null>(null);
-  const [showSummary, setShowSummary] = useState(false);
+  const [showSummary, setShowSummary] = useState(true);
 
   const hasInitializedOrder = useRef(false);
   const isTemporary = order?.esTemporal ?? false;
@@ -57,7 +58,7 @@ export default function OrderScreen() {
     : order?.totalSinDescuento || 0;
 
   useEffect(() => {
-    const createTemporalOrder = async () => {
+    const handleOrder = async () => {
       const isTokenValid = await checkTokenExpiration();
       if (!isTokenValid) {
         Toast.show({
@@ -74,7 +75,8 @@ export default function OrderScreen() {
         });
         return;
       }
-        if (orderIdentify === 0 && !order && !hasInitializedOrder.current) {
+      if (orderIdentify === 0) {
+        if (!order && !hasInitializedOrder.current) {
           hasInitializedOrder.current = true;
           try {
             dispatch({ type: "SET_LOADING", payload: true });
@@ -98,36 +100,20 @@ export default function OrderScreen() {
             dispatch({ type: "SET_LOADING", payload: false });
           }
         }
-    };
-
-    createTemporalOrder();
-  }, [orderIdentify, order, tableId, place, dispatch]);
-
-  useEffect(() => {
-    const checkTokenAndLoadOrder = async () => {
-      const isTokenValid = await checkTokenExpiration();
-      if (!isTokenValid) {
-        Toast.show({
-          type: 'error',
-          text1: 'Sesión expirada',
-          text2: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
-          position: 'top',
-          visibilityTime: 4000,
-          autoHide: true,
-          topOffset: 30,
-          onHide: () => {
-            router.navigate("/components/login");
-          },
-        });
-        return;
-      }
-      if (!order?.esTemporal) {
-        loadOrder();
+      } else if (!isTemporary && !order) {
+        try {
+          dispatch({ type: "SET_LOADING", payload: true });
+          await loadOrder();
+        } catch (error) {
+          // Manejo de error
+        } finally {
+          dispatch({ type: "SET_LOADING", payload: false });
+        }
       }
     };
 
-    checkTokenAndLoadOrder();
-  }, [order?.esTemporal, loadOrder]);
+    handleOrder();
+  }, [tableId, place, isTemporary, loadOrder, dispatch]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("beforeRemove", (e) => {
@@ -141,7 +127,7 @@ export default function OrderScreen() {
             {
               text: "Salir",
               onPress: async () => {
-                await reloadOriginalOrder(); // Recargar la orden original antes de salir
+                await reloadOriginalOrder();
                 clearCustomer();
                 navigation.dispatch(e.data.action);
               },
@@ -166,10 +152,7 @@ export default function OrderScreen() {
   const handleNavigateToProducts = useCallback(() => {
     router.navigate({
       pathname: "/screens/products-screen",
-      params: {
-        order: JSON.stringify(order),
-        isActive,
-      },
+      params: { order: JSON.stringify(order), isActive },
     });
   }, [order, isActive]);
 
@@ -180,7 +163,6 @@ export default function OrderScreen() {
 
   const handleSaveOrder = useCallback(async () => {
     if (!order) return;
-
     try {
       dispatch({ type: "SET_LOADING", payload: true });
       await saveOrder();
@@ -190,7 +172,6 @@ export default function OrderScreen() {
         text2: "La orden se ha guardado correctamente.",
       });
     } catch (error) {
-      console.log("Error saving order:", error);
       Toast.show({
         type: "error",
         text1: "Error",
@@ -198,10 +179,6 @@ export default function OrderScreen() {
           error instanceof Error
             ? error.message
             : "No se pudo guardar la orden.",
-        autoHide: true,
-        position: "top",
-        swipeable: true,
-        visibilityTime: 1000,
       });
     } finally {
       dispatch({ type: "SET_LOADING", payload: false });
@@ -210,7 +187,7 @@ export default function OrderScreen() {
 
   const handleDeleteProduct = useCallback(() => {
     if (selectedOrderDetail) {
-      removeProduct(selectedOrderDetail.idOrdenDetalle); // Ajustado a idOrdenDetalle
+      removeProduct(selectedOrderDetail.idOrdenDetalle);
       setShowOptionsModal(false);
     }
   }, [selectedOrderDetail, removeProduct]);

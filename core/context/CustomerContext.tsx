@@ -4,7 +4,8 @@ import React, {
   useReducer,
   useContext,
   ReactNode,
-  useCallback
+  useCallback,
+  useEffect
 } from "react";
 import { useSettings } from "./SettingsContext";
 import { Customer } from "@/types/customerTypes";
@@ -70,6 +71,9 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(customerReducer, initialState);
   const { settings, token } = useSettings();
 
+  useEffect(() => {
+    console.log("Selected Customer", state.selectedCustomer);
+  }, [state.selectedCustomer]);
   const fetchCustomers = useCallback(
     async (signal?: AbortSignal) => {
       try {

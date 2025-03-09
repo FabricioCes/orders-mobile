@@ -43,6 +43,7 @@ export class CustomerApiRepository {
       if (data.error) {
         throw new Error(data.mensaje || 'Error en la respuesta de la API')
       }
+
       return data.resultado
     } catch (error) {
       throw new Error(
