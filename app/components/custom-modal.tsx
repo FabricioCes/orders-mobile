@@ -22,7 +22,6 @@ interface CustomModalProps {
 const CustomModal = ({ visible, children, onClose }: CustomModalProps) => {
   const { height } = Dimensions.get("window");
 
-  // Estilo animado para el modal
   const animation = useAnimatedStyle(() => ({
     opacity: withTiming(visible ? 1 : 0, {
       duration: 300,

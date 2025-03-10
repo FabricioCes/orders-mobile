@@ -5,7 +5,7 @@ import CustomModal from "../custom-modal";
 
 interface ProductOptionsModalProps {
   visible: boolean;
-  product: OrderDetail;
+  product: OrderDetail | null; // Permitimos null
   onCancel: () => void;
   onDelete: () => void;
   onModify: () => void;
@@ -18,30 +18,45 @@ const ProductOptionsModal: React.FC<ProductOptionsModalProps> = ({
   onDelete,
   onModify,
 }) => {
+  const isProductSelected = product !== null && product !== undefined;
+
   return (
     <CustomModal visible={visible} onClose={onCancel}>
       <View style={styles.contentContainer}>
-        <Text style={styles.title}>{product.nombreProducto || "Producto"}</Text>
+        <Text style={styles.title}>
+          {isProductSelected ? product.nombreProducto || "Producto" : "No hay producto seleccionado"}
+        </Text>
         <Text style={styles.subtitle}>
-          ¿Qué deseas hacer con este producto?
+          {isProductSelected
+            ? "¿Qué deseas hacer con este producto?"
+            : "Por favor, selecciona un producto primero."}
         </Text>
 
         <View style={styles.optionsContainer}>
           <TouchableOpacity
-            style={[styles.button, styles.deleteButton]}
+            style={[
+              styles.button,
+              styles.deleteButton,
+              !isProductSelected && styles.disabledButton,
+            ]}
             onPress={onDelete}
+            disabled={!isProductSelected}
           >
             <Text style={styles.deleteText}>Eliminar</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.button, styles.modifyButton]}
+            style={[
+              styles.button,
+              styles.modifyButton,
+              !isProductSelected && styles.disabledButton,
+            ]}
             onPress={onModify}
+            disabled={!isProductSelected}
           >
             <Text style={styles.modifyText}>Modificar cantidad</Text>
           </TouchableOpacity>
         </View>
-
       </View>
     </CustomModal>
   );
@@ -82,6 +97,10 @@ const styles = StyleSheet.create({
   modifyButton: {
     backgroundColor: "#dbeafe",
   },
+  disabledButton: {
+    backgroundColor: "#e5e7eb",
+    opacity: 0.6,
+  },
   deleteText: {
     color: "#dc2626",
     fontSize: 16,
@@ -89,15 +108,6 @@ const styles = StyleSheet.create({
   },
   modifyText: {
     color: "#2563eb",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  cancelButton: {
-    marginTop: 16,
-    padding: 12,
-  },
-  cancelText: {
-    color: "#64748b",
     fontSize: 16,
     fontWeight: "500",
   },

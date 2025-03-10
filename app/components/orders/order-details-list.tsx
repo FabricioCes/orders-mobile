@@ -1,38 +1,33 @@
 import React, { useState, useRef } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { OrderDetail } from "@/types/types";
-import SwipeableListItem, {
-  SwipeableListItemRef,
-} from "./order-swipeable-list-item";
+import SwipeableListItem, { SwipeableListItemRef } from "./order-swipeable-list-item";
 import CustomModal from "../custom-modal";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { PortalProvider } from "@gorhom/portal";
+import ProductOptionsModal from "../products/product-option-modal";
+import QuantityModal from "../products/quantity-modal";
+
 
 interface OrderDetailsListProps {
   orderDetails: OrderDetail[];
   onProductPress: (product: OrderDetail) => void;
+  onDeleteProduct: (idOrdenDetalle: number) => void;
+  onUpdateQuantity: (idProducto: number, newQuantity: number) => void;
 }
 
 export default function OrderDetailsList({
   orderDetails,
   onProductPress,
+  onDeleteProduct,
+  onUpdateQuantity,
 }: OrderDetailsListProps) {
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<OrderDetail | null>(
-    null
-  );
+  const [modalVisible, setModalVisible] = useState(false); // Modal de adicionales
+  const [optionsModalVisible, setOptionsModalVisible] = useState(false); // Modal de opciones
+  const [quantityModalVisible, setQuantityModalVisible] = useState(false); // Modal de cantidad
+  const [selectedProduct, setSelectedProduct] = useState<OrderDetail | null>(null);
   const [actionType, setActionType] = useState<"add" | "remove" | null>(null);
-  // Mapa de referencias para los SwipeableListItem
-  const swipeableRefs = useRef<Map<string, SwipeableListItemRef>>(
-    new Map()
-  ).current;
+  const swipeableRefs = useRef<Map<string, SwipeableListItemRef>>(new Map()).current;
 
+  // Abrir modal de adicionales al deslizar
   const handleOpenModal = (
     product: OrderDetail,
     type: "add" | "remove",
@@ -41,13 +36,20 @@ export default function OrderDetailsList({
     setSelectedProduct(product);
     setActionType(type);
     setModalVisible(true);
-    // Cerramos el Swipeable después de abrir el modal
     const swipeableRef = swipeableRefs.get(itemId);
     if (swipeableRef) {
       swipeableRef.close();
     }
   };
 
+  // Abrir modal de opciones al presionar un producto
+  const handleProductPress = (product: OrderDetail) => {
+    setSelectedProduct(product);
+    setOptionsModalVisible(true);
+    onProductPress(product); // Llamamos al callback original si es necesario
+  };
+
+  // Manejar selección de adicionales
   const handleSelectAdditional = (additional: any) => {
     if (selectedProduct && actionType) {
       console.log(`Acción: ${actionType} adicional`, additional);
@@ -80,7 +82,7 @@ export default function OrderDetailsList({
                 }
               }}
               item={item}
-              onPress={() => onProductPress(item)}
+              onPress={() => handleProductPress(item)}
               onSwipeOpen={(direction) => {
                 handleOpenModal(
                   item,
@@ -93,10 +95,8 @@ export default function OrderDetailsList({
         })}
       </View>
 
-      <CustomModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-      >
+      {/* Modal de Adicionales */}
+      <CustomModal visible={modalVisible} onClose={() => setModalVisible(false)}>
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>
             {actionType === "add" ? "Agregar adicional" : "Quitar adicional"}
@@ -123,6 +123,36 @@ export default function OrderDetailsList({
           </ScrollView>
         </View>
       </CustomModal>
+
+      {/* Modal de Opciones del Producto */}
+      <ProductOptionsModal
+        visible={optionsModalVisible}
+        product={selectedProduct as OrderDetail}
+        onCancel={() => setOptionsModalVisible(false)}
+        onDelete={() => {
+          if (selectedProduct && selectedProduct.idOrdenDetalle) {
+            onDeleteProduct(selectedProduct.idOrdenDetalle);
+            setOptionsModalVisible(false);
+          }
+        }}
+        onModify={() => {
+          setOptionsModalVisible(false);
+          setQuantityModalVisible(true);
+        }}
+      />
+
+      {/* Modal de Cantidad */}
+      <QuantityModal
+        visible={quantityModalVisible}
+        product={selectedProduct as OrderDetail}
+        onCancel={() => setQuantityModalVisible(false)}
+        onConfirm={(newQuantity) => {
+          if (selectedProduct) {
+            onUpdateQuantity(selectedProduct.idProducto, newQuantity);
+            setQuantityModalVisible(false);
+          }
+        }}
+      />
     </>
   );
 }

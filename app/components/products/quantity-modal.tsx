@@ -13,7 +13,7 @@ import { Product } from "@/types/productTypes";
 
 interface QuantityModalProps {
   visible: boolean;
-  product: Product | OrderDetail;
+  product: Product | OrderDetail | null; // Permitimos null
   onCancel: () => void;
   onConfirm: (quantity: number) => void;
 }
@@ -25,16 +25,20 @@ const QuantityModal: React.FC<QuantityModalProps> = ({
   onConfirm,
 }) => {
   const [quantity, setQuantity] = useState("1");
-  const productName =
-    "nombre" in product ? product.nombre : product.nombreProducto;
+  const isProductSelected = product !== null && product !== undefined;
+  const productName = isProductSelected
+    ? "nombre" in product
+      ? product.nombre
+      : product.nombreProducto
+    : "No hay producto seleccionado";
 
   useEffect(() => {
-    if (visible) {
+    if (visible && isProductSelected) {
       const initialQty =
         "cantidad" in product ? product.cantidad.toString() : "1";
       setQuantity(initialQty);
     }
-  }, [visible, product]); // Añadido product como dependencia
+  }, [visible, product]);
 
   const handleQuantityChange = (text: string) => {
     if (/^\d*$/.test(text)) {
@@ -52,126 +56,138 @@ const QuantityModal: React.FC<QuantityModalProps> = ({
   };
 
   const handleConfirm = () => {
-    const numericQuantity = parseInt(quantity) || 1;
-    onConfirm(Math.max(numericQuantity, 1));
+    if (isProductSelected) {
+      const numericQuantity = parseInt(quantity) || 1;
+      onConfirm(Math.max(numericQuantity, 1));
+    }
   };
 
   return (
     <CustomModal visible={visible} onClose={onCancel}>
-      <View style={styles.contentContainer}>
+      <View style={styles.modalContent}>
         <Text style={styles.title}>
-          Seleccionar cantidad para {productName}
+          {isProductSelected ? `Seleccionar cantidad para ${productName}` : productName}
         </Text>
 
-        <View style={styles.quantityContainer}>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => adjustQuantity("decrement")}
-            accessibilityLabel="Reducir cantidad"
-          >
-            <FontAwesome name="minus" size={16} color="#4b5563" />
-          </TouchableOpacity>
+        {isProductSelected && (
+          <>
+            <View style={styles.quantityContainer}>
+              <TouchableOpacity
+                style={styles.decrementButton}
+                onPress={() => adjustQuantity("decrement")}
+                accessibilityLabel="Reducir cantidad"
+              >
+                <FontAwesome name="minus" size={20} color={COLORS.buttonText} />
+              </TouchableOpacity>
 
-          <TextInput
-            style={styles.input}
-            keyboardType="number-pad"
-            value={quantity}
-            onChangeText={handleQuantityChange}
-            selectTextOnFocus
-          />
+              <TextInput
+                style={styles.input}
+                keyboardType="number-pad"
+                value={quantity}
+                onChangeText={handleQuantityChange}
+                selectTextOnFocus
+              />
 
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => adjustQuantity("increment")}
-            accessibilityLabel="Aumentar cantidad"
-          >
-            <FontAwesome name="plus" size={16} color="#4b5563" />
-          </TouchableOpacity>
-        </View>
+              <TouchableOpacity
+                style={styles.incrementButton}
+                onPress={() => adjustQuantity("increment")}
+                accessibilityLabel="Aumentar cantidad"
+              >
+                <FontAwesome name="plus" size={20} color={COLORS.buttonText} />
+              </TouchableOpacity>
+            </View>
 
-        <View style={styles.actionContainer}>
-          <TouchableOpacity
-            onPress={handleConfirm}
-            style={styles.confirmButton}
-            accessibilityLabel="Confirmar cantidad"
-          >
-            <Text style={styles.confirmText}>Confirmar</Text>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              onPress={handleConfirm}
+              style={styles.confirmButton}
+              accessibilityLabel="Confirmar cantidad"
+            >
+              <Text style={styles.confirmButtonText}>Confirmar</Text>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
     </CustomModal>
   );
 };
 
-// Estilos optimizados usando variables de color
+// Colores vibrantes y consistentes
 const COLORS = {
-  primary: "#3b82f6",
-  background: "#f3f4f6",
-  border: "#e5e7eb",
-  text: "#1f2937",
-  danger: "#ef4444",
+  primary: "#3B82F6", // Azul principal para confirmar
+  background: "#fff", // Fondo blanco
+  border: "#9CA3AF", // Gris claro para bordes
+  text: "#1F2937", // Gris oscuro para texto
+  buttonText: "#fff", // Blanco para texto de botones
+  secondaryText: "#4B5563", // Gris medio para íconos
+  decrement: "#EF4444", // Rojo para decrementar
+  increment: "#10B981", // Verde para incrementar
 };
 
 const styles = StyleSheet.create({
-  contentContainer: {
-    padding: 24,
+  modalContent: {
+    width: "100%",
+    padding: 32,
+    backgroundColor: COLORS.background,
+    borderRadius: 16,
+    elevation: 5,
     alignItems: "center",
   },
   title: {
-    fontSize: 20,
-    fontWeight: "600",
+    fontSize: 28,
+    fontWeight: "700",
     color: COLORS.text,
-    marginBottom: 24,
+    marginBottom: 20,
     textAlign: "center",
   },
   quantityContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
-    marginBottom: 24,
+    gap: 20,
+    marginBottom: 28,
   },
-  button: {
-    backgroundColor: COLORS.background,
-    padding: 12,
-    borderRadius: 10,
-    minWidth: 48,
+  decrementButton: {
+    backgroundColor: COLORS.decrement,
+    padding: 14,
+    borderRadius: 12,
+    minWidth: 60,
     alignItems: "center",
+    justifyContent: "center",
+    elevation: 3,
+  },
+  incrementButton: {
+    backgroundColor: COLORS.increment,
+    padding: 14,
+    borderRadius: 12,
+    minWidth: 60,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 3,
   },
   input: {
-    backgroundColor: COLORS.background,
-    width: 80,
-    padding: 12,
-    fontSize: 18,
-    borderRadius: 10,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: COLORS.border,
+    borderRadius: 12,
+    height: 60,
+    width: 90,
+    paddingHorizontal: 16,
+    fontSize: 20,
     color: COLORS.text,
+    backgroundColor: COLORS.background,
     textAlign: "center",
-  },
-  actionContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 16,
-    width: "100%",
-  },
-  cancelButton: {
-    padding: 12,
-  },
-  cancelText: {
-    color: COLORS.text,
-    fontSize: 16,
-    fontWeight: "500",
   },
   confirmButton: {
     backgroundColor: COLORS.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 10,
+    paddingVertical: 18,
+    paddingHorizontal: 28,
+    borderRadius: 12,
+    elevation: 3,
+    width: "100%",
   },
-  confirmText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "500",
+  confirmButtonText: {
+    color: COLORS.buttonText,
+    fontWeight: "700",
+    textAlign: "center",
+    fontSize: 20,
   },
 });
 

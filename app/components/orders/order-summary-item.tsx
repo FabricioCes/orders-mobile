@@ -12,7 +12,6 @@ import {
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 
-// Habilitar LayoutAnimation para Android
 if (
   Platform.OS === "android" &&
   UIManager.setLayoutAnimationEnabledExperimental
@@ -55,7 +54,8 @@ const OrderSummaryItem: React.FC<OrderSummaryItemProps> = ({
         useNativeDriver: false,
       }),
       Animated.timing(contentHeight, {
-        toValue: expanded ? 100 : 0,
+        // Cambiado de 100 a 60 para ajustar la altura al contenido real
+        toValue: expanded ? 60 : 0,
         duration: 300,
         easing: Easing.out(Easing.ease),
         useNativeDriver: false,
@@ -67,7 +67,7 @@ const OrderSummaryItem: React.FC<OrderSummaryItemProps> = ({
         useNativeDriver: false,
       }),
       Animated.timing(buttonPosition, {
-        toValue: expanded ? 0 : -48, // Ajustamos para que coincida con la posición inicial
+        toValue: expanded ? 0 : -48,
         duration: 300,
         easing: Easing.out(Easing.ease),
         useNativeDriver: false,
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: 0,
   },
   totalLabel: {
     color: "#475569",

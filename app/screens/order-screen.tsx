@@ -1,13 +1,10 @@
-import { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { View, Alert, Text } from "react-native";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import CustomerSection from "../components/customers/customer-section";
 import ProductSection from "../components/products/product-section";
 import OrderSummaryItem from "../components/orders/order-summary-item";
-import { OrderDetail } from "@/types/types";
-import ProductOptionsModal from "../components/products/product-option-modal";
-import QuantityModal from "../components/products/quantity-modal";
-import OrderDetailsList from "../components/orders/order-details-list";
+import OrderDetailsList from "../components/orders/order-details-list"; // Asegúrate de que la ruta sea correcta
 import { useCustomer } from "../../core/context/CustomerContext";
 import { useOrder } from "@/core/context/OrderContext";
 import Toast from "react-native-toast-message";
@@ -29,25 +26,20 @@ export default function OrderScreen() {
     state: { order, orderDetails, loading, error, hasUnsavedChanges },
     dispatch,
   } = useOrder();
-  const { state: customerState, clearCustomer, dispatch: customerDispatch} = useCustomer();
-  const { checkTokenExpiration } = useSettings();
   const {
-    loadOrder,
-    saveOrder,
-    removeProduct,
-    updateQuantity,
-    reloadOriginalOrder,
-  } = useOrderOperations(Number(orderId));
+    state: customerState,
+    clearCustomer,
+    dispatch: customerDispatch,
+  } = useCustomer();
+  const { checkTokenExpiration } = useSettings();
+  const { loadOrder, saveOrder, removeProduct, updateQuantity, reloadOriginalOrder } =
+    useOrderOperations(Number(orderId));
 
-  const [showQuantityModal, setShowQuantityModal] = useState(false);
-  const [showOptionsModal, setShowOptionsModal] = useState(false);
-  const [selectedOrderDetail, setSelectedOrderDetail] =
-    useState<OrderDetail | null>(null);
-  const [showSummary, setShowSummary] = useState(false);
   const [hasInitializedOrder, setHasInitializedOrder] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
   const isTemporary = order?.esTemporal ?? false;
-
   const subtotal = isTemporary
     ? orderDetails.reduce(
         (sum, detail) => sum + detail.costoUnitario * detail.cantidad,
@@ -55,84 +47,61 @@ export default function OrderScreen() {
       )
     : order?.totalSinDescuento || 0;
 
-  // Combinar cambios en productos y cliente, con depuración
-  const [hasChanges, setHasChanges] = useState(false);
   useEffect(() => {
-    console.log(
-      "Checking changes - hasUnsavedChanges:",
-      hasUnsavedChanges,
-      "hasCustomerChanged:",
-      customerState.hasCustomerChanged
-    );
     const newHasChanges = hasUnsavedChanges || customerState.hasCustomerChanged;
     if (hasChanges !== newHasChanges) {
       setHasChanges(newHasChanges);
     }
-  }, [hasUnsavedChanges, customerState.hasCustomerChanged, orderDetails]);
+  }, [hasUnsavedChanges, customerState.hasCustomerChanged]);
 
   useEffect(() => {
     const handleOrder = async () => {
-      const isTokenValid = await checkTokenExpiration();
-      if (!isTokenValid) {
-        Toast.show({
-          type: "error",
-          text1: "Sesión expirada",
-          text2: "Tu sesión ha expirada. Por favor, inicia sesión nuevamente.",
-          position: "top",
-          visibilityTime: 4000,
-          autoHide: true,
-          topOffset: 30,
-          onHide: () => {
-            router.navigate("/components/login");
-          },
-        });
-        return;
-      }
-      if (orderIdentify === 0) {
-        if (!order && !hasInitializedOrder) {
-          setHasInitializedOrder(true);
-          try {
-            dispatch({ type: "SET_LOADING", payload: true });
-            const newOrder = await temporaryOrderService.createTemporaryOrder(
-              String(tableId),
-              String(place)
-            );
-            router.setParams({
-              orderId: newOrder.numeroOrden?.toString(),
-              tableId: newOrder.numeroMesa?.toString() ?? "0",
-              place: newOrder.ubicacion,
-            });
-            dispatch({ type: "SET_ORDER", payload: newOrder });
-            dispatch({ type: "SET_ORDER_DETAILS", payload: [] });
-          } catch (error) {
-            dispatch({
-              type: "SET_ERROR",
-              payload: error instanceof Error ? error.message : "Unknown error",
-            });
-          } finally {
-            dispatch({ type: "SET_LOADING", payload: false });
-          }
+      try {
+        dispatch({ type: "SET_LOADING", payload: true });
+        const isTokenValid = await checkTokenExpiration();
+        if (!isTokenValid) {
+          Toast.show({
+            type: "error",
+            text1: "Sesión expirada",
+            text2: "Por favor, inicia sesión nuevamente.",
+            onHide: () => router.navigate("/components/login"),
+          });
+          return;
         }
-      } else if (!isTemporary && !order) {
-        try {
-          dispatch({ type: "SET_LOADING", payload: true });
+
+        if (orderIdentify === 0 && !hasInitializedOrder) {
+          const newOrder = await temporaryOrderService.createTemporaryOrder(
+            String(tableId),
+            String(place)
+          );
+          router.setParams({
+            orderId: newOrder.numeroOrden?.toString(),
+            tableId: newOrder.numeroMesa?.toString() ?? "0",
+            place: newOrder.ubicacion,
+          });
+          dispatch({ type: "SET_ORDER", payload: newOrder });
+          dispatch({ type: "SET_ORDER_DETAILS", payload: [] });
+          setHasInitializedOrder(true);
+        } else if (!isTemporary && !order) {
           await loadOrder();
           setHasInitializedOrder(true);
-        } catch (error) {
-          // Manejo de error
-        } finally {
-          dispatch({ type: "SET_LOADING", payload: false });
         }
+      } catch (error) {
+        dispatch({
+          type: "SET_ERROR",
+          payload: error instanceof Error ? error.message : "Error desconocido",
+        });
+      } finally {
+        dispatch({ type: "SET_LOADING", payload: false });
       }
     };
 
     handleOrder();
-  }, [tableId, place, isTemporary, loadOrder, dispatch, order, hasInitializedOrder]);
+  }, [orderIdentify, isTemporary, tableId, place, order, hasInitializedOrder]);
 
   useEffect(() => {
     const formattedPlace =
-      place.toString().charAt(0).toUpperCase() +
-      place.toString().slice(1).toLowerCase();
+      place.toString().charAt(0).toUpperCase() + place.toString().slice(1).toLowerCase();
     navigation.setOptions({
       title: `Mesa ${tableId.toString().trim()} - ${formattedPlace}`,
     });
@@ -144,7 +113,7 @@ export default function OrderScreen() {
       if (hasChanges) {
         Alert.alert(
           "Cambios no guardados",
-          "Tienes cambios sin guardar. ¿Deseas salir y descartarlos?",
+          "¿Deseas salir y descartarlos?",
           [
             { text: "Cancelar", style: "cancel" },
             {
@@ -173,18 +142,12 @@ export default function OrderScreen() {
     });
   }, [order, isActive]);
 
-  const handleProductPress = useCallback((product: OrderDetail) => {
-    setSelectedOrderDetail(product);
-    setShowOptionsModal(true);
-  }, []);
-
   const handleSaveOrder = useCallback(async () => {
     if (!order) return;
     try {
       dispatch({ type: "SET_LOADING", payload: true });
       await saveOrder();
       customerDispatch({ type: "SET_CUSTOMER_CHANGED", payload: false });
-
       Toast.show({
         type: "success",
         text1: "Orden guardada",
@@ -195,31 +158,20 @@ export default function OrderScreen() {
         type: "error",
         text1: "Error",
         text2:
-          error instanceof Error
-            ? error.message
-            : "No se pudo guardar la orden.",
+          error instanceof Error ? error.message : "No se pudo guardar la orden.",
       });
     } finally {
       dispatch({ type: "SET_LOADING", payload: false });
     }
   }, [order, dispatch, saveOrder]);
 
-  const handleDeleteProduct = useCallback(() => {
-    if (selectedOrderDetail) {
-      removeProduct(selectedOrderDetail.idOrdenDetalle);
-      setShowOptionsModal(false);
-    }
-  }, [selectedOrderDetail, removeProduct]);
-
-  const handleUpdateQuantity = useCallback(
-    (newQuantity: number) => {
-      if (selectedOrderDetail) {
-        updateQuantity(selectedOrderDetail.idProducto, newQuantity);
-        setShowQuantityModal(false);
-      }
-    },
-    [selectedOrderDetail, updateQuantity]
-  );
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text>Cargando...</Text>
+      </View>
+    );
+  }
 
   if (error) {
     return (
@@ -240,7 +192,9 @@ export default function OrderScreen() {
           <ProductSection onAddProduct={handleNavigateToProducts} />
           <OrderDetailsList
             orderDetails={orderDetails}
-            onProductPress={handleProductPress}
+            onProductPress={() => {}} // Puedes dejarlo vacío si no necesitas acción adicional
+            onDeleteProduct={removeProduct}
+            onUpdateQuantity={updateQuantity}
           />
         </View>
 
@@ -255,28 +209,8 @@ export default function OrderScreen() {
           hasChanges={hasChanges}
         />
       </View>
-
-      {showOptionsModal && selectedOrderDetail && (
-        <ProductOptionsModal
-          visible={showOptionsModal}
-          product={selectedOrderDetail}
-          onCancel={() => setShowOptionsModal(false)}
-          onDelete={handleDeleteProduct}
-          onModify={() => {
-            setShowOptionsModal(false);
-            setShowQuantityModal(true);
-          }}
-        />
-      )}
-
-      {showQuantityModal && selectedOrderDetail && (
-        <QuantityModal
-          visible={showQuantityModal}
-          product={selectedOrderDetail}
-          onCancel={() => setShowQuantityModal(false)}
-          onConfirm={handleUpdateQuantity}
-        />
-      )}
     </View>
   );
 }
+
+
