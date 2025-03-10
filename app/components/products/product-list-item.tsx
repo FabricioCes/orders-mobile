@@ -40,12 +40,12 @@ const ProductListItem: React.FC<{
 
 const styles = StyleSheet.create({
   container: {
-    width: "100%", // Hace que el componente ocupe el ancho completo del contenedor padre
+    width: "100%", // Ocupa el ancho completo del contenedor padre
     padding: 12,
     backgroundColor: "#fff",
     borderRadius: 8,
     marginBottom: 8,
-    // Opcional: agregar sombra para imitar el estilo de tarjetas o categorías
+    // Sombra para dar efecto de tarjeta
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

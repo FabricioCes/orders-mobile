@@ -4,7 +4,12 @@ import "../global.css";
 import Providers from "./providers";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect } from "react";
+import { configureReanimatedLogger, ReanimatedLogLevel } from "react-native-reanimated";
 
+configureReanimatedLogger({
+  level: ReanimatedLogLevel.warn,
+  strict: false,
+});
 interface ScreenConfig {
   name: string;
   options: {

@@ -1,6 +1,6 @@
 // CustomersScreen.tsx
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet} from "react-native";
+import { View, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
@@ -12,7 +12,6 @@ import CustomerList from "../components/customers/ItemCustomerList";
 import useCustomerSearch from "../../core/hooks/useCustomerSearch";
 
 const CustomersScreen: React.FC = () => {
-
   const { settings, token } = useSettings();
   const { state, dispatch, fetchCustomers } = useCustomer();
   const { customers, status } = state;
@@ -21,6 +20,7 @@ const CustomersScreen: React.FC = () => {
 
   const handleSelect = async (customer: Customer) => {
     dispatch({ type: "SET_SELECTED_CUSTOMER", payload: customer });
+    dispatch({ type: "SET_CUSTOMER_CHANGED", payload: true });
     router.back();
   };
 
@@ -32,7 +32,6 @@ const CustomersScreen: React.FC = () => {
     return () => controller.abort();
   }, [token, settings, fetchCustomers]);
 
-
   return (
     <View style={styles.container}>
       <SearchBarCustomer value={searchQuery} onChangeText={setSearchQuery} />
@@ -41,7 +40,12 @@ const CustomersScreen: React.FC = () => {
       {status === "error" && <ErrorState message="Error al cargar clientes" />}
 
       {searchQuery.trim() === "" ? (
-       <CustomerList customers={customers} grouped={true} searchQuery={searchQuery} onSelect={handleSelect}/>
+        <CustomerList
+          customers={customers}
+          grouped={true}
+          searchQuery={searchQuery}
+          onSelect={handleSelect}
+        />
       ) : (
         <CustomerList
           customers={filteredCustomers}
@@ -62,4 +66,3 @@ const styles = StyleSheet.create({
 });
 
 export default CustomersScreen;
-

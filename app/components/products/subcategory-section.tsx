@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { Product } from "@/types/productTypes";
 import SubSubCategorySection from "./subsubcategory-section";
+
 
 interface SubCategorySectionProps {
   subCategory: {
     nombreSubcategoria: string;
     subSubCategories: { nombreSubSubCategoria: string; products: Product[] }[];
+    identificadorSubcategoria?: string;
   };
   onAddProduct: (product: Product, quantity: number) => void;
   searchQuery: string;
@@ -24,23 +26,16 @@ const SubCategorySection: React.FC<SubCategorySectionProps> = React.memo(
     }, [searchQuery]);
 
     return (
-      <View style={{ marginLeft: 16 }}>
+      <View style={styles.subCategoryContainer}>
         <TouchableOpacity
-          style={{
-            padding: 12,
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
+          style={styles.subCategoryHeader}
           onPress={() => setExpanded(!expanded)}
         >
-          <Text style={{ fontSize: 16, fontWeight: "500", color: "#4b5563" }}>
-            {subCategory.nombreSubcategoria}
-          </Text>
+          <Text style={styles.subCategoryText}>{subCategory.nombreSubcategoria}</Text>
           <FontAwesome
             name={expanded ? "minus" : "plus"}
             size={14}
-            color="#4f46e5"
+            color="#3b82f6"
           />
         </TouchableOpacity>
         {expanded &&
@@ -56,5 +51,28 @@ const SubCategorySection: React.FC<SubCategorySectionProps> = React.memo(
     );
   }
 );
+
+const styles = StyleSheet.create({
+  subCategoryContainer: {
+    marginLeft: 16,
+    backgroundColor: "#f3f4f6",
+    borderRadius: 12,
+    marginHorizontal: 12,
+    marginVertical: 8,
+    overflow: "hidden",
+  },
+  subCategoryHeader: {
+    padding: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#e5e7eb",
+  },
+  subCategoryText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#1F2937",
+  },
+});
 
 export default SubCategorySection;

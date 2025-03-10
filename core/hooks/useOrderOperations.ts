@@ -15,7 +15,6 @@ export const useOrderOperations = (orderId: number) => {
   const { state, dispatch } = useOrder();
   const { state: customerState } = useCustomer();
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const { getSaveOptions } = useOrderUpdater();
 
   const isTemporary = state.order?.esTemporal ?? false;
@@ -62,7 +61,7 @@ export const useOrderOperations = (orderId: number) => {
       } finally {
         dispatch({ type: 'SET_LOADING', payload: false });
         setIsInitialLoad(false); // Marcamos que la carga inicial ha terminado
-        setHasUnsavedChanges(false); // No hay cambios tras cargar
+        dispatch({ type: 'SET_UNSAVED_CHANGES', payload: false }); // Reiniciamos cambios tras cargar
       }
     }
   }, [orderId, dispatch, isTemporary]);
@@ -79,13 +78,13 @@ export const useOrderOperations = (orderId: number) => {
     } else {
       await loadOrder();
     }
-    setHasUnsavedChanges(false);
+    dispatch({ type: 'SET_UNSAVED_CHANGES', payload: false });
   }, [orderId, dispatch, isTemporary, loadOrder]);
 
   const addToOrder = useCallback(
     async (product: Product, quantity: number = 1) => {
       if (!state.order) return;
-
+      console.log('Add to Order');
       const newDetail: OrderDetail = {
         cantidad: quantity,
         nombreProducto: product.nombre,
@@ -102,21 +101,21 @@ export const useOrderOperations = (orderId: number) => {
         if (updatedOrder) {
           dispatch({ type: 'SET_ORDER', payload: updatedOrder });
           dispatch({ type: 'SET_ORDER_DETAILS', payload: updatedOrder.detalles || [] });
-          if (!isInitialLoad) {
-            setHasUnsavedChanges(true); // Solo marcamos cambios si no es la carga inicial
-          }
+          console.log('hasunsavedchanges');
+          dispatch({ type: 'SET_UNSAVED_CHANGES', payload: true });
         }
         return updatedOrder?.detalles;
       } else {
+        console.log('Aqui////////////');
         const updatedDetails = await orderService.addProduct(orderId, newDetail);
         dispatch({ type: 'SET_ORDER_DETAILS', payload: updatedDetails });
-        if (!isInitialLoad) {
-          setHasUnsavedChanges(true); // Solo marcamos cambios si no es la carga inicial
-        }
+        console.log(updatedDetails);
+        console.log('hasunsavedchanges');
+        dispatch({ type: 'SET_UNSAVED_CHANGES', payload: true });
         return updatedDetails;
       }
     },
-    [orderId, dispatch, isTemporary, state.order, isInitialLoad]
+    [orderId, dispatch, isTemporary, state.order]
   );
 
   const removeProduct = useCallback(
@@ -132,23 +131,19 @@ export const useOrderOperations = (orderId: number) => {
               if (updatedOrder) {
                 dispatch({ type: 'SET_ORDER', payload: updatedOrder });
                 dispatch({ type: 'SET_ORDER_DETAILS', payload: updatedOrder.detalles || [] });
-                if (!isInitialLoad) {
-                  setHasUnsavedChanges(true); // Solo marcamos cambios si no es la carga inicial
-                }
+                dispatch({ type: 'SET_UNSAVED_CHANGES', payload: true });
               }
             } else {
               await orderService.removeProduct(orderId, detailId);
               const updatedDetails = await orderService.getOrderDetails(orderId);
               dispatch({ type: 'SET_ORDER_DETAILS', payload: updatedDetails });
-              if (!isInitialLoad) {
-                setHasUnsavedChanges(true); // Solo marcamos cambios si no es la carga inicial
-              }
+              dispatch({ type: 'SET_UNSAVED_CHANGES', payload: true });
             }
           },
         },
       ]);
     },
-    [orderId, dispatch, isTemporary, isInitialLoad]
+    [orderId, dispatch, isTemporary]
   );
 
   const updateQuantity = useCallback(
@@ -162,9 +157,7 @@ export const useOrderOperations = (orderId: number) => {
           if (updatedOrder) {
             dispatch({ type: 'SET_ORDER', payload: updatedOrder });
             dispatch({ type: 'SET_ORDER_DETAILS', payload: updatedOrder.detalles || [] });
-            if (!isInitialLoad) {
-              setHasUnsavedChanges(true); // Solo marcamos cambios si no es la carga inicial
-            }
+            dispatch({ type: 'SET_UNSAVED_CHANGES', payload: true });
           }
         }
       } else {
@@ -173,12 +166,10 @@ export const useOrderOperations = (orderId: number) => {
         dispatch({ type: 'SET_ORDER_DETAILS', payload: updatedDetails });
         const updatedOrder = await orderService.getOrder(orderId);
         dispatch({ type: 'SET_ORDER', payload: updatedOrder });
-        if (!isInitialLoad) {
-          setHasUnsavedChanges(true); // Solo marcamos cambios si no es la carga inicial
-        }
+        dispatch({ type: 'SET_UNSAVED_CHANGES', payload: true });
       }
     },
-    [orderId, dispatch, isTemporary, isInitialLoad]
+    [orderId, dispatch, isTemporary]
   );
 
   const updateOrderState = async (orderIdToUse: number): Promise<Order> => {
@@ -188,7 +179,7 @@ export const useOrderOperations = (orderId: number) => {
     }
     dispatch({ type: 'SET_ORDER', payload: savedOrder });
     dispatch({ type: 'SET_ORDER_DETAILS', payload: savedOrder.detalles || [] });
-    setHasUnsavedChanges(false);
+    dispatch({ type: 'SET_UNSAVED_CHANGES', payload: false });
     return savedOrder;
   };
 
@@ -241,8 +232,16 @@ export const useOrderOperations = (orderId: number) => {
       temporaryOrderService.removeTemporaryOrder(orderId);
     }
     dispatch({ type: 'RESET_ORDER' });
-    setHasUnsavedChanges(false);
+    dispatch({ type: 'SET_UNSAVED_CHANGES', payload: false });
   }, [dispatch, orderId, isTemporary]);
+
+  // Exponemos hasUnsavedChanges directamente del estado del contexto
+  const hasUnsavedChanges = state.hasUnsavedChanges;
+
+  // Depuración del estado global hasUnsavedChanges
+  useEffect(() => {
+    console.log('Global hasUnsavedChanges:', hasUnsavedChanges);
+  }, [hasUnsavedChanges]);
 
   return {
     removeProduct,

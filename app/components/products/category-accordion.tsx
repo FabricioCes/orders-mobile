@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import { Product, GroupedCategory } from "@/types/productTypes";
+import { GroupedCategory, Product } from "@/types/productTypes";
 import SubCategorySection from "./subcategory-section";
+
 
 interface CategoryAccordionProps {
   category: GroupedCategory;
@@ -19,25 +20,12 @@ const CategoryAccordion: React.FC<CategoryAccordionProps> = React.memo(
     }, [searchQuery]);
 
     return (
-      <View
-        style={{
-          marginBottom: 16,
-          backgroundColor: "#f9fafb",
-          borderRadius: 8,
-        }}
-      >
+      <View style={styles.accordionContainer}>
         <TouchableOpacity
-          style={{
-            padding: 16,
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
+          style={styles.accordionHeader}
           onPress={() => setExpanded(!expanded)}
         >
-          <Text style={{ fontSize: 18, fontWeight: "600" }}>
-            {category.nombreCategoria}
-          </Text>
+          <Text style={styles.headerText}>{category.nombreCategoria}</Text>
           <FontAwesome
             name={expanded ? "chevron-up" : "chevron-down"}
             size={16}
@@ -48,7 +36,7 @@ const CategoryAccordion: React.FC<CategoryAccordionProps> = React.memo(
           category.subCategories.map((subCat) => (
             <SubCategorySection
               key={subCat.identificadorSubcategoria}
-              subCategory={subCat}
+              subCategory={{ ...subCat, identificadorSubcategoria: subCat.identificadorSubcategoria.toString() }}
               onAddProduct={onAddProduct}
               searchQuery={searchQuery}
             />
@@ -57,5 +45,31 @@ const CategoryAccordion: React.FC<CategoryAccordionProps> = React.memo(
     );
   }
 );
+
+const styles = StyleSheet.create({
+  accordionContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    marginBottom: 16,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  accordionHeader: {
+    padding: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderBottomColor: "#e5e7eb",
+    borderBottomWidth: 1,
+  },
+  headerText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1F2937",
+  },
+});
 
 export default CategoryAccordion;

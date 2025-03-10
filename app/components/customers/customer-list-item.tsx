@@ -1,6 +1,6 @@
-import React from "react";
 import { Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Customer } from "@/types/customerTypes";
+import { memo } from "react";
 
 type Props = {
   customer: Customer;
@@ -9,11 +9,14 @@ type Props = {
 
 const CustomerListItem: React.FC<Props> = ({ customer, onPress }) => (
   <TouchableOpacity
-    style={[styles.itemContainer, customer.identificacion % 2 === 0 && styles.evenBackground]}
+    style={[
+      styles.itemContainer,
+      customer.identificacion % 2 === 0 && styles.evenBackground,
+    ]}
     onPress={() => onPress(customer)}
     accessibilityRole="button"
   >
-    <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
+    <Text style={styles.nameText}>
       {customer.nombre}
     </Text>
     <Text style={styles.cedText}>{customer.cedula}</Text>
@@ -22,29 +25,32 @@ const CustomerListItem: React.FC<Props> = ({ customer, onPress }) => (
 
 const styles = StyleSheet.create({
   itemContainer: {
+    width: "100%",
     padding: 16,
     marginBottom: 12,
     borderRadius: 12,
-    backgroundColor: "#e0f7fa", // Un tono muy claro de teal
-    shadowColor: "#00695c",     // Sombra en un teal oscuro
+    backgroundColor: "#fff",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },
   evenBackground: {
-    backgroundColor: "#b2ebf2", // Un tono más oscuro para fondos alternos
+    backgroundColor: "#f3f4f6",
   },
   nameText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#00796b", // Un teal oscuro para el texto principal
+    color: "#1F2937",
+    flexWrap: "wrap", // Permite que el texto se extienda a múltiples líneas
   },
   cedText: {
     fontSize: 14,
-    color: "#004d40", // Un tono aún más oscuro para el texto secundario
+    color: "#4B5563",
     marginTop: 4,
   },
 });
 
-export default React.memo(CustomerListItem);
+export default memo(CustomerListItem);
+

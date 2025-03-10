@@ -30,6 +30,7 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
         const client = await CustomerApiRepository.getCustomer(customerId);
 
           dispatch({ type: "SET_SELECTED_CUSTOMER", payload: client });
+          dispatch({ type: "SET_CUSTOMER_CHANGED", payload: false });
       } catch (error) {
 
           dispatch({ type: "CLEAR_SELECTED_CUSTOMER" });
@@ -70,7 +71,11 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
         <View className="flex-row items-center justify-between bg-blue-50 p-3 rounded-lg">
           <Text className="text-base flex-1">{selectedCustomer.nombre}</Text>
           <TouchableOpacity
-            onPress={() => dispatch({ type: "CLEAR_SELECTED_CUSTOMER" })}
+            onPress={() => {
+              dispatch({ type: "CLEAR_SELECTED_CUSTOMER" })
+              dispatch({ type: "SET_CUSTOMER_CHANGED", payload: true });
+            }
+          }
           >
             <FontAwesome name="times-circle" size={20} color="#ef4444" />
           </TouchableOpacity>

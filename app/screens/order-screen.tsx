@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { View, Alert, Text } from "react-native";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import CustomerSection from "../components/customers/customer-section";
@@ -26,10 +26,10 @@ export default function OrderScreen() {
   const navigation = useNavigation();
 
   const {
-    state: { order, orderDetails, loading, error },
+    state: { order, orderDetails, loading, error, hasUnsavedChanges },
     dispatch,
   } = useOrder();
-  const { state: customerState, clearCustomer } = useCustomer();
+  const { state: customerState, clearCustomer, dispatch: customerDispatch} = useCustomer();
   const { checkTokenExpiration } = useSettings();
   const {
     loadOrder,
@@ -37,7 +37,6 @@ export default function OrderScreen() {
     removeProduct,
     updateQuantity,
     reloadOriginalOrder,
-    hasUnsavedChanges,
   } = useOrderOperations(Number(orderId));
 
   const [showQuantityModal, setShowQuantityModal] = useState(false);
@@ -45,8 +44,8 @@ export default function OrderScreen() {
   const [selectedOrderDetail, setSelectedOrderDetail] =
     useState<OrderDetail | null>(null);
   const [showSummary, setShowSummary] = useState(false);
+  const [hasInitializedOrder, setHasInitializedOrder] = useState(false);
 
-  const hasInitializedOrder = useRef(false);
   const isTemporary = order?.esTemporal ?? false;
 
   const subtotal = isTemporary
@@ -56,24 +55,20 @@ export default function OrderScreen() {
       )
     : order?.totalSinDescuento || 0;
 
-  // Determinar si el cliente ha cambiado (solo después de la inicialización)
-  const hasCustomerChanged = useRef(false);
-  useEffect(() => {
-    if (hasInitializedOrder.current && order?.idCliente) {
-      hasCustomerChanged.current =
-        customerState.selectedCustomer?.identificacion !== order?.idCliente;
-    }
-  }, [customerState.selectedCustomer?.identificacion, order?.idCliente]);
-
   // Combinar cambios en productos y cliente, con depuración
   const [hasChanges, setHasChanges] = useState(false);
   useEffect(() => {
-    console.log("Checking changes - hasUnsavedChanges:", hasUnsavedChanges, "hasCustomerChanged:", hasCustomerChanged.current);
-    const newHasChanges = hasUnsavedChanges || hasCustomerChanged.current;
+    console.log(
+      "Checking changes - hasUnsavedChanges:",
+      hasUnsavedChanges,
+      "hasCustomerChanged:",
+      customerState.hasCustomerChanged
+    );
+    const newHasChanges = hasUnsavedChanges || customerState.hasCustomerChanged;
     if (hasChanges !== newHasChanges) {
       setHasChanges(newHasChanges);
     }
-  }, [hasUnsavedChanges, hasCustomerChanged.current, orderDetails]); // Reactiva a cambios en orderDetails
+  }, [hasUnsavedChanges, customerState.hasCustomerChanged, orderDetails]);
 
   useEffect(() => {
     const handleOrder = async () => {
@@ -94,8 +89,8 @@ export default function OrderScreen() {
         return;
       }
       if (orderIdentify === 0) {
-        if (!order && !hasInitializedOrder.current) {
-          hasInitializedOrder.current = true;
+        if (!order && !hasInitializedOrder) {
+          setHasInitializedOrder(true);
           try {
             dispatch({ type: "SET_LOADING", payload: true });
             const newOrder = await temporaryOrderService.createTemporaryOrder(
@@ -122,7 +117,7 @@ export default function OrderScreen() {
         try {
           dispatch({ type: "SET_LOADING", payload: true });
           await loadOrder();
-          hasInitializedOrder.current = true;
+          setHasInitializedOrder(true);
         } catch (error) {
           // Manejo de error
         } finally {
@@ -132,7 +127,7 @@ export default function OrderScreen() {
     };
 
     handleOrder();
-  }, [tableId, place, isTemporary, loadOrder, dispatch]);
+  }, [tableId, place, isTemporary, loadOrder, dispatch, order, hasInitializedOrder]);
 
   useEffect(() => {
     const formattedPlace =
@@ -188,6 +183,8 @@ export default function OrderScreen() {
     try {
       dispatch({ type: "SET_LOADING", payload: true });
       await saveOrder();
+      customerDispatch({ type: "SET_CUSTOMER_CHANGED", payload: false });
+
       Toast.show({
         type: "success",
         text1: "Orden guardada",

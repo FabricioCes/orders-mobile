@@ -10,6 +10,7 @@ import { Product } from "@/types/productTypes";
 import SearchBar from "../components/products/search-bar-products";
 import { useOrderOperations } from "@/core/hooks/useOrderOperations";
 import { Order } from "@/types/types";
+import ProductsList from "../components/products/product-list";
 
 const ProductScreen: React.FC = () => {
   const { order: orderString } = useLocalSearchParams();
@@ -122,18 +123,9 @@ const ProductScreen: React.FC = () => {
           <ActivityIndicator size="small" color="#4f46e5" />
         </View>
       ) : (
-        <FlatList
-          data={flatProducts}
-          keyExtractor={(item, index) => `${item.identificador}-${index}`}
-          renderItem={({ item }) => (
-            <ProductListItem product={item} onAddProduct={handleAddProduct} />
-          )}
-          contentContainerStyle={{ paddingBottom: 20 }}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          windowSize={5}
-          maxToRenderPerBatch={10}
-          initialNumToRender={10}
+        <ProductsList 
+          flatProducts={flatProducts} 
+          handleAddProduct={handleAddProduct} 
         />
       )}
       <Toast />

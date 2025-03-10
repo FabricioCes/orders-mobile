@@ -5,7 +5,7 @@ import React, {
   useContext,
   ReactNode,
   useCallback,
-  useEffect
+  useEffect,
 } from "react";
 import { useSettings } from "./SettingsContext";
 import { Customer } from "@/types/customerTypes";
@@ -17,27 +17,28 @@ interface CustomerState {
   customers: Customer[];
   selectedCustomer?: Customer;
   status: "loading" | "error" | "success";
+  hasCustomerChanged: boolean; // Nuevo estado para rastrear cambios en el cliente
 }
 
 type CustomerAction =
   | { type: "SET_CUSTOMERS"; payload: Customer[] }
   | { type: "SET_STATUS"; payload: "loading" | "error" | "success" }
   | { type: "SET_SELECTED_CUSTOMER"; payload: Customer }
-  | { type: "CLEAR_SELECTED_CUSTOMER" };
+  | { type: "CLEAR_SELECTED_CUSTOMER" }
+  | { type: "SET_CUSTOMER_CHANGED"; payload: boolean }; // Nueva acción para hasCustomerChanged
 
 const initialState: CustomerState = {
   customers: [],
   selectedCustomer: undefined,
   status: "loading",
+  hasCustomerChanged: false, // Inicialmente no hay cambios
 };
 
 interface CustomerContextValue {
   state: CustomerState;
   dispatch: React.Dispatch<CustomerAction>;
   clearCustomer: () => void;
-  // Método que aún usa promesas para obtener todos los clientes (si aún lo necesitas)
   fetchCustomers: (signal?: AbortSignal) => void;
-  // Nuevo método que retorna un Observable para cargar clientes por letra
   loadCustomersForLetter: (letter: string) => Observable<Customer[]>;
 }
 
@@ -59,9 +60,15 @@ const customerReducer = (
     case "SET_STATUS":
       return { ...state, status: action.payload };
     case "SET_SELECTED_CUSTOMER":
-      return { ...state, selectedCustomer: action.payload };
+      return {
+        ...state,
+        selectedCustomer: action.payload,
+        hasCustomerChanged: state.selectedCustomer !== action.payload, // Cambia solo si el cliente es diferente
+      };
     case "CLEAR_SELECTED_CUSTOMER":
-      return { ...state, selectedCustomer: undefined };
+      return { ...state, selectedCustomer: undefined, hasCustomerChanged: false };
+    case "SET_CUSTOMER_CHANGED":
+      return { ...state, hasCustomerChanged: action.payload };
     default:
       return state;
   }
@@ -72,8 +79,9 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
   const { settings, token } = useSettings();
 
   useEffect(() => {
-    console.log("Selected Customer", state.selectedCustomer);
-  }, [state.selectedCustomer]);
+    console.log("CustomerContext state:", state.hasCustomerChanged);
+  }, [state]);
+
   const fetchCustomers = useCallback(
     async (signal?: AbortSignal) => {
       try {
@@ -94,7 +102,6 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
     [settings, token, dispatch]
   );
 
-  // Nuevo método que utiliza el método de CustomerService que retorna un Observable
   const loadCustomersForLetter = useCallback(
     (letter: string) => {
       return CustomerService.loadCustomersForLetter(letter);
@@ -114,7 +121,7 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
         dispatch,
         clearCustomer,
         fetchCustomers,
-        loadCustomersForLetter
+        loadCustomersForLetter,
       }}
     >
       {children}

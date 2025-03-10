@@ -6,6 +6,7 @@ interface OrderState {
   orderDetails: OrderDetail[];
   loading: boolean;
   error: string | null;
+  hasUnsavedChanges: boolean;
 }
 
 type OrderAction =
@@ -16,6 +17,7 @@ type OrderAction =
   | { type: "UPDATE_ORDER_DETAIL"; payload: OrderDetail }
   | { type: "REMOVE_ORDER_DETAIL"; payload: number }
   | { type: "SET_LOADING"; payload: boolean }
+  | { type: "SET_UNSAVED_CHANGES", payload: boolean }
   | { type: "SET_ERROR"; payload: string | null };
 
 const initialState: OrderState = {
@@ -23,6 +25,7 @@ const initialState: OrderState = {
   orderDetails: [],
   loading: false,
   error: null,
+  hasUnsavedChanges: false,
 };
 
 const OrderContext = createContext<{
@@ -67,6 +70,8 @@ const orderReducer = (state: OrderState, action: OrderAction): OrderState => {
       return { ...state, loading: action.payload };
     case "SET_ERROR":
       return { ...state, error: action.payload };
+    case "SET_UNSAVED_CHANGES":
+      return { ...state, hasUnsavedChanges: action.payload };
     default:
       return state;
   }
