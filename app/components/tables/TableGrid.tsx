@@ -1,47 +1,44 @@
-// TableGrid.tsx
-import React, { useCallback, useMemo } from "react";
+import { useMemo, useCallback, memo } from "react";
 import { View, Text } from "react-native";
 import { FlashList } from "@shopify/flash-list";
-import TableRow from "./TableRow";
-import { generateTableRows } from "@/utils/tableUtils";
+import TableRow from "./TableRow"; // Ajusta la ruta según tu estructura
+import { generateTableGridForZone } from "@/utils/tableUtils";
+import { TableCount } from "@/types/tableTypes";
 
-type TableGridProps = {
-  tables: number[];
+interface TableGridProps {
+  tables: TableCount;
   columns: number;
   isActive: (tableId: number) => boolean;
   onTablePress: (tableId: number) => void;
-  place?: string;
-};
+  place: string;
+}
 
-const TableGrid = React.memo(
-  ({
-    tables,
-    columns,
-    isActive,
-    onTablePress,
-    place = "comedor",
-  }: TableGridProps) => {
-    const rows = useMemo(
-      () => generateTableRows(tables, columns),
-      [tables, columns]
-    );
+const TableGrid = memo(
+  ({ tables, columns, isActive, onTablePress, place = "comedor" }: TableGridProps) => {
+    // Calculamos las filas solo cuando tables o columns cambian
+    const grid = useMemo(() => {
+      if (!tables) return [];
+      return generateTableGridForZone(tables, columns, place);
+    }, [tables, columns]);
 
+    // Renderizamos cada fila de la tabla
     const renderRow = useCallback(
       ({ item: row, index }: { item: number[]; index: number }) => (
         <TableRow
           key={`${place}-row-${index}`}
           place={place}
-          tables={row}
           isActive={isActive}
           onTablePress={onTablePress}
           rowIndex={index}
           totalColumns={columns}
+          tables={row}
         />
       ),
       [columns, isActive, onTablePress, place]
     );
 
-    if (!rows.length) {
+    // Si no hay filas, mostramos un mensaje
+    if (!grid.length) {
       return (
         <View className="flex-1 justify-center items-center p-4">
           <Text className="text-gray-500 text-lg">
@@ -53,7 +50,7 @@ const TableGrid = React.memo(
 
     return (
       <FlashList
-        data={rows}
+        data={grid}
         renderItem={renderRow}
         keyExtractor={(_, index) => `${place}-row-${index}`}
         estimatedItemSize={120}

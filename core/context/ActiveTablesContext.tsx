@@ -32,7 +32,7 @@ const initialState: ActiveTablesState = {
 const ActiveTablesContext = createContext<{
   state: ActiveTablesState;
   dispatch: React.Dispatch<ActiveTablesAction>;
-  loadActiveTables: () => Promise<void>;
+  loadActiveTables: DebounceFunction;
   updateTable: (table: ActiveTable) => void; // Nueva función
   removeTable: (tableId: number) => void; // Nueva función
 }>({
@@ -58,7 +58,9 @@ const activeTablesReducer = (
       return {
         ...state,
         activeTables: state.activeTables.map((table) =>
-          table.identificador === action.payload.identificador? action.payload : table
+          table.identificador === action.payload.identificador
+            ? action.payload
+            : table
         ),
       };
     case "REMOVE_TABLE":
@@ -77,19 +79,27 @@ export const ActiveTablesProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(activeTablesReducer, initialState);
   const { isLogin, checkTokenExpiration } = useSettings();
 
-  const loadActiveTables = useCallback(async () => {
-    if (!isLogin) return;
-    const isValidToken = await checkTokenExpiration();
-    if (!isValidToken) return;
+  const loadActiveTables = useCallback(
+    debounce(async () => {
+      if (!isLogin) return;
+      const isValidToken = await checkTokenExpiration();
+      if (!isValidToken) return;
 
-    dispatch({ type: "SET_LOADING", payload: true });
-    try {
-      const activeTables = await orderService.loadActiveOrders();
-      dispatch({ type: "SET_ACTIVE_TABLES", payload: activeTables });
-    } catch {
-      dispatch({ type: "SET_ERROR", payload: "Error al cargar mesas activas" });
-    }
-  }, [isLogin, checkTokenExpiration]);
+      dispatch({ type: "SET_LOADING", payload: true });
+      try {
+        const activeTables = await orderService.loadActiveOrders();
+        dispatch({ type: "SET_ACTIVE_TABLES", payload: activeTables });
+      } catch {
+        dispatch({
+          type: "SET_ERROR",
+          payload: "Error al cargar mesas activas",
+        });
+      } finally {
+        dispatch({ type: "SET_LOADING", payload: false });
+      }
+    }, 1000), // Espera 1 segundo antes de permitir otra llamada
+    [isLogin, checkTokenExpiration]
+  );
 
   const updateTable = useCallback((table: ActiveTable) => {
     dispatch({ type: "UPDATE_TABLE", payload: table });
@@ -127,3 +137,14 @@ export const useActiveTables = () => {
   }
   return context;
 };
+interface DebounceFunction {
+  (...args: any[]): void;
+}
+
+function debounce(func: (...args: any[]) => void, wait: number): DebounceFunction {
+  let timeout: NodeJS.Timeout;
+  return (...args: any[]) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(undefined, args), wait);
+  };
+}

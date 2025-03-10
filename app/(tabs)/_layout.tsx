@@ -1,16 +1,19 @@
-import { Tabs, useFocusEffect } from "expo-router";
-import { FontAwesome5 } from '@expo/vector-icons';
+import { useState, useCallback, useRef, useMemo, memo } from "react";
+import { Dimensions, StyleSheet, Text, View } from "react-native";
+import { TabView, SceneMap, TabBar } from "react-native-tab-view";
+import { FontAwesome5 } from "@expo/vector-icons";
+import { useFocusEffect } from "expo-router";
 import { useColorScheme } from "react-native";
-import { useMemo, memo, useCallback, useRef } from "react";
 import { useActiveTables } from "@/core/context/ActiveTablesContext";
 import { useSettings } from "@/core/context/SettingsContext";
+import ZoneScreen from "./tab";
 
 const staticTabs = [
-  { name: 'comedor', title: 'Comedor', icon: 'home' },
-  { name: 'barra', title: 'Barra', icon: 'glass-martini' },
-  { name: 'express', title: 'Express', icon: 'bolt' },
-  { name: 'llevar', title: 'Llevar', icon: 'shopping-bag' },
-  { name: 'terraza', title: 'Terraza', icon: 'tree' },
+  { name: "comedor", title: "Comedor", icon: "home" },
+  { name: "express", title: "Express", icon: "bolt" },
+  { name: "llevar", title: "Llevar", icon: "shopping-bag" },
+  { name: "barra", title: "Barra", icon: "glass-martini" },
+  { name: "terraza", title: "Terraza", icon: "tree" },
 ];
 
 const THEME = {
@@ -42,13 +45,21 @@ const TabLayout = memo(() => {
   const isDarkMode = colorScheme === "dark";
   const lastLoaded = useRef<number | null>(null);
   const { isLogin } = useSettings();
+  const [index, setIndex] = useState(0);
+  const [routes] = useState(
+    staticTabs.map((tab) => ({
+      key: tab.name,
+      title: tab.title,
+      icon: tab.icon,
+    }))
+  );
 
-  let activeTables = state.activeTables;
+  const activeTables = state.activeTables || [];
 
   const tablesByZone = useMemo(() => {
-    if (!isLogin) return {}; // Reiniciar cuando el usuario no está logueado
+    if (!isLogin || !activeTables.length) return {};
 
-    return activeTables?.reduce((acc, table) => {
+    return activeTables.reduce((acc, table) => {
       const zona = table.zona?.trim().toLowerCase() || "sin-zona";
       acc[zona] = (acc[zona] || 0) + 1;
       return acc;
@@ -59,72 +70,111 @@ const TabLayout = memo(() => {
     useCallback(() => {
       const now = Date.now();
       if (!lastLoaded.current || now - lastLoaded.current > 60000) {
-        // Recargar cada 60 segundos
         loadActiveTables();
         lastLoaded.current = now;
       }
     }, [loadActiveTables])
   );
 
-  const renderedTabs = useMemo(
-    () =>
-      staticTabs.map((tab) => {
-        const zoneKey = tab.title.toLowerCase();
-        const activeCount = tablesByZone?.[zoneKey] || 0;
+  const scenes = useMemo(() => {
+    return staticTabs.reduce((acc, tab) => {
+      acc[tab.name] = () => {
+        try {
+          return (
+            <ZoneScreen
+              place={tab.title}
+              qty={tablesByZone[tab.title.toLowerCase()] || 0}
+            />
+          );
+        } catch (error) {
+          console.error(`Error rendering ${tab.title}:`, error);
+          return (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>
+                Error al cargar {tab.title}
+              </Text>
+            </View>
+          );
+        }
+      };
+      return acc;
+    }, {} as Record<string, () => JSX.Element>);
+  }, [tablesByZone]);
 
-        return (
-          <Tabs.Screen
-            key={tab.name}
-            name={tab.name}
-            initialParams={{
-              qty: activeCount,
-              place: tab.title,
-            }}
-            options={{
-              title: tab.title,
-              tabBarIcon: ({ color }: { color: string }) => (
-                <FontAwesome5 name={tab.icon} size={24} color={color} />
-              ),
-              tabBarBadge: activeCount > 0 ? activeCount : undefined,
-              tabBarBadgeStyle: {
-                backgroundColor: '#34D399',
-                color: "white",
-                fontSize: 10,
-                fontWeight: "bold",
-                marginLeft: 5,
-              },
-              headerStyle: THEME.headers.default.headerStyle,
-              headerTitleStyle: THEME.headers.default.headerTitleStyle,
-              headerTintColor: THEME.headers.default.headerTintColor,
-            }}
-          />
-        );
-      }),
-    [tablesByZone, isLogin]
+  const renderScene = SceneMap(scenes);
+
+  const renderTabBar = (props: any) => (
+    <TabBar
+      {...props}
+      indicatorStyle={{ backgroundColor: THEME.colors.primary }}
+      style={{
+        backgroundColor: THEME.colors.background,
+        borderTopWidth: 1,
+        borderTopColor: "#E2E8F0",
+        height: 60,
+      }}
+      labelStyle={{
+        fontSize: 12,
+        fontFamily: "Inter-SemiBold",
+        paddingBottom: 4,
+        color: THEME.colors.textDark,
+      }}
+      activeColor={THEME.colors.primary}
+      inactiveColor={THEME.colors.textDark}
+      renderIcon={({ route, _focused, color }: { route: any; _focused: boolean; color: string }) => (
+        <FontAwesome5 name={route.icon} size={24} color={color} />
+      )}
+      renderBadge={({ route }: { route: { title: string } }) => {
+        const activeCount = tablesByZone[route.title.toLowerCase()] || 0;
+        return activeCount > 0 ? (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{activeCount}</Text>
+          </View>
+        ) : null;
+      }}
+    />
   );
 
   return (
-    <Tabs
-    screenOptions={{
-      tabBarActiveTintColor: '#2563EB',
-      tabBarInactiveTintColor: '#64748B',
-      tabBarStyle: {
-        backgroundColor: '#F8FAFC',
-        borderTopWidth: 1,
-        borderTopColor: '#E2E8F0',
-        height: 60,
-      },
-      tabBarLabelStyle: {
-        fontSize: 12,
-        fontFamily: 'Inter-SemiBold',
-        paddingBottom: 4,
-      },
-      headerShown: false,
-    }}
-  >
-      {renderedTabs}
-    </Tabs>
+    <TabView
+      navigationState={{ index, routes }}
+      renderScene={renderScene}
+      onIndexChange={setIndex}
+      initialLayout={{ width: Dimensions.get("window").width }}
+      renderTabBar={renderTabBar}
+      swipeEnabled={true}
+      animationEnabled={true}
+      lazy={true}
+      lazyPreloadDistance={1}
+    />
   );
+});
+
+const styles = StyleSheet.create({
+  badge: {
+    backgroundColor: "#34D399",
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 5,
+  },
+  badgeText: {
+    color: "white",
+    fontSize: 10,
+    fontWeight: "bold",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  errorText: {
+    color: "#dc2626",
+    fontSize: 16,
+  },
 });
 
 export default TabLayout;

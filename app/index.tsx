@@ -33,7 +33,7 @@ const StartPage = () => {
       ],
       { cancelable: false }
     );
-  return <Redirect href="/(tabs)/comedor" />;
+  return <Redirect href="/(tabs)/tab" />;
 };
 
 export default StartPage;

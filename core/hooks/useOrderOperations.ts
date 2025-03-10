@@ -83,8 +83,7 @@ export const useOrderOperations = (orderId: number) => {
 
   const addToOrder = useCallback(
     async (product: Product, quantity: number = 1) => {
-      if (!state.order) return;
-      console.log('Add to Order');
+      if (!state.order) return;;
       const newDetail: OrderDetail = {
         cantidad: quantity,
         nombreProducto: product.nombre,
@@ -101,16 +100,12 @@ export const useOrderOperations = (orderId: number) => {
         if (updatedOrder) {
           dispatch({ type: 'SET_ORDER', payload: updatedOrder });
           dispatch({ type: 'SET_ORDER_DETAILS', payload: updatedOrder.detalles || [] });
-          console.log('hasunsavedchanges');
           dispatch({ type: 'SET_UNSAVED_CHANGES', payload: true });
         }
         return updatedOrder?.detalles;
       } else {
-        console.log('Aqui////////////');
         const updatedDetails = await orderService.addProduct(orderId, newDetail);
         dispatch({ type: 'SET_ORDER_DETAILS', payload: updatedDetails });
-        console.log(updatedDetails);
-        console.log('hasunsavedchanges');
         dispatch({ type: 'SET_UNSAVED_CHANGES', payload: true });
         return updatedDetails;
       }
@@ -238,10 +233,6 @@ export const useOrderOperations = (orderId: number) => {
   // Exponemos hasUnsavedChanges directamente del estado del contexto
   const hasUnsavedChanges = state.hasUnsavedChanges;
 
-  // Depuración del estado global hasUnsavedChanges
-  useEffect(() => {
-    console.log('Global hasUnsavedChanges:', hasUnsavedChanges);
-  }, [hasUnsavedChanges]);
 
   return {
     removeProduct,

@@ -78,10 +78,6 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(customerReducer, initialState);
   const { settings, token } = useSettings();
 
-  useEffect(() => {
-    console.log("CustomerContext state:", state.hasCustomerChanged);
-  }, [state]);
-
   const fetchCustomers = useCallback(
     async (signal?: AbortSignal) => {
       try {

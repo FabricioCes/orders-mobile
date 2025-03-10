@@ -22,7 +22,7 @@ const TableRow = memo(
         {tables.map((table) => (
           <TableItem
             place={place ?? ""}
-            key={`table-${table}`}
+            key={`${place}-${table}`}
             tableNumber={table}
             isActive={isActive(table)}
             onPress={onTablePress}

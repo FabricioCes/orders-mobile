@@ -1,23 +1,31 @@
+import { TableCount } from '@/types/tableTypes'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
-export const generateTableRows = (tables: number[], columns: number) => {
-  const rows: number[][] = []
-  let currentRow: number[] = []
+export const generateTableGridForZone = (
+  tables: TableCount,
+  columns: number,
+  place: string
+): number[][] => {
+  const totalTables = Object.entries(tables).find(
+    ([zona]) => zona.toLowerCase().trim() === place.toLowerCase().trim()
+  )?.[1] ?? 0;
+  console.log(tables, columns, place)
+  console.log(totalTables)
 
-  tables.forEach((table, index) => {
-    currentRow.push(table)
-    if ((index + 1) % columns === 0) {
-      rows.push(currentRow)
-      currentRow = []
-    }
-  })
-
-  if (currentRow.length > 0) {
-    rows.push(currentRow)
+  if (typeof totalTables !== 'number' || totalTables <= 0) {
+    return [];
   }
 
-  return rows
-}
+  const rows = Math.ceil(totalTables / columns);
+
+  return Array.from({ length: rows }, (_, rowIndex) => {
+    const start = rowIndex * columns;
+    return Array.from(
+      { length: Math.min(columns, totalTables - start) },
+      (_, i) => start + i + 1
+    );
+  });
+};
 
 export const getToken = async (): Promise<string | null> => {
   try {

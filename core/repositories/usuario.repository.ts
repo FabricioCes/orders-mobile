@@ -60,7 +60,6 @@ export default class UsuarioApiRepository {
   static async getUsuarios(): Promise<UsuarioDto[]> {
     try {
       const result = await this.handleRequest<UsuarioDto[]>("usuario", undefined, false);
-      console.log("resultado usuarios:", result);
       return result;
     } catch (error) {
       throw new Error("No se pudieron obtener los usuarios: " + (error as Error).message);

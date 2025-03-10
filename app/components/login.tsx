@@ -47,7 +47,7 @@ export default function Login() {
     }
     const success = await login(selectedUser.usuario, password);
     if (success) {
-      router.replace("/(tabs)/comedor");
+      router.replace("/(tabs)/tab");
     } else {
       setError("Usuario o contraseña incorrectos");
     }
