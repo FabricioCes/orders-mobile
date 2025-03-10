@@ -31,7 +31,7 @@ export class ParamApiRepository {
       ...init,
       headers
     })
-
+    console.log(response)
     const data: ApiResponse<T> = await response.json()
 
     if (data.error) {
@@ -46,6 +46,7 @@ export class ParamApiRepository {
   static async getTablesByLocation (): Promise<TableCount> {
     try {
       const result = await this.handleRequest<TableCount>('Parametro/cantidad/mesas')
+      console.log(result)
       return result
     } catch (error) {
       throw new Error(

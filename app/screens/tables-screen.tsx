@@ -113,6 +113,7 @@ export default function Tables({ place, qty: propQty }: TablesProps) {
     const loadTables = async () => {
       try {
         const fetchedTables = await ParamApiRepository.getTablesByLocation();
+        console.log(fetchedTables)
         setTables(fetchedTables);
         setError(null);
       } catch (err) {

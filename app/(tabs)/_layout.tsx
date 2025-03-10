@@ -1,12 +1,13 @@
-import { useState, useCallback, useRef, useMemo, memo } from "react";
+import { useState, useCallback, useRef, useMemo, memo, useEffect } from "react";
 import { Dimensions, StyleSheet, Text, View } from "react-native";
-import { TabView, SceneMap, TabBar } from "react-native-tab-view";
-import { FontAwesome5 } from "@expo/vector-icons";
-import { useFocusEffect } from "expo-router";
-import { useColorScheme } from "react-native";
+import { TabView, SceneMap } from "react-native-tab-view";
+import { useNavigation } from "expo-router";
+
 import { useActiveTables } from "@/core/context/ActiveTablesContext";
 import { useSettings } from "@/core/context/SettingsContext";
 import ZoneScreen from "./tab";
+import { useFocusEffect } from "expo-router";
+import PillTabBar from "../components/tabBar/pill-tab-bar";
 
 const staticTabs = [
   { name: "comedor", title: "Comedor", icon: "home" },
@@ -16,6 +17,24 @@ const staticTabs = [
   { name: "terraza", title: "Terraza", icon: "tree" },
 ];
 
+// Función que retorna los colores para cada zona
+const getZoneColors = (zone: string) => {
+  switch (zone.toLowerCase()) {
+    case "comedor":
+      return { primary: "#4DB6AC", text: "#fff", badge: "#26A69A" };
+    case "express":
+      return { primary: "#E57373", text: "#fff", badge: "#F44336" };
+    case "llevar":
+      return { primary: "#64B5F6", text: "#fff", badge: "#42A5F5" };
+    case "barra":
+      return { primary: "#81C784", text: "#fff", badge: "#66BB6A" };
+    case "terraza":
+      return { primary: "#BA68C8", text: "#fff", badge: "#AB47BC" };
+    default:
+      return { primary: "#60A5FACC", text: "#fff", badge: "#34D399" };
+  }
+};
+
 const THEME = {
   colors: {
     primary: "#60A5FACC",
@@ -23,26 +42,11 @@ const THEME = {
     textLight: "#fff",
     textDark: "#60A5FA",
   },
-  headers: {
-    default: {
-      headerStyle: {
-        backgroundColor: "#60A5FACC",
-        elevation: 2,
-        shadowOpacity: 0.1,
-      },
-      headerTitleStyle: {
-        fontWeight: "700",
-        fontSize: 18,
-      },
-      headerTintColor: "#fff",
-    },
-  },
 };
 
 const TabLayout = memo(() => {
+  const navigation = useNavigation();
   const { state, loadActiveTables } = useActiveTables();
-  const colorScheme = useColorScheme();
-  const isDarkMode = colorScheme === "dark";
   const lastLoaded = useRef<number | null>(null);
   const { isLogin } = useSettings();
   const [index, setIndex] = useState(0);
@@ -54,11 +58,30 @@ const TabLayout = memo(() => {
     }))
   );
 
+  // Actualiza el header según la pestaña (zona) activa
+  useEffect(() => {
+    const activeZone = staticTabs[index].title;
+    const zoneColors = getZoneColors(activeZone);
+    navigation.setOptions({
+      headerTitle: activeZone,
+      headerStyle: {
+        backgroundColor: zoneColors.primary,
+        elevation: 4,
+        shadowOpacity: 0.2,
+      },
+      headerTitleStyle: {
+        fontWeight: "700",
+        fontSize: 20,
+        color: zoneColors.text,
+      },
+      headerTintColor: zoneColors.text,
+    });
+  }, [index, navigation]);
+
   const activeTables = state.activeTables || [];
 
   const tablesByZone = useMemo(() => {
     if (!isLogin || !activeTables.length) return {};
-
     return activeTables.reduce((acc, table) => {
       const zona = table.zona?.trim().toLowerCase() || "sin-zona";
       acc[zona] = (acc[zona] || 0) + 1;
@@ -90,9 +113,7 @@ const TabLayout = memo(() => {
           console.error(`Error rendering ${tab.title}:`, error);
           return (
             <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>
-                Error al cargar {tab.title}
-              </Text>
+              <Text style={styles.errorText}>Error al cargar {tab.title}</Text>
             </View>
           );
         }
@@ -103,68 +124,30 @@ const TabLayout = memo(() => {
 
   const renderScene = SceneMap(scenes);
 
-  const renderTabBar = (props: any) => (
-    <TabBar
-      {...props}
-      indicatorStyle={{ backgroundColor: THEME.colors.primary }}
-      style={{
-        backgroundColor: THEME.colors.background,
-        borderTopWidth: 1,
-        borderTopColor: "#E2E8F0",
-        height: 60,
-      }}
-      labelStyle={{
-        fontSize: 12,
-        fontFamily: "Inter-SemiBold",
-        paddingBottom: 4,
-        color: THEME.colors.textDark,
-      }}
-      activeColor={THEME.colors.primary}
-      inactiveColor={THEME.colors.textDark}
-      renderIcon={({ route, _focused, color }: { route: any; _focused: boolean; color: string }) => (
-        <FontAwesome5 name={route.icon} size={24} color={color} />
-      )}
-      renderBadge={({ route }: { route: { title: string } }) => {
-        const activeCount = tablesByZone[route.title.toLowerCase()] || 0;
-        return activeCount > 0 ? (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{activeCount}</Text>
-          </View>
-        ) : null;
-      }}
-    />
-  );
-
   return (
     <TabView
       navigationState={{ index, routes }}
       renderScene={renderScene}
       onIndexChange={setIndex}
       initialLayout={{ width: Dimensions.get("window").width }}
-      renderTabBar={renderTabBar}
+      renderTabBar={(props) => (
+        <PillTabBar
+          {...props}
+          tablesByZone={tablesByZone}
+          theme={THEME}
+          getZoneColors={getZoneColors}
+        />
+      )}
       swipeEnabled={true}
       animationEnabled={true}
       lazy={true}
       lazyPreloadDistance={1}
+      tabBarPosition="bottom"
     />
   );
 });
 
 const styles = StyleSheet.create({
-  badge: {
-    backgroundColor: "#34D399",
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 5,
-  },
-  badgeText: {
-    color: "white",
-    fontSize: 10,
-    fontWeight: "bold",
-  },
   errorContainer: {
     flex: 1,
     justifyContent: "center",

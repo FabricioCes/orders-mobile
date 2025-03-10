@@ -176,8 +176,8 @@ export default function RootLayout() {
                         >
                           <Ionicons
                             name="notifications"
-                            size={24}
-                            color="#1E3A8A"
+                            size={26}
+                            color="#fff"
                           />
                         </TouchableOpacity>
                         <TouchableOpacity
@@ -186,7 +186,7 @@ export default function RootLayout() {
                           }
                           style={{ marginLeft: 15 }}
                         >
-                          <Ionicons name="settings" size={24} color="#1E3A8A" />
+                          <Ionicons name="settings" size={26} color="#fff" />
                         </TouchableOpacity>
                       </View>
                     ),
