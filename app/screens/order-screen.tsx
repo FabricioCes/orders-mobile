@@ -11,6 +11,7 @@ import Toast from "react-native-toast-message";
 import { temporaryOrderService } from "@/core/services/temporary_order.service";
 import { useOrderOperations } from "@/core/hooks/useOrderOperations";
 import { useSettings } from "@/core/context/SettingsContext";
+import { useActiveTables } from "@/core/context/ActiveTablesContext";
 
 export default function OrderScreen() {
   const {
@@ -32,8 +33,15 @@ export default function OrderScreen() {
     dispatch: customerDispatch,
   } = useCustomer();
   const { checkTokenExpiration } = useSettings();
-  const { loadOrder, saveOrder, removeProduct, updateQuantity, reloadOriginalOrder } =
-    useOrderOperations(Number(orderId));
+  const {
+    loadOrder,
+    saveOrder,
+    removeProduct,
+    updateQuantity,
+    reloadOriginalOrder,
+  } = useOrderOperations(Number(orderId));
+
+  const { loadActiveTables } = useActiveTables();
 
   const [hasInitializedOrder, setHasInitializedOrder] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
@@ -101,7 +109,8 @@ export default function OrderScreen() {
 
   useEffect(() => {
     const formattedPlace =
-      place.toString().charAt(0).toUpperCase() + place.toString().slice(1).toLowerCase();
+      place.toString().charAt(0).toUpperCase() +
+      place.toString().slice(1).toLowerCase();
     navigation.setOptions({
       title: `Mesa ${tableId.toString().trim()} - ${formattedPlace}`,
     });
@@ -111,21 +120,17 @@ export default function OrderScreen() {
     const unsubscribe = navigation.addListener("beforeRemove", (e) => {
       e.preventDefault();
       if (hasChanges) {
-        Alert.alert(
-          "Cambios no guardados",
-          "¿Deseas salir y descartarlos?",
-          [
-            { text: "Cancelar", style: "cancel" },
-            {
-              text: "Salir",
-              onPress: async () => {
-                await reloadOriginalOrder();
-                clearCustomer();
-                navigation.dispatch(e.data.action);
-              },
+        Alert.alert("Cambios no guardados", "¿Deseas salir y descartarlos?", [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "Salir",
+            onPress: async () => {
+              await reloadOriginalOrder();
+              clearCustomer();
+              navigation.dispatch(e.data.action);
             },
-          ]
-        );
+          },
+        ]);
       } else {
         dispatch({ type: "RESET_ORDER" });
         clearCustomer();
@@ -148,17 +153,10 @@ export default function OrderScreen() {
       dispatch({ type: "SET_LOADING", payload: true });
       await saveOrder();
       customerDispatch({ type: "SET_CUSTOMER_CHANGED", payload: false });
-      Toast.show({
-        type: "success",
-        text1: "Orden guardada",
-        text2: "La orden se ha guardado correctamente.",
-      });
-    } catch (error) {
-      Toast.show({
-        type: "error",
-        text1: "Error",
-        text2:
-          error instanceof Error ? error.message : "No se pudo guardar la orden.",
+      await loadActiveTables();
+      router.replace({
+        pathname: "/(tabs)/tab",
+        params: { refresh: Date.now() }, // ✅ Forzar recarga
       });
     } finally {
       dispatch({ type: "SET_LOADING", payload: false });
@@ -212,5 +210,3 @@ export default function OrderScreen() {
     </View>
   );
 }
-
-

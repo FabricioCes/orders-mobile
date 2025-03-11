@@ -9,6 +9,7 @@ import React, {
 import { ActiveTable } from "@/types/tableTypes";
 import { orderService } from "@/core/services/order.service";
 import { useSettings } from "@/core/context/SettingsContext";
+import { signalRService } from "../services/real-time.service";
 
 interface ActiveTablesState {
   activeTables: ActiveTable[];
@@ -110,7 +111,19 @@ export const ActiveTablesProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    loadActiveTables();
+    const handleOrderUpdate = () => {
+      console.log("Actualización de orden recibida - Recargando mesas...");
+      loadActiveTables();
+    };
+
+    // Suscribirse y obtener función de desuscripción
+    const unsubscribe = signalRService.onOrderUpdated(handleOrderUpdate);
+
+    // Cleanup: Se ejecutará al desmontar el componente
+    return () => {
+      console.log("Desuscribiendo de actualizaciones de orden...");
+      unsubscribe();
+    };
   }, [loadActiveTables]);
 
   return (
@@ -141,7 +154,10 @@ interface DebounceFunction {
   (...args: any[]): void;
 }
 
-function debounce(func: (...args: any[]) => void, wait: number): DebounceFunction {
+function debounce(
+  func: (...args: any[]) => void,
+  wait: number
+): DebounceFunction {
   let timeout: NodeJS.Timeout;
   return (...args: any[]) => {
     clearTimeout(timeout);

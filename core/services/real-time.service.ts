@@ -1,117 +1,59 @@
-import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr'
-import { notificationService } from './notification.service'
-import { Order } from '@/types/types'
+// signalR.service.ts
+import {
+  HubConnection,
+  HubConnectionBuilder,
+  LogLevel
+} from '@microsoft/signalr'
 import { getBaseUrl } from './config'
 
-let connection: HubConnection
-let reconnectedCallbacks: (() => void)[] = []
-let connectionStatusCallbacks: ((
-  state: 'Connected' | 'Reconnecting' | 'Disconnected'
-) => void)[] = []
-let reconnectionFailedCallbacks: ((error?: Error) => void)[] = []
-let isReconnecting = false
+class SignalRService {
+  private connection: HubConnection | null = null
+  private orderUpdatedListeners: Array<() => void> = []
 
-const initConnection = async (): Promise<void> => {
-  const baseUrl = await getBaseUrl()
+  constructor () {
+    this.initializeConnection()
+  }
 
-  connection = new HubConnectionBuilder()
-    .withUrl(`${baseUrl}/MesasNotificaciones`)
-    .withAutomaticReconnect()
-    .build()
+  private async initializeConnection () {
+    const baseUrl = await getBaseUrl()
+    this.connection = new HubConnectionBuilder()
+      .withUrl(`${baseUrl}/MesasNotificaciones`)
+      .configureLogging(LogLevel.Information)
+      .withAutomaticReconnect()
+      .build()
 
-  // Event handlers
-  connection.onreconnecting(() => {
-    isReconnecting = true
-    connectionStatusCallbacks.forEach(cb => cb('Reconnecting'))
-  })
+    this.connection.on('OrderUpdated', () => {
+      this.notifyOrderUpdated()
+    })
 
-  connection.onreconnected(() => {
-    isReconnecting = false
-    connectionStatusCallbacks.forEach(cb => cb('Connected'))
-    reconnectedCallbacks.forEach(cb => cb())
-  })
+    this.startConnection()
+  }
 
-  connection.onclose(error => {
-    if (isReconnecting && error) {
-      reconnectionFailedCallbacks.forEach(cb => cb(error))
-      notificationService.sendNotification(
-        'Error de conexión',
-        'No se pudo reconectar al servidor'
-      )
-    }
-
-    if (error && !isReconnecting) {
-      notificationService.sendNotification(
-        'Desconectado',
-        'Se perdió la conexión con el servidor'
-      )
-    }
-
-    isReconnecting = false
-    connectionStatusCallbacks.forEach(cb => cb('Disconnected'))
-  })
-
-  connection.on('CambioEstadoOrden', (ordenId: number) => {
-    notificationService.sendNotification(
-      'Orden Actualizada',
-      `La orden #${ordenId} ha sido modificada.`
-    )
-  })
-}
-
-export const signalRService = {
-  start: async (): Promise<void> => {
-    if (!connection) {
-      await initConnection()
-    }
+  private async startConnection () {
     try {
-      await connection.start()
-      console.log('SignalR Connected')
-      connectionStatusCallbacks.forEach(cb => cb('Connected'))
-    } catch (err) {
-      console.log('Error al conectar con SignalR:', err)
-      connectionStatusCallbacks.forEach(cb => cb('Disconnected'))
+      if (this.connection?.state === 'Disconnected') {
+        await this.connection.start()
+      }
+    } catch (error) {
+      console.error('Error al conectar SignalR:', error)
     }
-  },
+  }
 
-  stop: async (): Promise<void> => {
-    if (connection) {
-      await connection.stop()
-      console.log('SignalR Disconnected')
+  // Método para suscribirse a actualizaciones
+  public onOrderUpdated (callback: () => void): () => void {
+    this.orderUpdatedListeners.push(callback)
+
+    // Devuelve función para desuscribirse
+    return () => {
+      this.orderUpdatedListeners = this.orderUpdatedListeners.filter(
+        listener => listener !== callback
+      )
     }
-  },
+  }
 
-  onOrderUpdated: (
-    callback: (ordenId: number, nuevoEstado: Order | string) => void
-  ): void => {
-    connection?.on('CambioEstadoOrden', callback)
-  },
-
-  onReconnected: (callback: () => void) => {
-    reconnectedCallbacks.push(callback)
-  },
-
-  offReconnected: (callback: () => void) => {
-    reconnectedCallbacks = reconnectedCallbacks.filter(cb => cb !== callback)
-  },
-
-  onConnectionStatusChanged: (callback: (state: string) => void) => {
-    connectionStatusCallbacks.push(callback)
-  },
-
-  offConnectionStatusChanged: (callback: (state: string) => void) => {
-    connectionStatusCallbacks = connectionStatusCallbacks.filter(
-      cb => cb !== callback
-    )
-  },
-
-  onReconnectionFailed: (callback: (error?: Error) => void) => {
-    reconnectionFailedCallbacks.push(callback)
-  },
-
-  offReconnectionFailed: (callback: (error?: Error) => void) => {
-    reconnectionFailedCallbacks = reconnectionFailedCallbacks.filter(
-      cb => cb !== callback
-    )
+  private notifyOrderUpdated () {
+    this.orderUpdatedListeners.forEach(callback => callback())
   }
 }
+
+export const signalRService = new SignalRService()

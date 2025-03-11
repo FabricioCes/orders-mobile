@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   useWindowDimensions,
@@ -15,6 +15,7 @@ import { router, useFocusEffect, useNavigation } from "expo-router";
 import { useActiveTables } from "@/core/context/ActiveTablesContext";
 import { ParamApiRepository } from "@/core/repositories/parametro.repository";
 import { TableCount } from "@/types/tableTypes";
+
 const variantStyles = {
   error: {
     bg: "bg-red-50",
@@ -79,52 +80,64 @@ const ErrorMessage = ({
   );
 };
 
-const LoadingState = () => (
-  <Animated.View
-    entering={FadeIn}
-    className="flex-1 justify-center items-center"
-  >
-    <ActivityIndicator size="large" color="#2563EB" />
-    <Text className="mt-4 text-gray-500">
-      Cargando configuración de mesas...
-    </Text>
-  </Animated.View>
-);
-
 interface TablesProps {
   place: string;
   qty?: number;
 }
 
 export default function Tables({ place, qty: propQty }: TablesProps) {
+  // 1. Todos los hooks primero
   const { width } = useWindowDimensions();
   const { zonas, token } = useSettings();
   const { loadActiveTables, state } = useActiveTables();
+  const navigation = useNavigation();
+  
   const isTablet = width >= 768;
   const columns = isTablet ? 9 : 3;
   const qty = propQty || zonas[place] || 0;
-  const { handleTablePress, isTableActive } = useTableNavigation(place);
-  const navigation = useNavigation();
+  
   const [tables, setTables] = useState<TableCount | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const { handleTablePress, isTableActive } = useTableNavigation(place);
 
+  // 2. useMemo debe estar antes de cualquier return
+  const memoizedTableGrid = useMemo(
+    () => (
+      <TableGrid
+        tables={tables || ({} as TableCount)}
+        columns={columns}
+        isActive={isTableActive}
+        onTablePress={handleTablePress}
+        place={place}
+      />
+    ),
+    [tables, columns, isTableActive, handleTablePress, place]
+  );
+
+  // 3. Efectos
   useEffect(() => {
     const loadTables = async () => {
       try {
+        setLoading(true);
         const fetchedTables = await ParamApiRepository.getTablesByLocation();
-        console.log(fetchedTables)
         setTables(fetchedTables);
         setError(null);
       } catch (err) {
-        setError("Error al cargar las mesas");
-        console.error(err);
+        setError(
+          `Error cargando mesas: ${
+            err instanceof Error ? err.message : "Error desconocido"
+          }`
+        );
       } finally {
         setLoading(false);
       }
     };
-    loadTables();
-  }, []);
+
+    if (token) loadTables();
+  }, [token, zonas]);
+
   useFocusEffect(
     useCallback(() => {
       const formattedPlace =
@@ -137,6 +150,7 @@ export default function Tables({ place, qty: propQty }: TablesProps) {
     }, [place, state.activeTables, state.loading, loadActiveTables])
   );
 
+  // 4. Condicionales DESPUÉS de todos los hooks
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center p-4">
@@ -174,19 +188,14 @@ export default function Tables({ place, qty: propQty }: TablesProps) {
     );
   }
 
+  // 5. Render principal
   return (
     <Animated.View
       entering={FadeIn}
       className="flex-1 p-5 bg-white"
-      style={{ justifyContent: "center" }} // Centrado vertical
+      style={{ justifyContent: "center" }}
     >
-      <TableGrid
-        tables={tables || {} as TableCount}
-        columns={columns}
-        isActive={isTableActive}
-        onTablePress={handleTablePress}
-        place={place}
-      />
+      {memoizedTableGrid}
     </Animated.View>
   );
 }

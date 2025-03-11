@@ -118,9 +118,7 @@ export default function RootLayout() {
   const { orderId = "0" } = useLocalSearchParams();
   const router = useRouter();
 
-  // Efecto para asegurar que el orderId esté actualizado
   useEffect(() => {
-    // Si no hay orderId, establecer un valor por defecto
     if (!orderId || orderId === "0") {
       router.setParams({ orderId: "0" });
     }

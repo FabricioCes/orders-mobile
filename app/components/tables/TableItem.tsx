@@ -35,7 +35,7 @@ const TableItem = ({
   const getStyles = () => {
     let backgroundColor = "#60A5FA";
     if (isActive) backgroundColor = "#34D399";
-    if (clientLoaded) backgroundColor = "#8B5CF6";
+    if (clientLoaded) backgroundColor = "#BA68C8";
 
     return {
       container: {
