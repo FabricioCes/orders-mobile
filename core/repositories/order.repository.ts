@@ -1,4 +1,4 @@
-import { getBaseUrl } from '@/core/services/config'
+import { getBaseUrl, handleUnauthorized } from '@/core/services/config'
 import { ApiResponse, Order, OrderDetail, SaveOptions } from '@/types/types'
 import { Customer } from '@/types/customerTypes'
 import { ActiveTable } from '@/types/tableTypes'
@@ -14,12 +14,11 @@ export class OrderApiRepository {
     try {
       token = await getToken()
       if (!token) {
-        throw new Error(
-          'No se encontró un token válido. Inicie sesión nuevamente.'
-        )
+        throw new Error('Token no válido')
       }
     } catch (err) {
-      console.log(err)
+      console.error('Error obteniendo token:', err)
+      throw new Error('Error de autenticación')
     }
 
     const headers: HeadersInit = {
@@ -34,6 +33,10 @@ export class OrderApiRepository {
 
     const data: ApiResponse<T> = await response.json()
 
+    if (response.status === 401) {
+      handleUnauthorized();
+      throw new Error('Sesión expirada');
+    }
     if (data.error) {
       throw new Error(data.mensaje || 'Error en la respuesta de la API', {
         cause: data.tipoError
@@ -91,14 +94,16 @@ export class OrderApiRepository {
     })
   }
 
-  static async updateOrder (order: Order, options: SaveOptions): Promise<void> {
+  static async updateOrder (order: Order, options: SaveOptions): Promise<Order> {
     const mappedOrder = mapToGuardarOrdenRequest(order, options)
 
-    await this.handleRequest<void>('Orden', {
+    const result = await this.handleRequest<Order>('Orden', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(mappedOrder)
     })
+
+    return result
   }
 
   static async deleteOrderDetail (detailId: number): Promise<void> {

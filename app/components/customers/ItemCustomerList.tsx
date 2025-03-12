@@ -1,5 +1,4 @@
-// CustomerList.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FlatList, Text, StyleSheet, View } from "react-native";
 import { Customer, FirstCustomerLetter } from "@/types/customerTypes";
 import CustomerListItem from "./customer-list-item";
@@ -22,10 +21,11 @@ const CustomerList: React.FC<CustomerListProps> = ({
 }) => {
   const [letters, setLetters] = useState<FirstCustomerLetter[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+
   useEffect(() => {
     let subscription: Subscription;
 
-    if (grouped) {
+    if (grouped && searchQuery.trim() === "") { // Only fetch letters when not searching
       subscription = CustomerService.fetchAvailableLetters().subscribe({
         next: (data) => {
           setLetters(data);
@@ -34,24 +34,26 @@ const CustomerList: React.FC<CustomerListProps> = ({
         error: (err) => {
           console.log("Error fetching letters", err);
           setLoading(false);
-        }
+        },
       });
+    } else {
+      setLoading(false); // No loading needed when showing filtered results
     }
 
     return () => {
       subscription?.unsubscribe();
     };
-  }, [grouped]);
+  }, [grouped, searchQuery]);
 
-  if (grouped) {
+  if (loading) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyText}>Cargando...</Text>
+      </View>
+    );
+  }
 
-    if (loading) {
-      return (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Cargando...</Text>
-        </View>
-      );
-    }
+  if (grouped && searchQuery.trim() === "") {
     return (
       <FlatList
         data={letters}
@@ -61,30 +63,29 @@ const CustomerList: React.FC<CustomerListProps> = ({
         )}
         contentContainerStyle={styles.groupListContent}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>
-            {searchQuery ? "No hay resultados" : "No se encontraron clientes"}
-          </Text>
+          <Text style={styles.emptyText}>No se encontraron clientes</Text>
         }
-      />
-    );
-  } 
-    return (
-      <FlatList
-        data={customers}
-        keyExtractor={(item) => item.identificacion.toString()}
-        renderItem={({ item }) => (
-          <CustomerListItem customer={item} onPress={onSelect} />
-        )}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>
-            {searchQuery ? "No hay resultados" : "No se encontraron clientes"}
-          </Text>
-        }
-        keyboardDismissMode="on-drag"
       />
     );
   }
+
+  return (
+    <FlatList
+      data={customers}
+      keyExtractor={(item) => item.identificacion.toString()}
+      renderItem={({ item }) => (
+        <CustomerListItem customer={item} onPress={onSelect} />
+      )}
+      contentContainerStyle={styles.listContent}
+      ListEmptyComponent={
+        <Text style={styles.emptyText}>
+          {searchQuery ? "No hay resultados" : "No se encontraron clientes"}
+        </Text>
+      }
+      keyboardDismissMode="on-drag"
+    />
+  );
+};
 
 const styles = StyleSheet.create({
   listContent: {

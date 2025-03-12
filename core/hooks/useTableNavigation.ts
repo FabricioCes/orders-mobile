@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+
 import { Alert } from 'react-native'
 import { router } from 'expo-router'
 import { useSettings } from '@/core/context/SettingsContext'
@@ -7,8 +7,7 @@ import { useActiveTables } from '../context/ActiveTablesContext'
 
 export const useTableNavigation = (place: string) => {
   const { isLogin, settings } = useSettings()
-  const { state } = useActiveTables()
-  const activeTables = state.activeTables
+  const { activeTables } = useActiveTables()
 
   const handleTablePress = (tableId: number) => {
     const isActive =

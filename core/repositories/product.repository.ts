@@ -74,6 +74,7 @@ export class ProductApiRepository {
 
   static async searchProducts(query: string): Promise<Product[]> {
     try {
+      console.log(query)
       const resultado = await this.handleRequest<Product[]>(`Producto/buscar/${query}`)
       return resultado
     } catch (error) {

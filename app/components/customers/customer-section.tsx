@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import { useCustomer } from "@/core/context/CustomerContext";
 import { router } from "expo-router";
 import { CustomerApiRepository } from "@/core/repositories/customer.repository";
+import { useSelectedCustomer } from "@/core/context/CustomerContext";
 
 type CustomerSectionProps = {
   customerId: number;
@@ -14,12 +14,13 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
   customerId,
   orderId,
 }) => {
-  const { state, dispatch } = useCustomer();
-  const [loadingCustomer, setLoadingCustomer] = useState(true);
+  const { selectedCustomer, setSelectedCustomer, clearSelectedCustomer } =
+    useSelectedCustomer();
+  const [loadingCustomer, setLoadingCustomer] = useState(false);
 
-  const { selectedCustomer } = state;
   useEffect(() => {
-    dispatch({ type: "CLEAR_SELECTED_CUSTOMER" });
+    // Clear selected customer when orderId changes
+    clearSelectedCustomer();
 
     if (!customerId) return;
 
@@ -28,21 +29,16 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
     const fetchCustomer = async () => {
       try {
         const client = await CustomerApiRepository.getCustomer(customerId);
-
-          dispatch({ type: "SET_SELECTED_CUSTOMER", payload: client });
-          dispatch({ type: "SET_CUSTOMER_CHANGED", payload: false });
-      } catch (error) {
-
-          dispatch({ type: "CLEAR_SELECTED_CUSTOMER" });
+        setSelectedCustomer(client);
+      } catch {
+        clearSelectedCustomer();
       } finally {
-
-          setLoadingCustomer(false);
+        setLoadingCustomer(false);
       }
     };
 
     fetchCustomer();
-
-  }, [orderId, customerId, dispatch]);
+  }, [orderId, customerId, setSelectedCustomer, clearSelectedCustomer]);
 
   if (loadingCustomer && customerId) {
     return <ActivityIndicator size="small" />;
@@ -70,13 +66,7 @@ const CustomerSection: React.FC<CustomerSectionProps> = ({
       {selectedCustomer && (
         <View className="flex-row items-center justify-between bg-blue-50 p-3 rounded-lg">
           <Text className="text-base flex-1">{selectedCustomer.nombre}</Text>
-          <TouchableOpacity
-            onPress={() => {
-              dispatch({ type: "CLEAR_SELECTED_CUSTOMER" })
-              dispatch({ type: "SET_CUSTOMER_CHANGED", payload: true });
-            }
-          }
-          >
+          <TouchableOpacity onPress={() => clearSelectedCustomer()}>
             <FontAwesome name="times-circle" size={20} color="#ef4444" />
           </TouchableOpacity>
         </View>

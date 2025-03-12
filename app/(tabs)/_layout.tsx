@@ -46,7 +46,7 @@ const THEME = {
 
 const TabLayout = memo(() => {
   const navigation = useNavigation();
-  const { state, loadActiveTables } = useActiveTables();
+  const { activeTables, isLoading, error } = useActiveTables();
   const lastLoaded = useRef<number | null>(null);
   const { isLogin } = useSettings();
   const [index, setIndex] = useState(0);
@@ -78,25 +78,26 @@ const TabLayout = memo(() => {
     });
   }, [index, navigation]);
 
-  const activeTables = state.activeTables || [];
 
   const tablesByZone = useMemo(() => {
-    if (!isLogin || !activeTables.length) return {};
+    if (isLoading) return {}; // Manejar estado de carga
+    if (error) return {};
+
     return activeTables.reduce((acc, table) => {
       const zona = table.zona?.trim().toLowerCase() || "sin-zona";
       acc[zona] = (acc[zona] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-  }, [activeTables, isLogin]);
+  }, [activeTables, isLoading, error]);
 
   useFocusEffect(
     useCallback(() => {
       const now = Date.now();
       if (!lastLoaded.current || now - lastLoaded.current > 60000) {
-        loadActiveTables();
+        //loadActiveTables();
         lastLoaded.current = now;
       }
-    }, [loadActiveTables])
+    }, [])
   );
 
   const scenes = useMemo(() => {

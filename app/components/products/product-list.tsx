@@ -1,29 +1,35 @@
 import React from "react";
-import { FlatList, StyleSheet, View } from "react-native";
-
+import { FlatList, StyleSheet } from "react-native";
 import { Product } from "@/types/productTypes";
 import ProductListItem from "./product-list-item";
 
 interface ProductsListProps {
-  flatProducts: Product[];
-  handleAddProduct: (product: Product, quantity: number) => void;
+  products: Product[];
+  onAddProduct: (product: Product, quantity: number) => void;
 }
 
-const ProductsList: React.FC<ProductsListProps> = ({ flatProducts, handleAddProduct }) => {
+const ProductsList: React.FC<ProductsListProps> = ({
+  products,
+  onAddProduct,
+}) => {
+  if (!products.length) {
+    return null; // SearchBar will handle the no results state
+  }
+
   return (
-      <FlatList
-        data={flatProducts}
-        keyExtractor={(item, index) => `${item.identificador}-${index}`}
-        renderItem={({ item }) => (
-          <ProductListItem product={item} onAddProduct={handleAddProduct} />
-        )}
-        contentContainerStyle={styles.flatListContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        windowSize={5}
-        maxToRenderPerBatch={10}
-        initialNumToRender={10}
-      />
+    <FlatList
+      data={products}
+      keyExtractor={(item) => item.identificador.toString()}
+      renderItem={({ item }) => (
+        <ProductListItem product={item} onAddProduct={onAddProduct} />
+      )}
+      contentContainerStyle={styles.flatListContent}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      windowSize={5}
+      maxToRenderPerBatch={10}
+      initialNumToRender={10}
+    />
   );
 };
 

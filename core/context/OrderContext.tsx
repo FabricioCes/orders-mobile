@@ -1,23 +1,26 @@
+// OrderContext.tsx
 import React, { createContext, useReducer, ReactNode, useContext } from "react";
 import { Order, OrderDetail } from "@/types/types";
+import { uuidEntero } from '@/utils/uuidUtils';
 
 interface OrderState {
-  order: Order | null;
-  orderDetails: OrderDetail[];
-  loading: boolean;
-  error: string | null;
-  hasUnsavedChanges: boolean;
+  order: Order | null;           // Orden actual (temporal o permanente)
+  orderDetails: OrderDetail[];   // Detalles de la orden
+  loading: boolean;              // Estado de carga
+  error: string | null;          // Errores
+  hasUnsavedChanges: boolean;    // Indicador de cambios no guardados
 }
 
 type OrderAction =
   | { type: "SET_ORDER"; payload: Order }
   | { type: "SET_ORDER_DETAILS"; payload: OrderDetail[] }
   | { type: "RESET_ORDER" }
-  | { type: "ADD_ORDER_DETAIL"; payload: OrderDetail }
-  | { type: "UPDATE_ORDER_DETAIL"; payload: OrderDetail }
+  | { type: "CREATE_TEMPORARY_ORDER"; payload: { numeroMesa: string; zona: string } }
+  | { type: "ADD_ORDER_DETAIL"; payload: Omit<OrderDetail, 'idOrden' | 'idOrdenDetalle'> }
+  | { type: "UPDATE_ORDER_DETAIL"; payload: { detailId: number; updatedDetail: Partial<OrderDetail> } }
   | { type: "REMOVE_ORDER_DETAIL"; payload: number }
   | { type: "SET_LOADING"; payload: boolean }
-  | { type: "SET_UNSAVED_CHANGES", payload: boolean }
+  | { type: "SET_UNSAVED_CHANGES"; payload: boolean }
   | { type: "SET_ERROR"; payload: string | null };
 
 const initialState: OrderState = {
@@ -36,36 +39,97 @@ const OrderContext = createContext<{
   dispatch: () => undefined,
 });
 
+// Función para calcular el total de la orden
+const calculateTotal = (details: OrderDetail[]): number => {
+  return details.reduce((total, detail) => total + detail.costoUnitario * detail.cantidad, 0);
+};
+
 const orderReducer = (state: OrderState, action: OrderAction): OrderState => {
   switch (action.type) {
     case "SET_ORDER":
-      const updteOrder = { ...state, order: action.payload, loading: false };
-      return updteOrder;
+      return { ...state, order: action.payload, loading: false };
     case "SET_ORDER_DETAILS":
       return { ...state, orderDetails: action.payload, loading: false };
     case "RESET_ORDER":
       return initialState;
-    case "ADD_ORDER_DETAIL":
+    case "CREATE_TEMPORARY_ORDER": {
+      const { numeroMesa, zona } = action.payload;
+      const temporaryOrderId = uuidEntero();
+      const newOrder: Order = {
+        numeroOrden: temporaryOrderId,
+        idCliente: 0,
+        totalSinDescuento: 0,
+        numeroMesa,
+        ubicacion: zona,
+        esTemporal: true,
+        detalles: [],
+      };
+      return { ...state, order: newOrder, orderDetails: [], hasUnsavedChanges: true };
+    }
+    case "ADD_ORDER_DETAIL": {
+      if (!state.order || !state.order.esTemporal) return state;
+      const newDetail: OrderDetail = {
+        ...action.payload,
+        idOrden: state.order?.numeroOrden ?? 0,
+        idOrdenDetalle: uuidEntero(),
+      };
+      const currentDetails = state.orderDetails || [];
+      const existingIndex = currentDetails.findIndex(d => d.idProducto === newDetail.idProducto);
+      let updatedDetails: OrderDetail[];
+      if (existingIndex !== -1) {
+        updatedDetails = [...currentDetails];
+        updatedDetails[existingIndex] = {
+          ...updatedDetails[existingIndex],
+          cantidad: updatedDetails[existingIndex].cantidad + newDetail.cantidad,
+        };
+      } else {
+        updatedDetails = [...currentDetails, newDetail];
+      }
+      const updatedOrder = {
+        ...state.order,
+        detalles: updatedDetails,
+        totalSinDescuento: calculateTotal(updatedDetails),
+      };
       return {
         ...state,
-        orderDetails: [...state.orderDetails, action.payload],
+        order: updatedOrder,
+        orderDetails: updatedDetails,
+        hasUnsavedChanges: true,
       };
-    case "UPDATE_ORDER_DETAIL":
+    }
+    case "UPDATE_ORDER_DETAIL": {
+      if (!state.order || !state.order.esTemporal) return state;
+      const { detailId, updatedDetail } = action.payload;
+      const updatedDetails = state.orderDetails.map((detail) =>
+        detail.idOrdenDetalle === detailId ? { ...detail, ...updatedDetail } : detail
+      );
+      const updatedOrder = {
+        ...state.order,
+        detalles: updatedDetails,
+        totalSinDescuento: calculateTotal(updatedDetails),
+      };
       return {
         ...state,
-        orderDetails: state.orderDetails.map((detail) =>
-          detail.idOrdenDetalle === action.payload.idOrdenDetalle
-            ? action.payload
-            : detail
-        ),
+        order: updatedOrder,
+        orderDetails: updatedDetails,
+        hasUnsavedChanges: true,
       };
-    case "REMOVE_ORDER_DETAIL":
+    }
+    case "REMOVE_ORDER_DETAIL": {
+      if (!state.order || !state.order.esTemporal) return state;
+      const updatedDetails = state.orderDetails.filter((detail) => detail.idOrdenDetalle !== action.payload);
+      const updatedOrder = {
+        ...state.order,
+        detalles: updatedDetails,
+        totalSinDescuento: calculateTotal(updatedDetails),
+      };
       return {
         ...state,
-        orderDetails: state.orderDetails.filter(
-          (detail) => detail.idOrdenDetalle !== action.payload
-        ),
+        order: updatedOrder,
+        orderDetails: updatedDetails,
+        hasUnsavedChanges: true,
       };
+    }
     case "SET_LOADING":
       return { ...state, loading: action.payload };
     case "SET_ERROR":
@@ -78,10 +142,9 @@ const orderReducer = (state: OrderState, action: OrderAction): OrderState => {
 };
 
 export const OrderProvider = ({ children }: { children: ReactNode }) => {
-  const [orderState, dispatch] = useReducer(orderReducer, initialState);
-
+  const [state, dispatch] = useReducer(orderReducer, initialState);
   return (
-    <OrderContext.Provider value={{ state: orderState, dispatch }}>
+    <OrderContext.Provider value={{ state, dispatch }}>
       {children}
     </OrderContext.Provider>
   );

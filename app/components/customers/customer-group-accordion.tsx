@@ -9,8 +9,8 @@ import {
 } from "react-native";
 import { Customer } from "@/types/customerTypes";
 import { FontAwesome } from "@expo/vector-icons";
-import { useCustomer } from "@/core/context/CustomerContext";
 import CustomerListItem from "./customer-list-item";
+import { CustomerService } from "@/core/services/customer.service"; // Use service directly
 
 interface CustomerGroupAccordionProps {
   letter: string;
@@ -23,12 +23,13 @@ const CustomerGroupAccordion: React.FC<CustomerGroupAccordionProps> =
     const [localCustomers, setLocalCustomers] = useState<Customer[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const animation = useRef(new Animated.Value(0)).current;
-    const { loadCustomersForLetter } = useCustomer();
 
     useEffect(() => {
       if (expanded) {
         setLoading(true);
-        const subscription = loadCustomersForLetter(letter).subscribe({
+        const subscription = CustomerService.loadCustomersForLetter(
+          letter
+        ).subscribe({
           next: (customers: Customer[]) => {
             setLocalCustomers(customers);
             setLoading(false);
@@ -49,9 +50,9 @@ const CustomerGroupAccordion: React.FC<CustomerGroupAccordionProps> =
           toValue: 0,
           duration: 200,
           useNativeDriver: false,
-        }).start(() => setLocalCustomers([])); // Borra los clientes al cerrar
+        }).start(() => setLocalCustomers([]));
       }
-    }, [expanded, letter, loadCustomersForLetter]);
+    }, [expanded, letter]);
 
     return (
       <View style={styles.groupContainer}>
@@ -68,8 +69,8 @@ const CustomerGroupAccordion: React.FC<CustomerGroupAccordionProps> =
         </TouchableOpacity>
         {expanded && (
           <Animated.View
-          style={[styles.customersContainer, { flexGrow: expanded ? 1 : 0 }]}
-        >
+            style={[styles.customersContainer, { flexGrow: expanded ? 1 : 0 }]}
+          >
             {loading ? (
               <ActivityIndicator size="small" color="#3b82f6" />
             ) : (
@@ -86,54 +87,39 @@ const CustomerGroupAccordion: React.FC<CustomerGroupAccordionProps> =
       </View>
     );
   });
-  const styles = StyleSheet.create({
-    groupContainer: {
-      marginBottom: 16,
-      backgroundColor: "#ffffff", // Fondo blanco, limpio y suave
-      borderRadius: 12,
-      overflow: "hidden",
-      elevation: 3, // Sombra en Android
-      shadowColor: "#000", // Sombra en iOS
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 5,
-    },
-    header: {
-      paddingVertical: 12,
-      paddingHorizontal: 16,
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      backgroundColor: "#F1F5F9", // Gris suave
-      borderBottomWidth: 1,
-      borderBottomColor: "#E2E8F0", // Gris claro para el borde
-    },
-    letterText: {
-      fontSize: 18,
-      fontWeight: "600",
-      color: "#1E293B", // Gris oscuro para el texto
-    },
-    customersContainer: {
-      paddingVertical: 16,
-      paddingHorizontal: 16,
-      overflow: "hidden",
-    },
-    loadingContainer: {
-      paddingVertical: 10,
-      alignItems: "center",
-    },
-    customerItem: {
-      paddingVertical: 12,
-      paddingHorizontal: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: "#E5E7EB", // Gris suave para el borde inferior
-      backgroundColor: "#F9FAFB", // Fondo muy suave
-    },
-    customerText: {
-      fontSize: 16,
-      fontWeight: "500",
-      color: "#374151", // Gris oscuro para el texto
-      letterSpacing: 0.5,
-    },
-  });
+
+const styles = StyleSheet.create({
+  groupContainer: {
+    marginBottom: 16,
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    overflow: "hidden",
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+  },
+  header: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#F1F5F9",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E2E8F0",
+  },
+  letterText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1E293B",
+  },
+  customersContainer: {
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    overflow: "hidden",
+  },
+});
+
 export default CustomerGroupAccordion;

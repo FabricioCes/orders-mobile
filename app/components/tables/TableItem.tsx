@@ -19,9 +19,9 @@ const TableItem = ({
   testID,
   place,
 }: TableItemProps) => {
-  const { state } = useActiveTables();
+  const { activeTables } = useActiveTables();
 
-  const clientLoaded = state.activeTables.some((table) => {
+  const clientLoaded = activeTables.some((table) => {
     const backendZone = table.zona?.toLowerCase().replace(/\s/g, "");
     const currentPlace = place.toLowerCase().replace(/\s/g, "");
 
@@ -67,7 +67,7 @@ const TableItem = ({
     };
   };
 
-  const clientName = state.activeTables.find(
+  const clientName = activeTables.find(
     (table) =>
       table.zona?.trim().toLowerCase() === place.trim().toLowerCase() &&
       table.numeroMesa === tableNumber

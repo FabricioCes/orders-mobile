@@ -1,166 +1,44 @@
-import React, {
-  createContext,
-  useReducer,
-  useContext,
-  ReactNode,
-  useEffect,
-  useCallback,
-} from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ActiveTable } from "@/types/tableTypes";
 import { orderService } from "@/core/services/order.service";
-import { useSettings } from "@/core/context/SettingsContext";
 import { signalRService } from "../services/real-time.service";
+import { useEffect } from "react";
 
-interface ActiveTablesState {
-  activeTables: ActiveTable[];
-  loading: boolean;
-  error: string | null;
-}
+// Hook personalizado para obtener mesas activas
+export const useActiveTables = () => {
+  const queryClient = useQueryClient();
 
-type ActiveTablesAction =
-  | { type: "SET_ACTIVE_TABLES"; payload: ActiveTable[] }
-  | { type: "SET_LOADING"; payload: boolean }
-  | { type: "SET_ERROR"; payload: string | null }
-  | { type: "UPDATE_TABLE"; payload: ActiveTable } // Nueva acción
-  | { type: "REMOVE_TABLE"; payload: number }; // Nueva acción
-
-const initialState: ActiveTablesState = {
-  activeTables: [],
-  loading: false,
-  error: null,
-};
-
-const ActiveTablesContext = createContext<{
-  state: ActiveTablesState;
-  dispatch: React.Dispatch<ActiveTablesAction>;
-  loadActiveTables: DebounceFunction;
-  updateTable: (table: ActiveTable) => void; // Nueva función
-  removeTable: (tableId: number) => void; // Nueva función
-}>({
-  state: initialState,
-  dispatch: () => undefined,
-  loadActiveTables: async () => {},
-  updateTable: () => {},
-  removeTable: () => {},
-});
-
-const activeTablesReducer = (
-  state: ActiveTablesState,
-  action: ActiveTablesAction
-): ActiveTablesState => {
-  switch (action.type) {
-    case "SET_ACTIVE_TABLES":
-      return { ...state, activeTables: action.payload, loading: false };
-    case "SET_LOADING":
-      return { ...state, loading: action.payload };
-    case "SET_ERROR":
-      return { ...state, error: action.payload, loading: false };
-    case "UPDATE_TABLE":
-      return {
-        ...state,
-        activeTables: state.activeTables.map((table) =>
-          table.identificador === action.payload.identificador
-            ? action.payload
-            : table
-        ),
-      };
-    case "REMOVE_TABLE":
-      return {
-        ...state,
-        activeTables: state.activeTables.filter(
-          (table) => table.identificador !== action.payload
-        ),
-      };
-    default:
-      return state;
-  }
-};
-
-export const ActiveTablesProvider = ({ children }: { children: ReactNode }) => {
-  const [state, dispatch] = useReducer(activeTablesReducer, initialState);
-  const { isLogin, checkTokenExpiration } = useSettings();
-
-  const loadActiveTables = useCallback(
-    debounce(async () => {
-      if (!isLogin) return;
-      const isValidToken = await checkTokenExpiration();
-      if (!isValidToken) return;
-
-      dispatch({ type: "SET_LOADING", payload: true });
+  const {
+    data: activeTables = [], // Valor por defecto
+    isLoading,
+    error,
+  } = useQuery<ActiveTable[]>({
+    queryKey: ["activeTables"],
+    queryFn: async () => {
       try {
-        const activeTables = await orderService.loadActiveOrders();
-        dispatch({ type: "SET_ACTIVE_TABLES", payload: activeTables });
-      } catch {
-        dispatch({
-          type: "SET_ERROR",
-          payload: "Error al cargar mesas activas",
-        });
-      } finally {
-        dispatch({ type: "SET_LOADING", payload: false });
+        return await orderService.loadActiveOrders();
+      } catch (error) {
+        console.error("Error fetching active tables:", error);
+        return []; // Retornar array vacío en caso de error
       }
-    }, 1000), // Espera 1 segundo antes de permitir otra llamada
-    [isLogin, checkTokenExpiration]
-  );
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
-  const updateTable = useCallback((table: ActiveTable) => {
-    dispatch({ type: "UPDATE_TABLE", payload: table });
-  }, []);
-
-  const removeTable = useCallback((tableId: number) => {
-    dispatch({ type: "REMOVE_TABLE", payload: tableId });
-  }, []);
-
+  // Manejo de actualizaciones en tiempo real con SignalR
   useEffect(() => {
     const handleOrderUpdate = () => {
       console.log("Actualización de orden recibida - Recargando mesas...");
-      loadActiveTables();
+      queryClient.invalidateQueries({ queryKey: ["activeTables"] });
     };
 
-    // Suscribirse y obtener función de desuscripción
     const unsubscribe = signalRService.onOrderUpdated(handleOrderUpdate);
 
-    // Cleanup: Se ejecutará al desmontar el componente
     return () => {
       console.log("Desuscribiendo de actualizaciones de orden...");
       unsubscribe();
     };
-  }, [loadActiveTables]);
+  }, [queryClient]);
 
-  return (
-    <ActiveTablesContext.Provider
-      value={{
-        state,
-        dispatch,
-        loadActiveTables,
-        updateTable,
-        removeTable,
-      }}
-    >
-      {children}
-    </ActiveTablesContext.Provider>
-  );
+  return { activeTables: activeTables || [], isLoading, error };
 };
-
-export const useActiveTables = () => {
-  const context = useContext(ActiveTablesContext);
-  if (!context) {
-    throw new Error(
-      "useActiveTables debe usarse dentro de un ActiveTablesProvider"
-    );
-  }
-  return context;
-};
-interface DebounceFunction {
-  (...args: any[]): void;
-}
-
-function debounce(
-  func: (...args: any[]) => void,
-  wait: number
-): DebounceFunction {
-  let timeout: NodeJS.Timeout;
-  return (...args: any[]) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func.apply(undefined, args), wait);
-  };
-}

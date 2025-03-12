@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import  { memo } from "react";
 import { View } from "react-native";
 import TableItem from "./TableItem";
 import { TableRowProps } from "@/types/tableTypes";
@@ -32,6 +32,5 @@ const TableRow = memo(
     );
   }
 );
-TableRow.displayName = "TableRow";
 
 export default TableRow;

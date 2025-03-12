@@ -1,47 +1,51 @@
-// CustomersScreen.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
-import SearchBarCustomer from "../components/customers/search-bar-customer";
-import { useCustomer } from "@/core/context/CustomerContext";
-import { useSettings } from "../../core/context/SettingsContext";
+import SearchBarClient from "../components/customers/search-bar-customer"; // Renamed import to match file
+import {
+  useCustomers,
+  useSelectedCustomer,
+} from "@/core/context/CustomerContext"; // Updated import
 import { Customer } from "@/types/customerTypes";
 import CustomerList from "../components/customers/ItemCustomerList";
 import useCustomerSearch from "../../core/hooks/useCustomerSearch";
 
 const CustomersScreen: React.FC = () => {
-  const { settings, token } = useSettings();
-  const { state, dispatch, fetchCustomers } = useCustomer();
-  const { customers, status } = state;
+  const { data: customers, isLoading, error } = useCustomers();
+  const { setSelectedCustomer } = useSelectedCustomer(); // Use context to set selected customer
   const [searchQuery, setSearchQuery] = useState("");
-  const filteredCustomers = useCustomerSearch(customers, searchQuery);
+  const filteredCustomers = useCustomerSearch(customers || [], searchQuery);
 
-  const handleSelect = async (customer: Customer) => {
-    dispatch({ type: "SET_SELECTED_CUSTOMER", payload: customer });
-    dispatch({ type: "SET_CUSTOMER_CHANGED", payload: true });
-    router.back();
+  const handleSelect = (customer: Customer) => {
+    setSelectedCustomer(customer); // Set the selected customer in context
+    router.back(); // Navigate back after selection
   };
 
-  useEffect(() => {
-    const controller = new AbortController();
-    if (token && settings) {
-      fetchCustomers(controller.signal);
-    }
-    return () => controller.abort();
-  }, [token, settings, fetchCustomers]);
+  const handleClearSearch = () => {
+    setSearchQuery(""); // Clear the search query
+  };
+
+  if (isLoading) {
+    return <LoadingState message="Cargando clientes..." />;
+  }
+
+  if (error) {
+    return <ErrorState message="Error al cargar clientes" />;
+  }
 
   return (
     <View style={styles.container}>
-      <SearchBarCustomer value={searchQuery} onChangeText={setSearchQuery} />
-
-      {status === "loading" && <LoadingState message="Cargando clientes..." />}
-      {status === "error" && <ErrorState message="Error al cargar clientes" />}
+      <SearchBarClient
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        onClear={handleClearSearch} // Added clear functionality
+      />
 
       {searchQuery.trim() === "" ? (
         <CustomerList
-          customers={customers}
+          customers={customers || []}
           grouped={true}
           searchQuery={searchQuery}
           onSelect={handleSelect}

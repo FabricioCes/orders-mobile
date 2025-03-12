@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { OrderDetail } from "@/types/types";
 import SwipeableListItem, { SwipeableListItemRef } from "./order-swipeable-list-item";
@@ -11,7 +11,7 @@ interface OrderDetailsListProps {
   orderDetails: OrderDetail[];
   onProductPress: (product: OrderDetail) => void;
   onDeleteProduct: (idOrdenDetalle: number) => void;
-  onUpdateQuantity: (idProducto: number, newQuantity: number) => void;
+  onUpdateQuantity: (variables: { detailId: number; quantity: number }) => void;
 }
 
 export default function OrderDetailsList({
@@ -148,7 +148,7 @@ export default function OrderDetailsList({
         onCancel={() => setQuantityModalVisible(false)}
         onConfirm={(newQuantity) => {
           if (selectedProduct) {
-            onUpdateQuantity(selectedProduct.idProducto, newQuantity);
+            onUpdateQuantity({ detailId: selectedProduct.idProducto, quantity: newQuantity });
             setQuantityModalVisible(false);
           }
         }}

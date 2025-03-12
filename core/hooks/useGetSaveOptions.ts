@@ -1,12 +1,12 @@
 import { useSettings } from '@/core/context/SettingsContext'
-import { useCustomer } from '@/core/context/CustomerContext'
+import { useSelectedCustomer } from '@/core/context/CustomerContext'
 import { Order, SaveOptions } from '@/types/types'
 import { Alert } from 'react-native'
 import { ModoImpresion } from '@/types/enums'
 
 export const useOrderUpdater = () => {
   const { userName } = useSettings() // Usamos userName como idUsuario
-  const { state: customerState } = useCustomer()
+  const { selectedCustomer } = useSelectedCustomer()
 
   /**
    * Actualiza la orden con los datos actuales de usuario, cliente y modo de impresión.
@@ -26,9 +26,9 @@ export const useOrderUpdater = () => {
     }
     return {
       idUsuario: userName,
-      nombreCliente: customerState.selectedCustomer?.nombre || order.nombreCliente || '',
+      nombreCliente: selectedCustomer?.nombre || order.nombreCliente || '',
       idCliente:
-        customerState.selectedCustomer?.identificacion || order.idCliente || 0,
+        selectedCustomer?.identificacion || order.idCliente || 0,
       imprimir: printOption.imprimir,
       modoImpresion: printOption.modoImpresion
     }

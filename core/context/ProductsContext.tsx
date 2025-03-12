@@ -1,108 +1,76 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { useSettings } from "./SettingsContext";
-import { Product, Category, ProductsContextType } from "@/types/productTypes";
+import { useQuery } from "@tanstack/react-query";
+import { Product, Category } from "@/types/productTypes";
 import { productService } from "@/core/services/product.services";
-import { Observable } from "rxjs";
+import { firstValueFrom } from "rxjs";
+import { useSettings } from "@/core/context/SettingsContext";
+import { useState } from "react";
 
-const ProductsContext = createContext<ProductsContextType | null>(null);
-
-export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const { token, settings } = useSettings();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [rawProducts, setRawProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
-
-  useEffect(() => {
-    if (!settings?.idComputadora || !token) return;
-
-    const categoriesSubscription = productService.loadCategories$().subscribe({
-      next: (cats) => {
-        setCategories(cats);
-        setError(null);
-      },
-      error: (err) => {
-        setError(err.message);
-      },
-    });
-
-    const productsSubscription = productService.products$.subscribe((products) => {
-      setRawProducts(products);
-    });
-
-    return () => {
-      categoriesSubscription.unsubscribe();
-      productsSubscription.unsubscribe();
-    };
-  }, [settings, token]);
-
-  const loadProductsForSubSubCategory = (subSubCategory: string): Observable<Product[]> => {
-    if (!settings?.idComputadora || !token) {
-      setError("Configuración incompleta");
-      throw Error("Configuración incompleta");
-    }
-
-    try {
-      const products$ = productService.searchProductByCategory$(subSubCategory);
-      return products$;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error desconocido");
-      return new Observable<Product[]>();
-    }
-  };
-
-
-  useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setSearchResults([]);
-      return;
-    }
-    setLoading(true);
-
-    const subscription = productService.searchProducts$(searchQuery).subscribe({
-      next: (products) => {
-        setSearchResults(products);
-        setError(null);
-        setLoading(false);
-      },
-      error: (err) => {
-        setError(err.message);
-        setLoading(false);
-      },
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [searchQuery, settings, token]);
-
-  return (
-    <ProductsContext.Provider
-      value={{
-        categories,
-        flatProducts: searchQuery.trim() !== "" ? searchResults : rawProducts,
-        loading,
-        error,
-        searchQuery,
-        setSearchQuery,
-        loadProductsForSubSubCategory,
-        refreshProducts: () => {
-          /* Implementar refresco global si es necesario */
-        },
-      }}
-    >
-      {children}
-    </ProductsContext.Provider>
-  );
+export const useCategories = () => {
+  return useQuery<Category[]>({
+    queryKey: ["categories"],
+    queryFn: () => firstValueFrom(productService.loadCategories$()),
+    staleTime: Infinity,
+  });
 };
 
-export const useProducts = () => {
-  const context = useContext(ProductsContext);
-  if (!context)
-    throw new Error("useProducts must be used within ProductsProvider");
-  return context;
+export const useProducts = (
+  initialSearchQuery: string = "",
+  subSubCategory?: string,
+  enabled: boolean = true
+) => {
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
+  const { data: categories } = useCategories();
+  const { settings, token } = useSettings();
+
+  const {
+    data: products,
+    isLoading,
+    error,
+  } = useQuery<Product[]>({
+    queryKey: ["products", searchQuery, subSubCategory],
+    queryFn: async () => {
+      // Validar configuración
+      if (!settings?.idComputadora || !token) {
+        throw new Error("Configuración incompleta");
+      }
+
+      // Si hay un término de búsqueda, se usan los productos filtrados
+      if (searchQuery.trim()) {
+        console.log("Searching for:", searchQuery);
+        const result = await firstValueFrom(
+          productService.searchProducts$(searchQuery)
+        );
+        return result || [];
+      }
+      // Si se pasa una subSubCategory (y no hay búsqueda), se cargan los productos de esa categoría
+      else if (subSubCategory) {
+        try {
+          const result = await firstValueFrom(
+            productService.searchProductByCategory$(subSubCategory)
+          );
+          return result || [];
+        } catch (err) {
+          throw new Error(
+            err instanceof Error ? err.message : "Error desconocido"
+          );
+        }
+      }
+      // En otro caso, se cargan todos los productos
+      else {
+        const result = await firstValueFrom(productService.products$);
+        return result || [];
+      }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    enabled,
+  });
+
+  return {
+    categories: categories || [],
+    products: products || [],
+    isLoading,
+    error,
+    searchQuery,
+    setSearchQuery, // Now this is a proper state setter
+  };
 };
