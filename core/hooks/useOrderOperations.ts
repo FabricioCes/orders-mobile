@@ -26,7 +26,10 @@ export const useOrderOperations = (orderId: number) => {
   }, [order, isSuccess, dispatch])
 
   // Cargar los detalles de la orden desde el servidor
-  const { data: orderDetails, isSuccess: detailsSuccess } = useQuery<OrderDetail[], Error>({
+  const { data: orderDetails, isSuccess: detailsSuccess } = useQuery<
+    OrderDetail[],
+    Error
+  >({
     queryKey: ['orderDetails', orderId],
     queryFn: () => orderService.getOrderDetails(orderId),
     enabled: !!orderId

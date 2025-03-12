@@ -6,8 +6,6 @@ import ProductSection from "../components/products/product-section";
 import OrderSummaryItem from "../components/orders/order-summary-item";
 import OrderDetailsList from "../components/orders/order-details-list";
 import Toast from "react-native-toast-message";
-import { useSettings } from "@/core/context/SettingsContext";
-import { useActiveTables } from "@/core/context/ActiveTablesContext";
 import { useOrderOperations } from "@/core/hooks/useOrderOperations";
 
 export default function OrderScreen() {
@@ -44,6 +42,11 @@ export default function OrderScreen() {
     if (!order) return;
     syncOrder(undefined, {
       onSuccess: () => {
+        Toast.show({
+          type: "success",
+          text1: "Orden guardada",
+          text2: "La orden se ha sincronizado correctamente.",
+        });
         router.replace({
           pathname: "/(tabs)/tab",
           params: { refresh: Date.now().toString() },
@@ -51,7 +54,7 @@ export default function OrderScreen() {
       },
       onError: (error: unknown) => {
         const errorMessage =
-          (error as Error).message ? (error as Error).message : "Error desconocido";
+          typeof error === "object" && error !== null && "message" in error ? (error as Error).message : "Error desconocido";
         Toast.show({
           type: "error",
           text1: "Error al guardar la orden",
@@ -71,7 +74,7 @@ export default function OrderScreen() {
 
   if (error) {
     const errorMessage =
-      (error as unknown) instanceof Error ? (error as unknown as Error).message : "Error desconocido";
+    typeof error === "object" && error !== null && "message" in error ? (error as Error).message : "Error desconocido";
     return (
       <View className="flex-1 justify-center items-center">
         <Text className="text-red-500">{errorMessage}</Text>
@@ -92,7 +95,9 @@ export default function OrderScreen() {
             orderDetails={orderDetails}
             onProductPress={() => {}}
             onDeleteProduct={removeProduct}
-            onUpdateQuantity={({ detailId, quantity }) => updateQuantity(detailId, quantity)}
+            onUpdateQuantity={({ detailId, quantity }) =>
+              updateQuantity(detailId, quantity)
+            }
           />
         </View>
         <OrderSummaryItem
@@ -106,6 +111,7 @@ export default function OrderScreen() {
           hasChanges={false}
         />
       </View>
+      <Toast />
     </View>
   );
 }

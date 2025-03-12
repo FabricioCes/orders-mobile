@@ -1,5 +1,3 @@
-// ProductDetail.tsx
-import React from "react";
 import { View, Text } from "react-native";
 import type { OrderDetail } from "@/types/types";
 import { Product } from "@/types/productTypes";

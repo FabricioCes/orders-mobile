@@ -9,11 +9,10 @@ import {
 import { FontAwesome } from "@expo/vector-icons";
 import { OrderDetail } from "@/types/types";
 import CustomModal from "../custom-modal";
-import { Product } from "@/types/productTypes";
 
 interface QuantityModalProps {
   visible: boolean;
-  product: Product | OrderDetail | null; // Permitimos null
+  product: OrderDetail | null;
   onCancel: () => void;
   onConfirm: (quantity: number) => void;
 }
@@ -25,18 +24,11 @@ const QuantityModal: React.FC<QuantityModalProps> = ({
   onConfirm,
 }) => {
   const [quantity, setQuantity] = useState("1");
-  const isProductSelected = product !== null && product !== undefined;
-  const productName = isProductSelected
-    ? "nombre" in product
-      ? product.nombre
-      : product.nombreProducto
-    : "No hay producto seleccionado";
+  const isProductSelected = !!product;
 
   useEffect(() => {
     if (visible && isProductSelected) {
-      const initialQty =
-        "cantidad" in product ? product.cantidad.toString() : "1";
-      setQuantity(initialQty);
+      setQuantity(product.cantidad.toString());
     }
   }, [visible, product]);
 
@@ -58,7 +50,7 @@ const QuantityModal: React.FC<QuantityModalProps> = ({
   const handleConfirm = () => {
     if (isProductSelected) {
       const numericQuantity = parseInt(quantity) || 1;
-      onConfirm(Math.max(numericQuantity, 1));
+      onConfirm(numericQuantity);
     }
   };
 
@@ -66,7 +58,9 @@ const QuantityModal: React.FC<QuantityModalProps> = ({
     <CustomModal visible={visible} onClose={onCancel}>
       <View style={styles.modalContent}>
         <Text style={styles.title}>
-          {isProductSelected ? `Seleccionar cantidad para ${productName}` : productName}
+          {isProductSelected
+            ? `Cantidad para ${product.nombreProducto}`
+            : "Producto no seleccionado"}
         </Text>
 
         {isProductSelected && (
@@ -75,7 +69,6 @@ const QuantityModal: React.FC<QuantityModalProps> = ({
               <TouchableOpacity
                 style={styles.decrementButton}
                 onPress={() => adjustQuantity("decrement")}
-                accessibilityLabel="Reducir cantidad"
               >
                 <FontAwesome name="minus" size={20} color={COLORS.buttonText} />
               </TouchableOpacity>
@@ -91,7 +84,6 @@ const QuantityModal: React.FC<QuantityModalProps> = ({
               <TouchableOpacity
                 style={styles.incrementButton}
                 onPress={() => adjustQuantity("increment")}
-                accessibilityLabel="Aumentar cantidad"
               >
                 <FontAwesome name="plus" size={20} color={COLORS.buttonText} />
               </TouchableOpacity>
@@ -100,7 +92,6 @@ const QuantityModal: React.FC<QuantityModalProps> = ({
             <TouchableOpacity
               onPress={handleConfirm}
               style={styles.confirmButton}
-              accessibilityLabel="Confirmar cantidad"
             >
               <Text style={styles.confirmButtonText}>Confirmar</Text>
             </TouchableOpacity>
@@ -111,16 +102,14 @@ const QuantityModal: React.FC<QuantityModalProps> = ({
   );
 };
 
-// Colores vibrantes y consistentes
 const COLORS = {
-  primary: "#3B82F6", // Azul principal para confirmar
-  background: "#fff", // Fondo blanco
-  border: "#9CA3AF", // Gris claro para bordes
-  text: "#1F2937", // Gris oscuro para texto
-  buttonText: "#fff", // Blanco para texto de botones
-  secondaryText: "#4B5563", // Gris medio para íconos
-  decrement: "#EF4444", // Rojo para decrementar
-  increment: "#10B981", // Verde para incrementar
+  primary: "#3B82F6",
+  background: "#fff",
+  border: "#9CA3AF",
+  text: "#1F2937",
+  buttonText: "#fff",
+  decrement: "#EF4444",
+  increment: "#10B981",
 };
 
 const styles = StyleSheet.create({
@@ -129,11 +118,10 @@ const styles = StyleSheet.create({
     padding: 32,
     backgroundColor: COLORS.background,
     borderRadius: 16,
-    elevation: 5,
     alignItems: "center",
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "700",
     color: COLORS.text,
     marginBottom: 20,
@@ -151,8 +139,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     minWidth: 60,
     alignItems: "center",
-    justifyContent: "center",
-    elevation: 3,
   },
   incrementButton: {
     backgroundColor: COLORS.increment,
@@ -160,8 +146,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     minWidth: 60,
     alignItems: "center",
-    justifyContent: "center",
-    elevation: 3,
   },
   input: {
     borderWidth: 2,
@@ -180,7 +164,6 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     paddingHorizontal: 28,
     borderRadius: 12,
-    elevation: 3,
     width: "100%",
   },
   confirmButtonText: {

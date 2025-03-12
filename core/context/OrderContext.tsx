@@ -116,6 +116,7 @@ const orderReducer = (state: OrderState, action: OrderAction): OrderState => {
       };
     }
     case "REMOVE_ORDER_DETAIL": {
+      console.log("remove")
       if (!state.order || !state.order.esTemporal) return state;
       const updatedDetails = state.orderDetails.filter((detail) => detail.idOrdenDetalle !== action.payload);
       const updatedOrder = {
@@ -123,6 +124,7 @@ const orderReducer = (state: OrderState, action: OrderAction): OrderState => {
         detalles: updatedDetails,
         totalSinDescuento: calculateTotal(updatedDetails),
       };
+      console.log(updatedOrder)
       return {
         ...state,
         order: updatedOrder,

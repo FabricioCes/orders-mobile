@@ -5,7 +5,7 @@ import CustomModal from "../custom-modal";
 
 interface ProductOptionsModalProps {
   visible: boolean;
-  product: OrderDetail | null; // Permitimos null
+  product: OrderDetail | null;
   onCancel: () => void;
   onDelete: () => void;
   onModify: () => void;
@@ -18,27 +18,25 @@ const ProductOptionsModal: React.FC<ProductOptionsModalProps> = ({
   onDelete,
   onModify,
 }) => {
-  const isProductSelected = product !== null && product !== undefined;
+  const isProductSelected = !!product;
 
   return (
     <CustomModal visible={visible} onClose={onCancel}>
       <View style={styles.contentContainer}>
         <Text style={styles.title}>
-          {isProductSelected ? product.nombreProducto || "Producto" : "No hay producto seleccionado"}
+          {isProductSelected
+            ? product.nombreProducto
+            : "Producto no seleccionado"}
         </Text>
         <Text style={styles.subtitle}>
           {isProductSelected
-            ? "¿Qué deseas hacer con este producto?"
-            : "Por favor, selecciona un producto primero."}
+            ? "¿Qué deseas hacer?"
+            : "Selecciona un producto primero."}
         </Text>
 
         <View style={styles.optionsContainer}>
           <TouchableOpacity
-            style={[
-              styles.button,
-              styles.deleteButton,
-              !isProductSelected && styles.disabledButton,
-            ]}
+            style={[styles.button, styles.deleteButton]}
             onPress={onDelete}
             disabled={!isProductSelected}
           >
@@ -46,11 +44,7 @@ const ProductOptionsModal: React.FC<ProductOptionsModalProps> = ({
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.button,
-              styles.modifyButton,
-              !isProductSelected && styles.disabledButton,
-            ]}
+            style={[styles.button, styles.modifyButton]}
             onPress={onModify}
             disabled={!isProductSelected}
           >
@@ -82,24 +76,18 @@ const styles = StyleSheet.create({
   },
   optionsContainer: {
     width: "100%",
-    marginBottom: 16,
     gap: 12,
   },
   button: {
     padding: 16,
     borderRadius: 12,
     alignItems: "center",
-    justifyContent: "center",
   },
   deleteButton: {
     backgroundColor: "#fee2e2",
   },
   modifyButton: {
     backgroundColor: "#dbeafe",
-  },
-  disabledButton: {
-    backgroundColor: "#e5e7eb",
-    opacity: 0.6,
   },
   deleteText: {
     color: "#dc2626",
@@ -113,4 +101,5 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ProductOptionsModal;
+
+export default ProductOptionsModal
