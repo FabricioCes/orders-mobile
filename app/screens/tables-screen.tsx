@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import React, { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { View, Text, TouchableOpacity, useWindowDimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
@@ -9,7 +9,8 @@ import { useSettings } from "@/core/context/SettingsContext";
 import { router, useFocusEffect, useNavigation } from "expo-router";
 import { useActiveTables } from "@/core/context/ActiveTablesContext";
 import { ParamApiRepository } from "@/core/repositories/parametro.repository";
-
+import { capitalizeFirstLetter } from "@/utils/stringUtil";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 const variantStyles = {
   error: { bg: "bg-red-50", text: "text-red-600", iconColor: "#DC2626", iconName: "alert-circle-outline" },
   warning: { bg: "bg-amber-50", text: "text-amber-600", iconColor: "#D97706", iconName: "warning-outline" },
@@ -42,29 +43,45 @@ interface TablesProps {
 
 export default function Tables({ place, qty: propQty }: TablesProps) {
   const { width } = useWindowDimensions();
-  const { zonas, token } = useSettings();
+  const { zonas, token, isLogin } = useSettings();
   const { activeTables } = useActiveTables();
   const navigation = useNavigation();
   const isTablet = width >= 768;
   const columns = isTablet ? 9 : 3;
-  const qty = propQty ?? zonas[place] ?? 0;
-
-  const { data: tables, isLoading, error } = useQuery({
-    queryKey: ["tablesByLocation", place],
+  const qty = propQty !== undefined ? propQty : zonas[place] ?? 0;
+  const insets = useSafeAreaInsets();
+  const { data: tables, isLoading, error} = useQuery({
+    queryKey: ["tablesByLocation", isLogin],
     queryFn: () => ParamApiRepository.getTablesByLocation(),
-    enabled: !!token,
+    enabled: isLogin,
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   const { handleTablePress, isTableActive } = useTableNavigation(place);
 
   useFocusEffect(
     useCallback(() => {
-      const formattedPlace = place.charAt(0).toUpperCase() + place.slice(1).toLowerCase();
+      const formattedPlace = capitalizeFirstLetter(place)
       navigation.getParent()?.setOptions({ title: formattedPlace });
     }, [place, activeTables, navigation])
   );
 
-  if (isLoading) {
+  // Primero verifica si no hay token
+  if (!token) {
+    return (
+      <View className="flex-1 justify-center items-center p-5">
+        <ErrorMessage
+          text="Debe iniciar sesión para ver las mesas"
+          action={{ label: "Ir al Login", onPress: () => router.navigate("/components/login") }}
+        />
+      </View>
+    );
+  }
+
+  // Luego verifica si está cargando
+  if (!tables || Object.keys(tables).length === 0) {
     return (
       <View className="flex-1 justify-center items-center p-4">
         <Text className="text-gray-500 text-lg">Cargando mesas...</Text>
@@ -72,6 +89,7 @@ export default function Tables({ place, qty: propQty }: TablesProps) {
     );
   }
 
+  // Después el error
   if (error) {
     const errorMessage = error instanceof Error ? error.message : "Error desconocido";
     return (
@@ -81,21 +99,25 @@ export default function Tables({ place, qty: propQty }: TablesProps) {
     );
   }
 
-  if (!qty || !token) {
+  // Luego verifica si no hay mesas configuradas
+  if (!qty) {
     return (
       <View className="flex-1 justify-center items-center p-5">
-        {!token ? (
-          <ErrorMessage text="Debe iniciar sesión para ver las mesas" action={{ label: "Ir al Login", onPress: () => router.navigate("/components/login") }} />
-        ) : (
-          <ErrorMessage text={`No hay mesas configuradas para ${place}`} variant="warning" />
-        )}
+        <ErrorMessage text={`No hay mesas configuradas para ${place}`} variant="warning" />
       </View>
     );
   }
 
+  // Finalmente renderiza el contenido principal
   return (
-    <Animated.View entering={FadeIn} className="flex-1 p-5 bg-white" style={{ justifyContent: "center" }}>
-      <TableGrid tables={tables || { comedor: 0, barra: 0, express: 0, llevar: 0, terraza: 0 }} columns={columns} isActive={isTableActive} onTablePress={handleTablePress} place={place} />
+    <Animated.View entering={FadeIn} className="flex-1 p-5 bg-white" style={{ justifyContent: "center",  paddingBottom: insets.bottom + 70 }}>
+      <TableGrid
+        tables={tables || { comedor: 0, barra: 0, express: 0, llevar: 0, terraza: 0 }}
+        columns={columns}
+        isActive={isTableActive}
+        onTablePress={handleTablePress}
+        place={place}
+      />
     </Animated.View>
   );
 }

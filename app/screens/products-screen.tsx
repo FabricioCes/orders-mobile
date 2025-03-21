@@ -10,20 +10,10 @@ import SearchBar from "../components/products/search-bar-products";
 import ProductsList from "../components/products/product-list";
 import { useOrderOperations } from "@/core/hooks/useOrderOperations";
 
-const getOrderId = (orderString: any): number => {
-  try {
-    const order = orderString ? JSON.parse(String(orderString)) : undefined;
-    return order?.numeroOrden ?? 0;
-  } catch (error) {
-    console.log("Error parsing order:", error);
-    return 0;
-  }
-};
-
 const ProductScreen: React.FC = () => {
-  const { order: orderString } = useLocalSearchParams();
-  const orderId = getOrderId(orderString);
-  const { addProduct } = useOrderOperations(orderId);
+  const { orderId = "0" } = useLocalSearchParams();
+  const numericOrderId = Number(orderId);
+  const { addProduct } = useOrderOperations(numericOrderId);
   const {
     categories,
     products,
@@ -35,8 +25,10 @@ const ProductScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      return () => setSearchQuery("");
-    }, [setSearchQuery])
+      return () => {
+        setSearchQuery("");
+      };
+    }, [setSearchQuery, orderId])
   );
 
   const handleAddProduct = useCallback(
@@ -45,8 +37,8 @@ const ProductScreen: React.FC = () => {
         cantidad: quantity,
         idProducto: product.identificador,
         nombreProducto: product.nombre,
-        costoUnitario: product.costo,
-        idOrden: orderId,
+        precioVenta: product.precio,
+        idOrden: numericOrderId,
         idOrdenDetalle: 0,
         precioCompra: product.costo,
         impuestoProducto: product.impuesto ?? 0,

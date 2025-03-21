@@ -12,36 +12,55 @@ export const useOrderOperations = (orderId: number) => {
   const { getSaveOptions } = useOrderUpdater()
   const { clearSelectedCustomer } = useSelectedCustomer()
 
-  // Cargar la orden desde el servidor
-  const { data: order, isSuccess } = useQuery<Order, Error>({
+  const isTemporal = orderId === 0 || state.order?.esTemporal === true
+  const isOrderLoaded = state.order?.numeroOrden === orderId && !isTemporal
+
+  console.log(
+    `useOrderOperations: orderId=${orderId}, isTemporal=${isTemporal}, isOrderLoaded=${isOrderLoaded}, hasUnsavedChanges=${state.hasUnsavedChanges}`
+  )
+  console.log(
+    `Estado actual: order=${JSON.stringify(
+      state.order
+    )}, details=${JSON.stringify(state.orderDetails)}`
+  )
+
+  const { data: fetchedOrder, isSuccess } = useQuery<Order, Error>({
     queryKey: ['order', orderId],
     queryFn: () => orderService.getOrder(orderId),
-    enabled: !!orderId // Solo se ejecuta si orderId es válido
+    enabled: orderId !== 0 && !isTemporal && !isOrderLoaded,
+    staleTime: 5 * 60 * 1000
   })
 
   useEffect(() => {
-    if (isSuccess && order) {
-      dispatch({ type: 'SET_ORDER', payload: order })
+    if (isSuccess && fetchedOrder && !state.hasUnsavedChanges) {
+      console.log(
+        `Cargando order desde backend: ${JSON.stringify(fetchedOrder)}`
+      )
+      dispatch({ type: 'SET_ORDER', payload: fetchedOrder })
     }
-  }, [order, isSuccess, dispatch])
+  }, [fetchedOrder, isSuccess, dispatch, state.hasUnsavedChanges])
 
-  // Cargar los detalles de la orden desde el servidor
-  const { data: orderDetails, isSuccess: detailsSuccess } = useQuery<
+  const { data: fetchedOrderDetails, isSuccess: detailsSuccess } = useQuery<
     OrderDetail[],
     Error
   >({
     queryKey: ['orderDetails', orderId],
     queryFn: () => orderService.getOrderDetails(orderId),
-    enabled: !!orderId
+    enabled: orderId !== 0 && !isTemporal && !isOrderLoaded,
+    staleTime: 5 * 60 * 1000
   })
 
   useEffect(() => {
-    if (detailsSuccess && orderDetails) {
-      dispatch({ type: 'SET_ORDER_DETAILS', payload: orderDetails })
+    if (detailsSuccess && fetchedOrderDetails && !state.hasUnsavedChanges) {
+      console.log(
+        `Cargando orderDetails desde backend: ${JSON.stringify(
+          fetchedOrderDetails
+        )}`
+      )
+      dispatch({ type: 'SET_ORDER_DETAILS', payload: fetchedOrderDetails })
     }
-  }, [orderDetails, detailsSuccess, dispatch])
+  }, [fetchedOrderDetails, detailsSuccess, dispatch, state.hasUnsavedChanges])
 
-  // Mutación para sincronizar la orden con el servidor
   const syncOrderMutation = useMutation({
     mutationFn: async () => {
       if (!state.order) throw new Error('No hay orden para sincronizar')
@@ -52,9 +71,7 @@ export const useOrderOperations = (orderId: number) => {
       dispatch({ type: 'SET_UNSAVED_CHANGES', payload: false })
       queryClient.invalidateQueries({ queryKey: ['order', orderId] })
       queryClient.invalidateQueries({ queryKey: ['orderDetails', orderId] })
-      // Limpiar la orden y sus detalles
       dispatch({ type: 'RESET_ORDER' })
-      // Limpiar el cliente seleccionado
       clearSelectedCustomer()
     },
     onError: error => {
@@ -62,7 +79,13 @@ export const useOrderOperations = (orderId: number) => {
     }
   })
 
-  // Funciones para operaciones locales
+  const createTemporaryOrder = (numeroMesa: string, zona: string) => {
+    dispatch({
+      type: 'CREATE_TEMPORARY_ORDER',
+      payload: { numeroMesa, zona, esTemporal: false }
+    })
+  }
+
   const addProduct = (product: OrderDetail) => {
     dispatch({ type: 'ADD_ORDER_DETAIL', payload: product })
   }
@@ -72,18 +95,17 @@ export const useOrderOperations = (orderId: number) => {
   }
 
   const updateQuantity = (detailId: number, quantity: number) => {
-    const detail = state.orderDetails.find(d => d.idOrdenDetalle === detailId)
-    if (detail) {
-      dispatch({
-        type: 'UPDATE_ORDER_DETAIL',
-        payload: { detailId, updatedDetail: { ...detail, cantidad: quantity } }
-      })
-    }
+    dispatch({
+      type: 'UPDATE_ORDER_DETAIL',
+      payload: { detailId, updatedDetail: { cantidad: quantity } }
+    })
   }
+
+  const cleanOrder = () => dispatch({ type: 'RESET_ORDER' })
 
   return {
     order: state.order,
-    orderDetails: state.orderDetails,
+    orderDetails: state.orderDetails || [],
     isLoading: state.loading,
     error: state.error,
     hasUnsavedChanges: state.hasUnsavedChanges,
@@ -91,6 +113,8 @@ export const useOrderOperations = (orderId: number) => {
     removeProduct,
     updateQuantity,
     syncOrder: syncOrderMutation.mutate,
-    isSyncing: syncOrderMutation.isPending
+    isSyncing: syncOrderMutation.isPending,
+    cleanOrder,
+    createTemporaryOrder
   }
 }

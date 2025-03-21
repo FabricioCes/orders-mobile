@@ -3,7 +3,7 @@ import type { OrderDetail } from "@/types/types";
 import { Product } from "@/types/productTypes";
 
 interface ProductDetailProps {
-  product: OrderDetail | Product;
+  product: OrderDetail;
   quantity?: number;
 }
 
@@ -16,10 +16,10 @@ export default function ProductDetail({
     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
       <View style={{ flex: 1, marginRight: 16 }}>
         <Text style={{ fontSize: 16, fontWeight: "500", color: "#1f2937" }}>
-          {"nombre" in product ? product.nombre : product.nombreProducto}
+          {product.nombreProducto}
         </Text>
         <Text style={{ color: "#6b7280", marginTop: 4 }}>
-          {"costoUnitario" in product ? `₡${product.costoUnitario.toFixed(2)}` : `₡${product.costo.toFixed(2)}`}
+          {`₡${Math.round(product.precioVenta)}`}
         </Text>
       </View>
       <View>

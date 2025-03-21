@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Text, TouchableOpacity, View, StyleSheet } from "react-native";
 import { Product } from "@/types/productTypes";
 import QuantityModal from "./quantity-modal";
+import { mapProductToOrderDetail } from "@/core/mappers/mappers";
 
 const ProductListItem: React.FC<{
   product: Product;
@@ -13,7 +14,7 @@ const ProductListItem: React.FC<{
     onAddProduct(product, quantity);
     setShowModal(false);
   };
-
+  const orderDetail = mapProductToOrderDetail(product)
   return (
     <>
       <TouchableOpacity
@@ -30,7 +31,7 @@ const ProductListItem: React.FC<{
 
       <QuantityModal
         visible={showModal}
-        product={product}
+        product={orderDetail}
         onCancel={() => setShowModal(false)}
         onConfirm={handleConfirm}
       />

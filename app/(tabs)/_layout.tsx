@@ -48,7 +48,7 @@ const TabLayout = memo(() => {
   const navigation = useNavigation();
   const { activeTables, isLoading, error } = useActiveTables();
   const lastLoaded = useRef<number | null>(null);
-  const { isLogin } = useSettings();
+  const { isLogin, zonas } = useSettings();
   const [index, setIndex] = useState(0);
   const [routes] = useState(
     staticTabs.map((tab) => ({
@@ -107,7 +107,7 @@ const TabLayout = memo(() => {
           return (
             <ZoneScreen
               place={tab.title}
-              qty={tablesByZone[tab.title.toLowerCase()] || 0}
+              qty={zonas[tab.title.toLowerCase()] || 0}
             />
           );
         } catch (error) {
@@ -121,7 +121,7 @@ const TabLayout = memo(() => {
       };
       return acc;
     }, {} as Record<string, () => JSX.Element>);
-  }, [tablesByZone]);
+  }, [zonas]);
 
   const renderScene = SceneMap(scenes);
 

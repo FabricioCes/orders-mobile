@@ -23,6 +23,7 @@ class OrderService {
   async getOrder (orderId: number): Promise<Order> {
     try {
       const order = await OrderApiRepository.getOrder(orderId)
+      console.log(order)
       return order
     } catch {
       throw new Error(`Error al obtener la orden con ID ${orderId}`)
@@ -33,6 +34,7 @@ class OrderService {
   async getOrderDetails (orderId: number): Promise<OrderDetail[]> {
     try {
       const details = await OrderApiRepository.getOrderDetails(orderId)
+      console.log(details)
       return details
     } catch {
       throw new Error(

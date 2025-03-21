@@ -1,12 +1,11 @@
-// context/SettingsContext.tsx
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { router } from "expo-router";
 import { SettingsService } from "../services/settings.service";
 import { TokenService } from "../services/token.service";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthService } from "../services/auth.service";
 import { ZonaService } from "../services/zone.service";
-import { orderService } from "../services/order.service";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 type SettingsContextType = {
   saveSettings: (value: any) => void;
@@ -18,8 +17,7 @@ type SettingsContextType = {
   token: string;
   checkTokenExpiration: () => Promise<boolean>;
   zonas: Record<string, number>;
-  fetchZonasMesas: () => Promise<void>;
-  loadingZonas: boolean;
+  refetchZonas: () => void;
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(
@@ -28,13 +26,12 @@ const SettingsContext = createContext<SettingsContextType | undefined>(
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
-}) => {
+}: { children: React.ReactNode }) => {
   const [settings, setSettings] = useState<any>(null);
-  const [isLogin, setisLogin] = useState<boolean>(false);
+  const [isLogin, setIsLogin] = useState<boolean>(false);
   const [userName, setUserName] = useState<string>("");
   const [token, setToken] = useState<string>("");
-  const [zonas, setZonas] = useState<Record<string, number>>({});
-  const [loadingZonas, setLoadingZonas] = useState(false);
+  const queryClient = useQueryClient();
 
   const saveSettings = async (value: any) => {
     await SettingsService.saveSettings(value);
@@ -49,10 +46,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
 
     if (storedSettings) setSettings(storedSettings);
     if (savedToken) setToken(savedToken);
-    if (userStatus === "true") setisLogin(true);
+    if (userStatus === "true") setIsLogin(true);
     if (savedUserName) setUserName(savedUserName);
-
-    checkTokenExpiration();
   };
 
   const login = async (
@@ -62,22 +57,23 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
     const apiUrl = `http://${settings?.idComputadora}:5001`;
     const success = await AuthService.login(username, password, apiUrl);
     if (success) {
-      setisLogin(true);
+      setIsLogin(true);
       setUserName(username);
-      const token = await TokenService.getToken();
-      setToken(token ?? "");
-      fetchZonasMesas();
+      const newToken = await TokenService.getToken();
+      setToken(newToken ?? "");
+      // Invalidar la caché de zonas para recargar los datos tras el login
+      queryClient.invalidateQueries({ queryKey: ["zonas"] });
+      queryClient.invalidateQueries({ queryKey: ["tablesByLocation"] });
     }
     return success;
   };
 
   const logOut = async () => {
     await AuthService.logout();
-    setisLogin(false);
+    setIsLogin(false);
     setUserName("");
     setToken("");
     router.navigate("/components/login");
-    
   };
 
   const checkTokenExpiration = async (): Promise<boolean> => {
@@ -85,32 +81,20 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
     return isValid;
   };
 
-  const fetchZonasMesas = useCallback(async () => {
-    if (!settings?.idComputadora || !token) return;
-
-    setLoadingZonas(true);
-    const apiUrl = `http://${settings.idComputadora}:5001`;
-    const zonasData = await ZonaService.fetchZonasMesas(apiUrl, token);
-    setZonas(zonasData);
-    setLoadingZonas(false);
-  }, [settings?.idComputadora, token]);
+  // Cargar zonas con useQuery
+  const { data: zonas, refetch: refetchZonas } = useQuery({
+    queryKey: ["zonas"],
+    queryFn: async () => {
+      if (!settings?.idComputadora || !token) return {};
+      const apiUrl = `http://${settings.idComputadora}:5001`;
+      return await ZonaService.fetchZonasMesas(apiUrl, token);
+    },
+    enabled: !!settings?.idComputadora && !!token, // Solo se ejecuta si hay idComputadora y token
+  });
 
   useEffect(() => {
     loadSettings();
   }, []);
-
-
-  useEffect(() => {
-    const fetchZonas = async () => {
-      const isValidToken = await checkTokenExpiration();
-      if (isValidToken) {
-        await fetchZonasMesas();
-      } else {
-          
-      }
-    };
-    fetchZonas();
-  }, [token, isLogin, fetchZonasMesas]);
 
   return (
     <SettingsContext.Provider
@@ -123,9 +107,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
         logOut,
         token,
         checkTokenExpiration,
-        zonas,
-        fetchZonasMesas,
-        loadingZonas,
+        zonas: zonas || {}, // Si zonas es undefined, devuelve un objeto vacío
+        refetchZonas, // Función para recargar manualmente las zonas
       }}
     >
       {children}

@@ -1,5 +1,5 @@
-import { useCallback, useEffect } from "react";
-import { View, Text } from "react-native";
+import { useCallback, useEffect, useRef } from "react";
+import { View, Text, Alert } from "react-native";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import CustomerSection from "../components/customers/customer-section";
 import ProductSection from "../components/products/product-section";
@@ -22,8 +22,46 @@ export default function OrderScreen() {
     updateQuantity,
     syncOrder,
     isSyncing,
+    cleanOrder,
+    hasUnsavedChanges,
+    createTemporaryOrder, // Función para crear la orden temporal
   } = useOrderOperations(orderIdentify);
+  const hasCreatedOrder = useRef(false);
+  // Crear la orden temporal si no hay una orden existente (orderId === 0)
+  useEffect(() => {
+    if (orderIdentify === 0 && !hasCreatedOrder.current) {
+      createTemporaryOrder(tableId as string, place as string);
+      hasCreatedOrder.current = true;
+    }
+  }, [orderIdentify, tableId, place, createTemporaryOrder]);
 
+  // Listener para manejar cambios no guardados al salir
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("beforeRemove", (e) => {
+      if (!hasUnsavedChanges) {
+        return;
+      }
+      e.preventDefault();
+      Alert.alert(
+        "Cambios no guardados",
+        "¿Estás seguro de que quieres salir sin guardar los cambios?",
+        [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "Salir sin guardar",
+            style: "destructive",
+            onPress: () => {
+              cleanOrder();
+              navigation.dispatch(e.data.action);
+            },
+          },
+        ]
+      );
+    });
+    return unsubscribe;
+  }, [navigation, hasUnsavedChanges, cleanOrder]);
+
+  // Configurar el título de la pantalla
   useEffect(() => {
     const formattedPlace =
       (typeof place === "string" ? place : "").charAt(0).toUpperCase() +
@@ -32,9 +70,14 @@ export default function OrderScreen() {
   }, [tableId, place, navigation]);
 
   const handleNavigateToProducts = useCallback(() => {
+    const currentOrderId = order?.numeroOrden?.toString() ?? "0";
+    console.log(`Navigating to ProductScreen with orderId: ${currentOrderId}`);
     router.navigate({
       pathname: "/screens/products-screen",
-      params: { order: JSON.stringify(order), isActive: "false" },
+      params: {
+        orderId: currentOrderId,
+        isActive: "false",
+      },
     });
   }, [order]);
 
@@ -54,7 +97,9 @@ export default function OrderScreen() {
       },
       onError: (error: unknown) => {
         const errorMessage =
-          typeof error === "object" && error !== null && "message" in error ? (error as Error).message : "Error desconocido";
+          typeof error === "object" && error !== null && "message" in error
+            ? (error as Error).message
+            : "Error desconocido";
         Toast.show({
           type: "error",
           text1: "Error al guardar la orden",
@@ -64,17 +109,11 @@ export default function OrderScreen() {
     });
   }, [order, syncOrder]);
 
-  if (isLoading) {
-    return (
-      <View className="flex-1 justify-center items-center">
-        <Text>Cargando...</Text>
-      </View>
-    );
-  }
-
   if (error) {
     const errorMessage =
-    typeof error === "object" && error !== null && "message" in error ? (error as Error).message : "Error desconocido";
+      typeof error === "object" && error !== null && "message" in error
+        ? (error as Error).message
+        : "Error desconocido";
     return (
       <View className="flex-1 justify-center items-center">
         <Text className="text-red-500">{errorMessage}</Text>

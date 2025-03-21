@@ -1,6 +1,7 @@
-import { GuardarOrdenRequest, Order, SaveOptions } from "@/types/types";
+import { Product } from "@/types/productTypes";
+import { AdicionalType, GuardarOrdenRequest, Order, OrderDetail, SaveOptions } from "@/types/types";
 
-const mapToGuardarOrdenRequest = (order: Order, otrosValores: SaveOptions): GuardarOrdenRequest => {
+export const mapToGuardarOrdenRequest = (order: Order, otrosValores: SaveOptions): GuardarOrdenRequest => {
   return {
     numeroOrden: order.numeroOrden,
     numeroLugar: order.numeroMesa,
@@ -25,4 +26,33 @@ const mapToGuardarOrdenRequest = (order: Order, otrosValores: SaveOptions): Guar
   };
 }
 
-export default mapToGuardarOrdenRequest
+
+
+export const mapProductToOrderDetail = (
+  product: Product,
+  options?: {
+    quantity?: number;
+    discounts?: number;
+    modifiers?: AdicionalType[];
+  }
+): OrderDetail => {
+  return {
+    cantidad: options?.quantity || 1,
+    idProducto: product.identificador,
+    nombreProducto: product.nombre,
+    precioVenta: product.precio,
+    precioCompra: product.costo,
+    impuestoProducto: product.impuesto || 0,
+    porcentajeDescuento: options?.discounts || 0,
+    unidad: product.unidad || 1,
+    totalCostoUnitario: (options?.quantity || 1) * product.precio,
+    totalDescProducto: ((options?.quantity || 1) * product.precio) * (options?.discounts || 0),
+    adicionales: options?.modifiers || [],
+    // Campos con valores por defecto
+    productoMitad: false,
+    ingrediente: false,
+    productoImpreso: true,
+    idOrden: 0, // Se actualizará al guardar
+    idOrdenDetalle: 0 // Generado por el backend
+  };
+};

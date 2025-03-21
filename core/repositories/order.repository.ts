@@ -3,7 +3,7 @@ import { ApiResponse, Order, OrderDetail, SaveOptions } from '@/types/types'
 import { Customer } from '@/types/customerTypes'
 import { ActiveTable } from '@/types/tableTypes'
 import { getToken } from '@/utils/tableUtils'
-import mapToGuardarOrdenRequest from '@/core/mappers/mappers'
+import {mapToGuardarOrdenRequest} from '@/core/mappers/mappers'
 export class OrderApiRepository {
   private static async handleRequest<T> (
     endpoint: string,
@@ -49,6 +49,7 @@ export class OrderApiRepository {
   static async getOrder (orderId: number): Promise<Order> {
     try {
       const result = this.handleRequest<Order>(`Orden/${orderId}`)
+      console.log(result)
       return result
     } catch (error) {
       throw new Error(
@@ -73,6 +74,7 @@ export class OrderApiRepository {
     const result = await this.handleRequest<OrderDetail[]>(
       `Orden/${orderId}/detalle`
     )
+    console.log(result)
     return result
   }
 

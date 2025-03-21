@@ -55,7 +55,7 @@ export type OrderDetail = {
   cantidad: number;
   codigoMitad?: number;
   consecutivo?: number;
-  costoUnitario: number;
+  costoUnitario?: number;
   creadoPor?: string;
   encargadoComisionEspecifico?: string;
   idOrden: number;
@@ -70,6 +70,7 @@ export type OrderDetail = {
   modificadoPor?: string;
   nombreProducto: string;
   porcentajeDescuento?: number;
+  precioVenta:number;
   precioCompra?: number;
   productoImpreso?: boolean;
   productoMitad?: boolean;
