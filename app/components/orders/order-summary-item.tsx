@@ -41,9 +41,9 @@ const OrderSummaryItem: React.FC<OrderSummaryItemProps> = ({
   hasChanges,
 }) => {
   const arrowRotation = useRef(new Animated.Value(expanded ? 1 : 0)).current;
-  const contentHeight = useRef(new Animated.Value(expanded ? 100 : 0)).current;
+  const contentHeight = useRef(new Animated.Value(expanded ? 60 : 0)).current; // Ajustado desde el inicio
   const contentOpacity = useRef(new Animated.Value(expanded ? 1 : 0)).current;
-  const buttonPosition = useRef(new Animated.Value(expanded ? 0 : -20)).current;
+  const buttonPosition = useRef(new Animated.Value(expanded ? 0 : -48)).current; // Ajustado desde el inicio
 
   useEffect(() => {
     Animated.parallel([
@@ -54,8 +54,7 @@ const OrderSummaryItem: React.FC<OrderSummaryItemProps> = ({
         useNativeDriver: false,
       }),
       Animated.timing(contentHeight, {
-        // Cambiado de 100 a 60 para ajustar la altura al contenido real
-        toValue: expanded ? 60 : 0,
+        toValue: expanded ? 60 : 0, // Altura ajustada al contenido real
         duration: 300,
         easing: Easing.out(Easing.ease),
         useNativeDriver: false,
@@ -67,7 +66,7 @@ const OrderSummaryItem: React.FC<OrderSummaryItemProps> = ({
         useNativeDriver: false,
       }),
       Animated.timing(buttonPosition, {
-        toValue: expanded ? 0 : -48,
+        toValue: expanded ? 0 : -48, // Posición ajustada para el botón
         duration: 300,
         easing: Easing.out(Easing.ease),
         useNativeDriver: false,
@@ -109,7 +108,6 @@ const OrderSummaryItem: React.FC<OrderSummaryItemProps> = ({
         )}
       </View>
 
-      {/* Contenido expandido con animación de altura y opacidad */}
       <Animated.View
         style={[
           styles.expandedContent,
@@ -128,7 +126,6 @@ const OrderSummaryItem: React.FC<OrderSummaryItemProps> = ({
         </View>
       </Animated.View>
 
-      {/* Botón de guardar con animación de posición */}
       <Animated.View
         style={[
           styles.saveButtonWrapper,
@@ -173,7 +170,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 3,
-    position: "relative", // Para que el botón absoluto se posicione relativo al contenedor
+    position: "relative",
   },
   header: {
     flexDirection: "row",
@@ -226,7 +223,7 @@ const styles = StyleSheet.create({
   },
   saveButtonWrapper: {
     marginTop: 16,
-    alignItems: "center", // Centrar el botón horizontalmente cuando está expandido
+    alignItems: "center",
   },
   saveButton: {
     backgroundColor: "#2563eb",
@@ -235,25 +232,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    width: "100%", // Ocupa todo el ancho cuando está expandido
+    width: "100%",
   },
   saveButtonDisabled: {
     backgroundColor: "#93c5fd",
   },
-
   saveButtonMinimized: {
     position: "absolute",
-    top: -90, // Mitad del botón estará fuera del contenedor para que se vea "sobre el borde"
-    right: 60, // Ajustado para que esté más cerca del borde derecho
+    top: -90,
+    right: 60,
     paddingVertical: 8,
     paddingHorizontal: 8,
     borderRadius: 50,
     marginTop: 0,
-    width: 40, // Tamaño más pequeño para el botón minimizado
+    width: 40,
     height: 40,
     justifyContent: "center",
     alignItems: "center",
-    elevation: 5, // Sombra para que destaque sobre el contenedor
+    elevation: 5,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,

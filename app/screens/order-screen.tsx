@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react"; // Agregar useState
 import { View, Text, Alert } from "react-native";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import CustomerSection from "../components/customers/customer-section";
@@ -24,10 +24,12 @@ export default function OrderScreen() {
     isSyncing,
     cleanOrder,
     hasUnsavedChanges,
-    createTemporaryOrder, // Función para crear la orden temporal
+    createTemporaryOrder,
   } = useOrderOperations(orderIdentify);
+
   const hasCreatedOrder = useRef(false);
-  // Crear la orden temporal si no hay una orden existente (orderId === 0)
+  const [expanded, setExpanded] = useState(false); // Estado para controlar la expansión
+
   useEffect(() => {
     if (orderIdentify === 0 && !hasCreatedOrder.current) {
       createTemporaryOrder(tableId as string, place as string);
@@ -35,7 +37,6 @@ export default function OrderScreen() {
     }
   }, [orderIdentify, tableId, place, createTemporaryOrder]);
 
-  // Listener para manejar cambios no guardados al salir
   useEffect(() => {
     const unsubscribe = navigation.addListener("beforeRemove", (e) => {
       if (!hasUnsavedChanges) {
@@ -61,7 +62,6 @@ export default function OrderScreen() {
     return unsubscribe;
   }, [navigation, hasUnsavedChanges, cleanOrder]);
 
-  // Configurar el título de la pantalla
   useEffect(() => {
     const formattedPlace =
       (typeof place === "string" ? place : "").charAt(0).toUpperCase() +
@@ -108,6 +108,10 @@ export default function OrderScreen() {
     });
   }, [order, syncOrder]);
 
+  const handleToggleSummary = useCallback(() => {
+    setExpanded((prev) => !prev);
+  }, []);
+
   if (error) {
     const errorMessage =
       typeof error === "object" && error !== null && "message" in error
@@ -144,9 +148,9 @@ export default function OrderScreen() {
           onSave={handleSaveOrder}
           isActive={false}
           isSaving={isSyncing}
-          expanded={false}
-          onToggle={() => {}}
-          hasChanges={false}
+          expanded={expanded} // Usar el estado dinámico
+          onToggle={handleToggleSummary} // Pasar la función de toggle
+          hasChanges={hasUnsavedChanges} // Usar hasUnsavedChanges del contexto
         />
       </View>
       <Toast />

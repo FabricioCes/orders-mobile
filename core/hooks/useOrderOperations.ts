@@ -23,6 +23,11 @@ export const useOrderOperations = (orderId: number) => {
       state.order
     )}, details=${JSON.stringify(state.orderDetails)}`
   )
+  console.log(
+    `Estado original: originalOrder=${JSON.stringify(
+      state.originalOrder
+    )}, originalDetails=${JSON.stringify(state.originalOrderDetails)}`
+  )
 
   const { data: fetchedOrder, isSuccess } = useQuery<Order, Error>({
     queryKey: ['order', orderId],
@@ -33,6 +38,9 @@ export const useOrderOperations = (orderId: number) => {
 
   useEffect(() => {
     if (isSuccess && fetchedOrder && !state.hasUnsavedChanges) {
+      console.log(
+        `Cargando order desde backend: ${JSON.stringify(fetchedOrder)}`
+      )
       dispatch({ type: 'SET_ORDER', payload: fetchedOrder })
     }
   }, [fetchedOrder, isSuccess, dispatch, state.hasUnsavedChanges])
@@ -49,6 +57,11 @@ export const useOrderOperations = (orderId: number) => {
 
   useEffect(() => {
     if (detailsSuccess && fetchedOrderDetails && !state.hasUnsavedChanges) {
+      console.log(
+        `Cargando orderDetails desde backend: ${JSON.stringify(
+          fetchedOrderDetails
+        )}`
+      )
       dispatch({ type: 'SET_ORDER_DETAILS', payload: fetchedOrderDetails })
     }
   }, [fetchedOrderDetails, detailsSuccess, dispatch, state.hasUnsavedChanges])
@@ -63,6 +76,11 @@ export const useOrderOperations = (orderId: number) => {
       dispatch({ type: 'SET_UNSAVED_CHANGES', payload: false })
       queryClient.invalidateQueries({ queryKey: ['order', orderId] })
       queryClient.invalidateQueries({ queryKey: ['orderDetails', orderId] })
+      // Actualizar el estado original con la orden sincronizada
+      if (state.order) {
+        dispatch({ type: 'SET_ORDER', payload: state.order })
+      }
+      dispatch({ type: 'SET_ORDER_DETAILS', payload: state.orderDetails })
       dispatch({ type: 'RESET_ORDER' })
       clearSelectedCustomer()
     },
@@ -74,7 +92,7 @@ export const useOrderOperations = (orderId: number) => {
   const createTemporaryOrder = (numeroMesa: string, zona: string) => {
     dispatch({
       type: 'CREATE_TEMPORARY_ORDER',
-      payload: { numeroMesa, zona, esTemporal: false }
+      payload: { numeroMesa, zona, esTemporal: true } // Corregido a true para órdenes temporales
     })
   }
 

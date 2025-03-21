@@ -5,6 +5,8 @@ import { uuidEntero } from "@/utils/uuidUtils";
 interface OrderState {
   order: Order | null; // Orden actual (temporal o permanente)
   orderDetails: OrderDetail[]; // Detalles de la orden
+  originalOrder: Order | null; // Estado original de la orden
+  originalOrderDetails: OrderDetail[];
   loading: boolean; // Estado de carga
   error: string | null; // Errores
   hasUnsavedChanges: boolean; // Indicador de cambios no guardados
@@ -34,6 +36,8 @@ type OrderAction =
 const initialState: OrderState = {
   order: null,
   orderDetails: [],
+  originalOrder: null,
+  originalOrderDetails: [],
   loading: false,
   error: null,
   hasUnsavedChanges: false,
@@ -54,7 +58,24 @@ const calculateTotal = (details: OrderDetail[]): number => {
     0
   );
 };
+const hasDetailsChanged = (
+  current: OrderDetail[],
+  original: OrderDetail[]
+): boolean => {
+  if (current.length !== original.length) return true;
 
+  return current.some((currentDetail) => {
+    const originalDetail = original.find(
+      (d) => d.idOrdenDetalle === currentDetail.idOrdenDetalle
+    );
+    if (!originalDetail) return true;
+    return (
+      currentDetail.cantidad !== originalDetail.cantidad ||
+      currentDetail.precioVenta !== originalDetail.precioVenta ||
+      currentDetail.idProducto !== originalDetail.idProducto
+    );
+  });
+};
 const orderReducer = (state: OrderState, action: OrderAction): OrderState => {
   switch (action.type) {
     case "CREATE_TEMPORARY_ORDER": {
@@ -73,16 +94,38 @@ const orderReducer = (state: OrderState, action: OrderAction): OrderState => {
         ...state,
         order: newOrder,
         orderDetails: [],
-        hasUnsavedChanges: true,
+        originalOrder: newOrder, // Estado original para órdenes temporales
+        originalOrderDetails: [],
+        hasUnsavedChanges: false, // Inicialmente no hay cambios
       };
     }
-    case "SET_ORDER":
-      return { ...state, order: action.payload, loading: false };
+    case "SET_ORDER": {
+      const newOrder = action.payload;
+      return {
+        ...state,
+        order: newOrder,
+        originalOrder:
+          state.originalOrder === null ? newOrder : state.originalOrder, // Solo setea original si no existe
+        loading: false,
+      };
+    }
     case "SET_ORDER_DETAILS": {
-      if (action.payload && action.payload.length > 0) {
-        return { ...state, orderDetails: action.payload, loading: false };
+      if (action.payload && action.payload.length >= 0) {
+        const newDetails = action.payload;
+        return {
+          ...state,
+          orderDetails: newDetails,
+          originalOrderDetails:
+            state.originalOrderDetails.length === 0
+              ? newDetails
+              : state.originalOrderDetails, // Solo setea original si no existe
+          loading: false,
+          hasUnsavedChanges:
+            state.originalOrderDetails.length > 0 &&
+            hasDetailsChanged(newDetails, state.originalOrderDetails),
+        };
       }
-      return state; // No sobrescribe si los datos son vacíos o undefined
+      return state;
     }
     case "RESET_ORDER":
       return initialState;
@@ -107,46 +150,40 @@ const orderReducer = (state: OrderState, action: OrderAction): OrderState => {
     }
     case "ADD_ORDER_DETAIL": {
       if (!state.order) return state;
-
       const newDetail: OrderDetail = {
         ...action.payload,
-        idOrden: state.order?.numeroOrden ?? 0,
-        idOrdenDetalle: uuidEntero(), // Aseguramos que cada nuevo detalle tenga un ID único
+        idOrden: state.order.numeroOrden!,
+        idOrdenDetalle: uuidEntero(),
       };
-
       const currentDetails = state.orderDetails || [];
       const existingIndex = currentDetails.findIndex(
         (d) => d.idProducto === newDetail.idProducto
       );
-
       let updatedDetails: OrderDetail[];
-
       if (existingIndex !== -1) {
-        // Si el producto ya está en la orden, sumamos la cantidad
         updatedDetails = [...currentDetails];
         updatedDetails[existingIndex] = {
           ...updatedDetails[existingIndex],
           cantidad: updatedDetails[existingIndex].cantidad + newDetail.cantidad,
         };
       } else {
-        // Si es un producto nuevo, lo agregamos a la lista
         updatedDetails = [...currentDetails, newDetail];
       }
-
       const updatedOrder = {
         ...state.order,
         detalles: updatedDetails,
         totalSinDescuento: calculateTotal(updatedDetails),
       };
-
       return {
         ...state,
         order: updatedOrder,
         orderDetails: updatedDetails,
-        hasUnsavedChanges: true,
+        hasUnsavedChanges: hasDetailsChanged(
+          updatedDetails,
+          state.originalOrderDetails
+        ),
       };
     }
-
     case "UPDATE_ORDER_DETAIL": {
       if (!state.order) return state;
       const { detailId, updatedDetail } = action.payload;
@@ -164,7 +201,10 @@ const orderReducer = (state: OrderState, action: OrderAction): OrderState => {
         ...state,
         order: updatedOrder,
         orderDetails: updatedDetails,
-        hasUnsavedChanges: true,
+        hasUnsavedChanges: hasDetailsChanged(
+          updatedDetails,
+          state.originalOrderDetails
+        ),
       };
     }
     case "REMOVE_ORDER_DETAIL": {
@@ -181,7 +221,10 @@ const orderReducer = (state: OrderState, action: OrderAction): OrderState => {
         ...state,
         order: updatedOrder,
         orderDetails: updatedDetails,
-        hasUnsavedChanges: true,
+        hasUnsavedChanges: hasDetailsChanged(
+          updatedDetails,
+          state.originalOrderDetails
+        ),
       };
     }
     case "SET_LOADING":
