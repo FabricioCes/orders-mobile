@@ -33,9 +33,6 @@ export const useOrderOperations = (orderId: number) => {
 
   useEffect(() => {
     if (isSuccess && fetchedOrder && !state.hasUnsavedChanges) {
-      console.log(
-        `Cargando order desde backend: ${JSON.stringify(fetchedOrder)}`
-      )
       dispatch({ type: 'SET_ORDER', payload: fetchedOrder })
     }
   }, [fetchedOrder, isSuccess, dispatch, state.hasUnsavedChanges])
@@ -52,11 +49,6 @@ export const useOrderOperations = (orderId: number) => {
 
   useEffect(() => {
     if (detailsSuccess && fetchedOrderDetails && !state.hasUnsavedChanges) {
-      console.log(
-        `Cargando orderDetails desde backend: ${JSON.stringify(
-          fetchedOrderDetails
-        )}`
-      )
       dispatch({ type: 'SET_ORDER_DETAILS', payload: fetchedOrderDetails })
     }
   }, [fetchedOrderDetails, detailsSuccess, dispatch, state.hasUnsavedChanges])

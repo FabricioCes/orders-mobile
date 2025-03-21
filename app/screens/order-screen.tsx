@@ -71,7 +71,6 @@ export default function OrderScreen() {
 
   const handleNavigateToProducts = useCallback(() => {
     const currentOrderId = order?.numeroOrden?.toString() ?? "0";
-    console.log(`Navigating to ProductScreen with orderId: ${currentOrderId}`);
     router.navigate({
       pathname: "/screens/products-screen",
       params: {
